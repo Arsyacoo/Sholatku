@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Footer } from '@/components/layout/Footer';
@@ -8,9 +8,10 @@ import { CalculationMethodSelector } from '@/components/settings/CalculationMeth
 import { MadhabSelector } from '@/components/settings/MadhabSelector';
 import { PrayerAdjustmentEditor } from '@/components/settings/PrayerAdjustmentEditor';
 import { NotificationPreferences } from '@/components/settings/NotificationPreferences';
+import { ThemeSelector } from '@/components/settings/ThemeSelector';
 import { UserSettings, CalculationMethodId, Madhab, PrayerAdjustment } from '@/types';
 import { getSavedSettings, saveSettings } from '@/lib/storage/preferences';
-import { ArrowLeft, Check, Settings2 } from 'lucide-react';
+import { ArrowLeft, Check } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SettingsPage() {
@@ -47,7 +48,7 @@ export default function SettingsPage() {
                 Pengaturan
               </h1>
               <p className="text-xs text-slate-500">
-                Sesuaikan preferensi metode hisab, madhab, dan pengingat adzan
+                Sesuaikan preferensi tema, metode hisab, madhab, dan pengingat adzan
               </p>
             </div>
           </div>
@@ -60,8 +61,13 @@ export default function SettingsPage() {
           )}
         </div>
 
-        {/* Calculation Methods */}
+        {/* Theme Preference */}
         <section>
+          <ThemeSelector />
+        </section>
+
+        {/* Calculation Methods */}
+        <section className="pt-4 border-t border-surface-200 dark:border-surface-800">
           <CalculationMethodSelector
             value={settings.method}
             onChange={(method: CalculationMethodId) =>

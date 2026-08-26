@@ -3,7 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Compass, Calendar, Settings, Moon, Sun, Sparkles, BookOpen } from 'lucide-react';
+import { Compass, Calendar, Settings, Sparkles, BookOpen } from 'lucide-react';
+import { ThemeToggle } from './ThemeToggle';
 import { UserLocation } from '@/types';
 
 interface NavbarProps {
@@ -61,7 +62,7 @@ export const Navbar: React.FC<NavbarProps> = ({ location, onOpenLocationModal })
           })}
         </nav>
 
-        {/* Quick action / Theme indicator */}
+        {/* Quick actions: Location pill + Theme toggle */}
         <div className="flex items-center gap-2">
           {location && onOpenLocationModal && (
             <button
@@ -72,6 +73,9 @@ export const Navbar: React.FC<NavbarProps> = ({ location, onOpenLocationModal })
               <span className="truncate">{location.city}</span>
             </button>
           )}
+
+          {/* Dark / Light Mode Toggle Button */}
+          <ThemeToggle />
         </div>
       </div>
     </header>
