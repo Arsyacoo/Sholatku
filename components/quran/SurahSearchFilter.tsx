@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Search, X, BookOpen, Layers, Star } from 'lucide-react';
+import { Search, X, BookOpen, Layers, Star, Bookmark } from 'lucide-react';
 
-export type QuranTab = 'surah' | 'juz' | 'favorites';
+export type QuranTab = 'surah' | 'juz' | 'favorites' | 'bookmarks';
 
 interface SurahSearchFilterProps {
   query: string;
@@ -12,6 +12,7 @@ interface SurahSearchFilterProps {
   onTabChange: (tab: QuranTab) => void;
   surahCount: number;
   favoriteCount: number;
+  bookmarkCount: number;
 }
 
 export const SurahSearchFilter: React.FC<SurahSearchFilterProps> = ({
@@ -21,6 +22,7 @@ export const SurahSearchFilter: React.FC<SurahSearchFilterProps> = ({
   onTabChange,
   surahCount,
   favoriteCount,
+  bookmarkCount = 0,
 }) => {
   return (
     <div className="space-y-4">
@@ -75,14 +77,27 @@ export const SurahSearchFilter: React.FC<SurahSearchFilterProps> = ({
         <button
           type="button"
           onClick={() => onTabChange('favorites')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-all ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg transition-all ${
             activeTab === 'favorites'
               ? 'bg-white dark:bg-surface-900 text-primary-700 dark:text-primary-300 shadow-2xs font-bold'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
           <Star className="w-3.5 h-3.5" />
-          <span>Favorit ({favoriteCount})</span>
+          <span>Surat Favorit ({favoriteCount})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onTabChange('bookmarks')}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg transition-all ${
+            activeTab === 'bookmarks'
+              ? 'bg-white dark:bg-surface-900 text-primary-700 dark:text-primary-300 shadow-2xs font-bold'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+          }`}
+        >
+          <Bookmark className="w-3.5 h-3.5" />
+          <span>Ayat Disimpan ({bookmarkCount})</span>
         </button>
       </div>
     </div>

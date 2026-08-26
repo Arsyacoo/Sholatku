@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect, useMemo, use } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Footer } from '@/components/layout/Footer';
 import { SurahHeader } from '@/components/quran/SurahHeader';
 import { AyahCard } from '@/components/quran/AyahCard';
+import { AyahSearchJump } from '@/components/quran/AyahSearchJump';
+import { AyahPagination } from '@/components/quran/AyahPagination';
 import { FloatingAudioPlayer } from '@/components/quran/FloatingAudioPlayer';
 import { QuranSettingsModal } from '@/components/quran/QuranSettingsModal';
 import { TafsirModal } from '@/components/quran/TafsirModal';
@@ -18,8 +20,15 @@ import {
   getLastRead,
   saveLastRead,
 } from '@/lib/storage/quran-preferences';
+import {
+  saveCachedSurah,
+  getCachedSurah,
+  toggleBookmarkAyah,
+  getBookmarkedAyahs,
+  SavedAyah,
+} from '@/lib/storage/quran-offline';
 import { SurahDetail, Ayah, QuranDisplaySettings, LastReadInfo } from '@/types';
-import { BookOpen, Check } from 'lucide-react';
+import { BookOpen, Check, WifiOff } from 'lucide-react';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -32,10 +41,17 @@ export default function SurahDetailPage({ params }: PageProps) {
   const [surah, setSurah] = useState<SurahDetail | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isOfflineSource, setIsOfflineSource] = useState<boolean>(false);
 
-  // Settings & Last Read
+  // Pagination & In-surah Search
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [pageSize, setPageSize] = useState<number>(20);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
+  // Settings, Last Read, Bookmarked Ayahs
   const [settings, setSettings] = useState<QuranDisplaySettings>(getQuranSettings);
   const [lastRead, setLastRead] = useState<LastReadInfo | null>(null);
+  const [bookmarkedList, setBookmarkedList] = useState<SavedAyah[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Modals
@@ -43,30 +59,47 @@ export default function SurahDetailPage({ params }: PageProps) {
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
   const [selectedTafsirAyah, setSelectedTafsirAyah] = useState<Ayah | null>(null);
 
-  // Load Quran Settings & Last Read on mount
+  // Load Quran Settings & Bookmarks on mount
   useEffect(() => {
     setSettings(getQuranSettings());
     setLastRead(getLastRead());
+    setBookmarkedList(getBookmarkedAyahs());
   }, []);
 
-  // Fetch Surah Details
+  // Fetch Surah Details with Offline Cache fallback
   useEffect(() => {
     let active = true;
+
+    // Check offline cache first for instant render
+    const cached = getCachedSurah(surahId);
+    if (cached) {
+      setSurah(cached);
+      setIsLoading(false);
+      setIsOfflineSource(true);
+    }
+
     const fetchSurah = async () => {
-      setIsLoading(true);
+      if (!cached) setIsLoading(true);
       setError(null);
+
       try {
         const res = await fetch(`/api/quran/surah/${surahId}`);
         if (res.ok) {
           const json = await res.json();
-          if (active && json.data) {
+          if (active && json.data && json.data.ayahs && json.data.ayahs.length > 0) {
             setSurah(json.data);
+            saveCachedSurah(json.data);
+            setIsOfflineSource(false);
           }
         } else {
-          if (active) setError('Gagal memuat surat. Periksa koneksi internet Anda.');
+          if (!cached && active) {
+            setError('Gagal memuat surat. Periksa koneksi internet Anda.');
+          }
         }
       } catch (err: any) {
-        if (active) setError('Terjadi kendala saat memuat data surat.');
+        if (!cached && active) {
+          setError('Terjadi kendala saat memuat data surat.');
+        }
       } finally {
         if (active) setIsLoading(false);
       }
@@ -81,29 +114,93 @@ export default function SurahDetailPage({ params }: PageProps) {
   // Quran Audio Hook
   const audio = useQuranAudio(surah, settings.autoScrollAudio);
 
-  // Sync selected qari with settings
+  // Sync selected qari
   useEffect(() => {
     if (settings.selectedQari) {
       audio.setSelectedQari(settings.selectedQari);
     }
   }, [settings.selectedQari]);
 
+  // Filter ayahs by in-surah search query
+  const filteredAyahs = useMemo(() => {
+    if (!surah) return [];
+    if (!searchQuery.trim()) return surah.ayahs;
+
+    const q = searchQuery.toLowerCase().trim();
+    return surah.ayahs.filter((a) => {
+      return (
+        a.translation.toLowerCase().includes(q) ||
+        a.latinText.toLowerCase().includes(q) ||
+        a.arabText.includes(q) ||
+        String(a.numberInSurah) === q
+      );
+    });
+  }, [surah, searchQuery]);
+
+  // Calculate pagination
+  const totalPages = Math.max(1, Math.ceil(filteredAyahs.length / pageSize));
+
+  // Current slice of ayahs to render
+  const paginatedAyahs = useMemo(() => {
+    if (pageSize >= 999) return filteredAyahs;
+    const start = (currentPage - 1) * pageSize;
+    return filteredAyahs.slice(start, start + pageSize);
+  }, [filteredAyahs, currentPage, pageSize]);
+
+  // Handle jump to a specific ayah
+  const handleJumpToAyah = (ayahNumber: number) => {
+    if (!surah) return;
+    const targetIndex = surah.ayahs.findIndex((a) => a.numberInSurah === ayahNumber);
+    if (targetIndex >= 0) {
+      // Calculate which page contains this ayah
+      const targetPage = Math.floor(targetIndex / pageSize) + 1;
+      setCurrentPage(targetPage);
+      setSearchQuery('');
+
+      setTimeout(() => {
+        const el = document.getElementById(`ayah-${ayahNumber}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    }
+  };
+
   const handleUpdateSettings = (newSettings: QuranDisplaySettings) => {
     setSettings(newSettings);
     saveQuranSettings(newSettings);
   };
 
+  // Toggle individual ayah bookmark
   const handleBookmarkAyah = (ayah: Ayah) => {
     if (!surah) return;
-    const info: LastReadInfo = {
+    const saved: SavedAyah = {
+      surahNumber: surah.number,
+      surahName: surah.name,
+      ayahNumber: ayah.numberInSurah,
+      arabText: ayah.arabText,
+      translation: ayah.translation,
+      timestamp: Date.now(),
+    };
+
+    const { isBookmarked, list } = toggleBookmarkAyah(saved);
+    setBookmarkedList(list);
+
+    // Also update last read
+    const lastReadInfo: LastReadInfo = {
       surahNumber: surah.number,
       surahName: surah.name,
       ayahNumber: ayah.numberInSurah,
       timestamp: Date.now(),
     };
-    saveLastRead(info);
-    setLastRead(info);
-    showToast(`Ayat ${ayah.numberInSurah} ditandai sebagai bacaan terakhir`);
+    saveLastRead(lastReadInfo);
+    setLastRead(lastReadInfo);
+
+    showToast(
+      isBookmarked
+        ? `Ayat ${ayah.numberInSurah} disimpan ke koleksi ayat`
+        : `Ayat ${ayah.numberInSurah} dihapus dari koleksi`
+    );
   };
 
   const showToast = (msg: string) => {
@@ -121,6 +218,14 @@ export default function SurahDetailPage({ params }: PageProps) {
           <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-xs font-semibold rounded-full shadow-lg border border-slate-700 animate-fade-in">
             <Check className="w-3.5 h-3.5 text-emerald-400" />
             <span>{toastMessage}</span>
+          </div>
+        )}
+
+        {/* Offline Cache Indicator */}
+        {isOfflineSource && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 rounded-xl text-xs text-amber-800 dark:text-amber-300 font-medium">
+            <WifiOff className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>Mode Offline: Membaca dari penyimpanan lokal perangkat.</span>
           </div>
         )}
 
@@ -149,40 +254,90 @@ export default function SurahDetailPage({ params }: PageProps) {
               onOpenInfo={() => setIsInfoOpen(true)}
             />
 
-            {/* List of Ayahs */}
-            <div className="space-y-3 pt-2">
-              {surah.ayahs.map((ayah, index) => {
-                const isPlaying = audio.currentAyahIndex === index && audio.isPlaying;
-                const isLastReadAyah =
-                  lastRead?.surahNumber === surah.number &&
-                  lastRead?.ayahNumber === ayah.numberInSurah;
+            {/* In-Surah Search & Jump Bar */}
+            <AyahSearchJump
+              query={searchQuery}
+              onQueryChange={(q) => {
+                setSearchQuery(q);
+                setCurrentPage(1);
+              }}
+              totalAyahs={surah.numberOfAyahs}
+              onJumpToAyah={handleJumpToAyah}
+              pageSize={pageSize}
+              onPageSizeChange={(size) => {
+                setPageSize(size);
+                setCurrentPage(1);
+              }}
+              matchCount={filteredAyahs.length}
+            />
 
-                return (
-                  <AyahCard
-                    key={ayah.numberInSurah}
-                    ayah={ayah}
-                    surahNumber={surah.number}
-                    surahName={surah.name}
-                    isPlaying={isPlaying}
-                    isLastRead={isLastReadAyah}
-                    arabicFontSize={settings.arabicFontSize}
-                    showTranslation={settings.showTranslation}
-                    showLatin={settings.showLatin}
-                    onPlay={() => {
-                      if (audio.currentAyahIndex === index && audio.isPlaying) {
-                        audio.togglePlay();
-                      } else {
-                        audio.playAyah(index);
-                      }
-                    }}
-                    onBookmark={() => handleBookmarkAyah(ayah)}
-                    onOpenTafsir={() => setSelectedTafsirAyah(ayah)}
-                  />
-                );
-              })}
+            {/* Top Pagination Bar */}
+            <AyahPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalAyahs={filteredAyahs.length}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+            />
+
+            {/* List of Paginated Ayahs */}
+            <div className="space-y-3 pt-1">
+              {paginatedAyahs.length === 0 ? (
+                <div className="text-center py-12 text-slate-500 text-sm">
+                  Tidak ditemukan ayat dengan kata kunci &ldquo;{searchQuery}&rdquo;.
+                </div>
+              ) : (
+                paginatedAyahs.map((ayah) => {
+                  const originalIndex = surah.ayahs.findIndex(
+                    (a) => a.numberInSurah === ayah.numberInSurah
+                  );
+                  const isPlaying =
+                    audio.currentAyahIndex === originalIndex && audio.isPlaying;
+                  const isLastReadAyah =
+                    lastRead?.surahNumber === surah.number &&
+                    lastRead?.ayahNumber === ayah.numberInSurah;
+                  const isBookmarked = bookmarkedList.some(
+                    (b) =>
+                      b.surahNumber === surah.number &&
+                      b.ayahNumber === ayah.numberInSurah
+                  );
+
+                  return (
+                    <AyahCard
+                      key={ayah.numberInSurah}
+                      ayah={ayah}
+                      surahNumber={surah.number}
+                      surahName={surah.name}
+                      isPlaying={isPlaying}
+                      isLastRead={isLastReadAyah || isBookmarked}
+                      arabicFontSize={settings.arabicFontSize}
+                      showTranslation={settings.showTranslation}
+                      showLatin={settings.showLatin}
+                      onPlay={() => {
+                        if (audio.currentAyahIndex === originalIndex && audio.isPlaying) {
+                          audio.togglePlay();
+                        } else {
+                          audio.playAyah(originalIndex);
+                        }
+                      }}
+                      onBookmark={() => handleBookmarkAyah(ayah)}
+                      onOpenTafsir={() => setSelectedTafsirAyah(ayah)}
+                    />
+                  );
+                })
+              )}
             </div>
 
-            {/* Floating Audio Player (when audio is active) */}
+            {/* Bottom Pagination Bar */}
+            <AyahPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalAyahs={filteredAyahs.length}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+            />
+
+            {/* Floating Audio Player */}
             {audio.currentAyahIndex !== null && (
               <FloatingAudioPlayer
                 surahName={surah.name}

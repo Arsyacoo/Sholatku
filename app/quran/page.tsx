@@ -8,8 +8,10 @@ import { LastReadCard } from '@/components/quran/LastReadCard';
 import { SurahCard } from '@/components/quran/SurahCard';
 import { SurahSearchFilter, QuranTab } from '@/components/quran/SurahSearchFilter';
 import { JuzList } from '@/components/quran/JuzList';
+import { BookmarkedAyahsList } from '@/components/quran/BookmarkedAyahsList';
 import { SURAH_LIST, searchSurahs } from '@/lib/quran/surah-list';
 import { getLastRead, getFavoriteSurahs, toggleFavoriteSurah } from '@/lib/storage/quran-preferences';
+import { getBookmarkedAyahs, toggleBookmarkAyah, SavedAyah } from '@/lib/storage/quran-offline';
 import { LastReadInfo } from '@/types';
 import { BookOpen } from 'lucide-react';
 
@@ -18,15 +20,22 @@ export default function QuranPage() {
   const [activeTab, setActiveTab] = useState<QuranTab>('surah');
   const [lastRead, setLastRead] = useState<LastReadInfo | null>(null);
   const [favorites, setFavorites] = useState<number[]>([]);
+  const [bookmarkedAyahs, setBookmarkedAyahs] = useState<SavedAyah[]>([]);
 
   useEffect(() => {
     setLastRead(getLastRead());
     setFavorites(getFavoriteSurahs());
+    setBookmarkedAyahs(getBookmarkedAyahs());
   }, []);
 
   const handleToggleFavorite = (surahNumber: number) => {
     const updated = toggleFavoriteSurah(surahNumber);
     setFavorites(updated);
+  };
+
+  const handleRemoveBookmark = (ayah: SavedAyah) => {
+    const { list } = toggleBookmarkAyah(ayah);
+    setBookmarkedAyahs(list);
   };
 
   const filteredSurahs = useMemo(() => {
@@ -53,11 +62,17 @@ export default function QuranPage() {
           onTabChange={setActiveTab}
           surahCount={SURAH_LIST.length}
           favoriteCount={favorites.length}
+          bookmarkCount={bookmarkedAyahs.length}
         />
 
         {/* Content Body */}
         {activeTab === 'juz' ? (
           <JuzList />
+        ) : activeTab === 'bookmarks' ? (
+          <BookmarkedAyahsList
+            bookmarks={bookmarkedAyahs}
+            onRemoveBookmark={handleRemoveBookmark}
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {filteredSurahs.length === 0 ? (
