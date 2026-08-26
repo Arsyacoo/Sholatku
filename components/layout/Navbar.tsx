@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Compass, Calendar, Settings, Moon, Sun, Sparkles } from 'lucide-react';
+import { Compass, Calendar, Settings, Moon, Sun, Sparkles, BookOpen } from 'lucide-react';
 import { UserLocation } from '@/types';
 
 interface NavbarProps {
@@ -16,6 +16,7 @@ export const Navbar: React.FC<NavbarProps> = ({ location, onOpenLocationModal })
 
   const navLinks = [
     { href: '/', label: 'Hari Ini', icon: Sparkles },
+    { href: '/quran', label: 'Al-Qur\'an', icon: BookOpen },
     { href: '/monthly', label: 'Bulanan', icon: Calendar },
     { href: '/qibla', label: 'Arah Kiblat', icon: Compass },
     { href: '/settings', label: 'Pengaturan', icon: Settings },

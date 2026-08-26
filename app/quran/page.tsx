@@ -1,0 +1,90 @@
+'use client';
+
+import React, { useState, useEffect, useMemo } from 'react';
+import { Navbar } from '@/components/layout/Navbar';
+import { BottomNav } from '@/components/layout/BottomNav';
+import { Footer } from '@/components/layout/Footer';
+import { LastReadCard } from '@/components/quran/LastReadCard';
+import { SurahCard } from '@/components/quran/SurahCard';
+import { SurahSearchFilter, QuranTab } from '@/components/quran/SurahSearchFilter';
+import { JuzList } from '@/components/quran/JuzList';
+import { SURAH_LIST, searchSurahs } from '@/lib/quran/surah-list';
+import { getLastRead, getFavoriteSurahs, toggleFavoriteSurah } from '@/lib/storage/quran-preferences';
+import { LastReadInfo } from '@/types';
+import { BookOpen } from 'lucide-react';
+
+export default function QuranPage() {
+  const [query, setQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<QuranTab>('surah');
+  const [lastRead, setLastRead] = useState<LastReadInfo | null>(null);
+  const [favorites, setFavorites] = useState<number[]>([]);
+
+  useEffect(() => {
+    setLastRead(getLastRead());
+    setFavorites(getFavoriteSurahs());
+  }, []);
+
+  const handleToggleFavorite = (surahNumber: number) => {
+    const updated = toggleFavoriteSurah(surahNumber);
+    setFavorites(updated);
+  };
+
+  const filteredSurahs = useMemo(() => {
+    const searched = searchSurahs(query);
+    if (activeTab === 'favorites') {
+      return searched.filter((s) => favorites.includes(s.number));
+    }
+    return searched;
+  }, [query, activeTab, favorites]);
+
+  return (
+    <div className="flex-1 flex flex-col">
+      <Navbar />
+
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+        {/* Banner Last Read / Introduction */}
+        <LastReadCard lastRead={lastRead} />
+
+        {/* Search & Tabs */}
+        <SurahSearchFilter
+          query={query}
+          onQueryChange={setQuery}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          surahCount={SURAH_LIST.length}
+          favoriteCount={favorites.length}
+        />
+
+        {/* Content Body */}
+        {activeTab === 'juz' ? (
+          <JuzList />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {filteredSurahs.length === 0 ? (
+              <div className="col-span-full text-center py-12 text-slate-500">
+                <BookOpen className="w-8 h-8 mx-auto text-slate-400 mb-2 opacity-50" />
+                <p className="text-sm">
+                  {activeTab === 'favorites'
+                    ? 'Belum ada surat favorit yang ditandai.'
+                    : `Tidak ditemukan surat dengan kata kunci "${query}".`}
+                </p>
+              </div>
+            ) : (
+              filteredSurahs.map((surah) => (
+                <SurahCard
+                  key={surah.number}
+                  surah={surah}
+                  isFavorite={favorites.includes(surah.number)}
+                  onToggleFavorite={handleToggleFavorite}
+                />
+              ))
+            )}
+          </div>
+        )}
+      </main>
+
+      <Footer />
+      <BottomNav />
+    </div>
+  );
+}

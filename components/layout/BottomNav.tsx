@@ -3,16 +3,17 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Sparkles, Calendar, Compass, Settings } from 'lucide-react';
+import { Sparkles, Calendar, Compass, Settings, BookOpen } from 'lucide-react';
 
 export const BottomNav: React.FC = () => {
   const pathname = usePathname();
 
   const navItems = [
     { href: '/', label: 'Hari Ini', icon: Sparkles },
+    { href: '/quran', label: 'Al-Qur\'an', icon: BookOpen },
     { href: '/monthly', label: 'Bulanan', icon: Calendar },
     { href: '/qibla', label: 'Kiblat', icon: Compass },
-    { href: '/settings', label: 'Pengaturan', icon: Settings },
+    { href: '/settings', label: 'Setelan', icon: Settings },
   ];
 
   return (

@@ -14,8 +14,8 @@ export const Footer: React.FC = () => {
           <span>Akurat &bull; Tenang &bull; Presisi</span>
         </div>
         <div className="flex items-center gap-4 text-xs">
-          <Link href="/settings" className="hover:text-primary-600 transition-colors">
-            Metode Hisab
+          <Link href="/quran" className="hover:text-primary-600 transition-colors">
+            Al-Qur&apos;an
           </Link>
           <span>&bull;</span>
           <Link href="/monthly" className="hover:text-primary-600 transition-colors">
@@ -24,6 +24,10 @@ export const Footer: React.FC = () => {
           <span>&bull;</span>
           <Link href="/qibla" className="hover:text-primary-600 transition-colors">
             Kompas Kiblat
+          </Link>
+          <span>&bull;</span>
+          <Link href="/settings" className="hover:text-primary-600 transition-colors">
+            Pengaturan
           </Link>
         </div>
       </div>
