@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F766E"/>
+      <stop offset="100%" stop-color="#042F2E"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE68A"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="url(#bg)"/>
+  <!-- Crescent & Star -->
+  <path d="M256 96 C167.63 96 96 167.63 96 256 C96 344.37 167.63 416 256 416 C308.27 416 354.51 390.87 383.6 352 C302.4 357.6 232 292.8 232 211.2 C232 159.2 258.4 113.6 298.4 87.2 C284.8 82.4 270.4 80 256 96 Z" fill="url(#gold)" opacity="0.95"/>
+  <polygon points="360,170 375,200 408,205 384,228 390,260 360,245 330,260 336,228 312,205 345,200" fill="url(#gold)"/>
+</svg>
