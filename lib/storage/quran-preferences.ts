@@ -1,4 +1,9 @@
-import { LastReadInfo, QuranDisplaySettings } from '@/types';
+import {
+  LastReadInfo,
+  QuranDisplaySettings,
+  QuranPlaybackRate,
+  QURAN_PLAYBACK_RATES,
+} from '@/types';
 
 const KEYS = {
   LAST_READ: 'sholatku_quran_last_read_v1',
@@ -13,7 +18,37 @@ export const DEFAULT_QURAN_SETTINGS: QuranDisplaySettings = {
   showLatin: true,
   selectedQari: '05', // Misyari Rasyid Al-Afasy default
   autoScrollAudio: true,
+  audioVolume: 100,
+  audioMuted: false,
+  playbackRate: 1,
 };
+
+function isPlaybackRate(value: unknown): value is QuranPlaybackRate {
+  return QURAN_PLAYBACK_RATES.includes(value as QuranPlaybackRate);
+}
+
+export function normalizeQuranSettings(value: unknown): QuranDisplaySettings {
+  const saved = value && typeof value === 'object'
+    ? (value as Partial<QuranDisplaySettings>)
+    : {};
+  const parsedVolume = Number(saved.audioVolume);
+  const audioVolume = Number.isFinite(parsedVolume)
+    ? Math.min(100, Math.max(0, Math.round(parsedVolume)))
+    : DEFAULT_QURAN_SETTINGS.audioVolume;
+
+  return {
+    ...DEFAULT_QURAN_SETTINGS,
+    ...saved,
+    audioVolume,
+    audioMuted:
+      typeof saved.audioMuted === 'boolean'
+        ? saved.audioMuted
+        : DEFAULT_QURAN_SETTINGS.audioMuted,
+    playbackRate: isPlaybackRate(saved.playbackRate)
+      ? saved.playbackRate
+      : DEFAULT_QURAN_SETTINGS.playbackRate,
+  };
+}
 
 export function getLastRead(): LastReadInfo | null {
   if (typeof window === 'undefined') return null;
@@ -68,7 +103,7 @@ export function getQuranSettings(): QuranDisplaySettings {
   if (typeof window === 'undefined') return DEFAULT_QURAN_SETTINGS;
   try {
     const raw = localStorage.getItem(KEYS.SETTINGS);
-    if (raw) return { ...DEFAULT_QURAN_SETTINGS, ...JSON.parse(raw) };
+    if (raw) return normalizeQuranSettings(JSON.parse(raw));
   } catch (e) {
     console.warn('Failed to read quran settings:', e);
   }
@@ -78,7 +113,7 @@ export function getQuranSettings(): QuranDisplaySettings {
 export function saveQuranSettings(settings: QuranDisplaySettings): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(KEYS.SETTINGS, JSON.stringify(settings));
+    localStorage.setItem(KEYS.SETTINGS, JSON.stringify(normalizeQuranSettings(settings)));
   } catch (e) {
     console.warn('Failed to save quran settings:', e);
   }

@@ -50,10 +50,17 @@ export interface LastReadInfo {
   timestamp: number;
 }
 
+export const QURAN_PLAYBACK_RATES = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2] as const;
+
+export type QuranPlaybackRate = (typeof QURAN_PLAYBACK_RATES)[number];
+
 export interface QuranDisplaySettings {
   arabicFontSize: number; // 20 - 44
   showTranslation: boolean;
   showLatin: boolean;
   selectedQari: string; // e.g. 'mishary'
   autoScrollAudio: boolean;
+  audioVolume: number; // 0 - 100
+  audioMuted: boolean;
+  playbackRate: QuranPlaybackRate;
 }
