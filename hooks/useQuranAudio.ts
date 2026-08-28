@@ -1,7 +1,12 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Ayah, SurahDetail } from '@/types';
+import {
+  QuranDisplaySettings,
+  QuranPlaybackRate,
+  QURAN_PLAYBACK_RATES,
+  SurahDetail,
+} from '@/types';
 
 export type RepeatMode = 'none' | 'ayah' | 'surah';
 
@@ -18,16 +23,46 @@ export const QARI_OPTIONS: QariOption[] = [
   { id: '04', name: 'Mahmoud Khalil Al-Husary', subname: 'Mesir (Tartil)' },
 ];
 
-export function useQuranAudio(surah: SurahDetail | null, autoScroll: boolean = true) {
+interface QuranAudioOptions {
+  autoScroll: boolean;
+  selectedQari: string;
+  audioVolume: number;
+  audioMuted: boolean;
+  playbackRate: QuranPlaybackRate;
+  onPreferenceChange: (partial: Partial<QuranDisplaySettings>) => void;
+}
+
+function applyAudioPreferences(
+  audio: HTMLAudioElement,
+  volume: number,
+  muted: boolean,
+  playbackRate: QuranPlaybackRate
+) {
+  audio.volume = Math.min(1, Math.max(0, volume / 100));
+  audio.muted = muted || volume === 0;
+  audio.playbackRate = playbackRate;
+  audio.preservesPitch = true;
+  (audio as HTMLAudioElement & { webkitPreservesPitch?: boolean }).webkitPreservesPitch = true;
+}
+
+export function useQuranAudio(surah: SurahDetail | null, options: QuranAudioOptions) {
+  const {
+    autoScroll,
+    selectedQari,
+    audioVolume,
+    audioMuted,
+    playbackRate,
+    onPreferenceChange,
+  } = options;
   const [currentAyahIndex, setCurrentAyahIndex] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('none');
-  const [selectedQari, setSelectedQari] = useState<string>('05');
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const lastAudibleVolumeRef = useRef(audioVolume > 0 ? audioVolume : 100);
 
   // Initialize audio element
   useEffect(() => {
@@ -57,6 +92,16 @@ export function useQuranAudio(surah: SurahDetail | null, autoScroll: boolean = t
     };
   }, []);
 
+  // Keep the live audio element synchronized with persisted preferences.
+  useEffect(() => {
+    if (audioVolume > 0) {
+      lastAudibleVolumeRef.current = audioVolume;
+    }
+    if (audioRef.current) {
+      applyAudioPreferences(audioRef.current, audioVolume, audioMuted, playbackRate);
+    }
+  }, [audioVolume, audioMuted, playbackRate]);
+
   // Play a specific ayah
   const playAyah = useCallback(
     (index: number) => {
@@ -76,6 +121,7 @@ export function useQuranAudio(surah: SurahDetail | null, autoScroll: boolean = t
 
       const audio = audioRef.current;
       audio.src = audioUrl;
+      applyAudioPreferences(audio, audioVolume, audioMuted, playbackRate);
       audio
         .play()
         .then(() => {
@@ -105,7 +151,7 @@ export function useQuranAudio(surah: SurahDetail | null, autoScroll: boolean = t
           setIsLoading(false);
         });
     },
-    [surah, selectedQari, autoScroll]
+    [surah, selectedQari, autoScroll, audioVolume, audioMuted, playbackRate]
   );
 
   // Play next ayah or repeat
@@ -193,6 +239,58 @@ export function useQuranAudio(surah: SurahDetail | null, autoScroll: boolean = t
     }
   };
 
+  const setSelectedQari = useCallback(
+    (qariId: string) => {
+      onPreferenceChange({ selectedQari: qariId });
+    },
+    [onPreferenceChange]
+  );
+
+  const setVolume = useCallback(
+    (nextVolume: number) => {
+      const normalizedVolume = Math.min(100, Math.max(0, Math.round(nextVolume)));
+      const nextMuted = normalizedVolume === 0;
+
+      if (normalizedVolume > 0) {
+        lastAudibleVolumeRef.current = normalizedVolume;
+      }
+      if (audioRef.current) {
+        applyAudioPreferences(audioRef.current, normalizedVolume, nextMuted, playbackRate);
+      }
+      onPreferenceChange({
+        audioVolume: normalizedVolume,
+        audioMuted: nextMuted,
+      });
+    },
+    [onPreferenceChange, playbackRate]
+  );
+
+  const toggleMute = useCallback(() => {
+    const currentlyMuted = audioMuted || audioVolume === 0;
+    const restoredVolume = audioVolume > 0 ? audioVolume : lastAudibleVolumeRef.current;
+    const nextVolume = currentlyMuted ? restoredVolume : audioVolume;
+    const nextMuted = !currentlyMuted;
+
+    if (audioRef.current) {
+      applyAudioPreferences(audioRef.current, nextVolume, nextMuted, playbackRate);
+    }
+    onPreferenceChange({
+      audioVolume: nextVolume,
+      audioMuted: nextMuted,
+    });
+  }, [audioMuted, audioVolume, onPreferenceChange, playbackRate]);
+
+  const setPlaybackRate = useCallback(
+    (nextRate: QuranPlaybackRate) => {
+      if (!QURAN_PLAYBACK_RATES.includes(nextRate)) return;
+      if (audioRef.current) {
+        applyAudioPreferences(audioRef.current, audioVolume, audioMuted, nextRate);
+      }
+      onPreferenceChange({ playbackRate: nextRate });
+    },
+    [audioMuted, audioVolume, onPreferenceChange]
+  );
+
   const activeAyah =
     surah && currentAyahIndex !== null ? surah.ayahs[currentAyahIndex] : null;
 
@@ -205,7 +303,13 @@ export function useQuranAudio(surah: SurahDetail | null, autoScroll: boolean = t
     duration,
     repeatMode,
     selectedQari,
+    volume: audioVolume,
+    isMuted: audioMuted || audioVolume === 0,
+    playbackRate,
     setSelectedQari,
+    setVolume,
+    toggleMute,
+    setPlaybackRate,
     playAyah,
     playNext,
     playPrev,

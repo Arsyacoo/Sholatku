@@ -10,9 +10,13 @@ import {
   Repeat1,
   X,
   Volume2,
+  Volume1,
+  VolumeX,
   Loader2,
+  Gauge,
 } from 'lucide-react';
 import { RepeatMode } from '@/hooks/useQuranAudio';
+import { QuranPlaybackRate, QURAN_PLAYBACK_RATES } from '@/types';
 
 interface FloatingAudioPlayerProps {
   surahName: string;
@@ -23,10 +27,16 @@ interface FloatingAudioPlayerProps {
   progress: number;
   duration: number;
   repeatMode: RepeatMode;
+  volume: number;
+  isMuted: boolean;
+  playbackRate: QuranPlaybackRate;
   onTogglePlay: () => void;
   onPlayNext: () => void;
   onPlayPrev: () => void;
   onCycleRepeat: () => void;
+  onVolumeChange: (volume: number) => void;
+  onToggleMute: () => void;
+  onPlaybackRateChange: (rate: QuranPlaybackRate) => void;
   onClose: () => void;
 }
 
@@ -39,10 +49,16 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
   progress,
   duration,
   repeatMode,
+  volume,
+  isMuted,
+  playbackRate,
   onTogglePlay,
   onPlayNext,
   onPlayPrev,
   onCycleRepeat,
+  onVolumeChange,
+  onToggleMute,
+  onPlaybackRateChange,
   onClose,
 }) => {
   const formatSec = (sec: number) => {
@@ -53,6 +69,7 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
   };
 
   const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
+  const VolumeIcon = isMuted || volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2;
 
   return (
     <div className="fixed bottom-16 md:bottom-6 left-0 right-0 z-40 px-4 max-w-2xl mx-auto pointer-events-none animate-slide-up">
@@ -112,7 +129,14 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
         </div>
 
         {/* Progress bar */}
-        <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+        <div
+          className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden"
+          role="progressbar"
+          aria-label="Progres audio"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(progressPercent)}
+        >
           <div
             className="bg-gradient-to-r from-primary-400 to-teal-300 h-full rounded-full transition-all duration-200"
             style={{ width: `${progressPercent}%` }}
@@ -168,6 +192,69 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
           <span className="font-mono text-[10px] text-slate-400 w-10 text-right">
             {formatSec(duration)}
           </span>
+        </div>
+
+        {/* Persistent audio preferences */}
+        <div className="flex items-center gap-2.5 pt-2.5 border-t border-white/10">
+          <button
+            type="button"
+            onClick={onToggleMute}
+            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 ${
+              isMuted
+                ? 'bg-white/10 text-slate-300 hover:bg-white/15 hover:text-white'
+                : 'bg-primary-500/20 text-primary-200 hover:bg-primary-500/30'
+            }`}
+            aria-label={isMuted ? 'Aktifkan suara' : 'Bisukan audio'}
+            aria-pressed={isMuted}
+            title={isMuted ? 'Aktifkan suara' : 'Bisukan audio'}
+          >
+            <VolumeIcon className="w-4 h-4" />
+          </button>
+
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <label htmlFor="quran-player-volume" className="sr-only">
+              Volume audio
+            </label>
+            <input
+              id="quran-player-volume"
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value={volume}
+              onChange={(event) => onVolumeChange(Number(event.target.value))}
+              className="w-full min-w-20 h-1.5 rounded-full cursor-pointer accent-primary-400 bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+              aria-valuetext={
+                isMuted ? `Bisu, volume tersimpan ${volume} persen` : `${volume} persen`
+              }
+            />
+            <span className="hidden sm:block w-10 text-right text-[10px] font-semibold tabular-nums text-slate-300">
+              {isMuted ? 'Bisu' : `${volume}%`}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <Gauge className="hidden sm:block w-3.5 h-3.5 text-slate-400" aria-hidden="true" />
+            <label htmlFor="quran-player-speed" className="sr-only">
+              Kecepatan audio
+            </label>
+            <select
+              id="quran-player-speed"
+              value={playbackRate}
+              onChange={(event) =>
+                onPlaybackRateChange(Number(event.target.value) as QuranPlaybackRate)
+              }
+              className="h-9 rounded-xl bg-white/10 border border-white/10 px-2 text-xs font-bold text-white cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+              aria-label={`Kecepatan audio ${String(playbackRate).replace('.', ',')} kali`}
+              title="Kecepatan audio"
+            >
+              {QURAN_PLAYBACK_RATES.map((rate) => (
+                <option key={rate} value={rate} className="bg-slate-900 text-white">
+                  {String(rate).replace('.', ',')}×
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
     </div>

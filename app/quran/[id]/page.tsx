@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, use } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, use } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Footer } from '@/components/layout/Footer';
@@ -111,15 +111,31 @@ export default function SurahDetailPage({ params }: PageProps) {
     };
   }, [surahId]);
 
-  // Quran Audio Hook
-  const audio = useQuranAudio(surah, settings.autoScrollAudio);
+  const handleUpdateSettings = useCallback((newSettings: QuranDisplaySettings) => {
+    setSettings(newSettings);
+    saveQuranSettings(newSettings);
+  }, []);
 
-  // Sync selected qari
-  useEffect(() => {
-    if (settings.selectedQari) {
-      audio.setSelectedQari(settings.selectedQari);
-    }
-  }, [settings.selectedQari]);
+  const handleAudioPreferenceChange = useCallback(
+    (partial: Partial<QuranDisplaySettings>) => {
+      setSettings((current) => {
+        const next = { ...current, ...partial };
+        saveQuranSettings(next);
+        return next;
+      });
+    },
+    []
+  );
+
+  // Quran Audio Hook
+  const audio = useQuranAudio(surah, {
+    autoScroll: settings.autoScrollAudio,
+    selectedQari: settings.selectedQari,
+    audioVolume: settings.audioVolume,
+    audioMuted: settings.audioMuted,
+    playbackRate: settings.playbackRate,
+    onPreferenceChange: handleAudioPreferenceChange,
+  });
 
   // Filter ayahs by in-surah search query
   const filteredAyahs = useMemo(() => {
@@ -164,11 +180,6 @@ export default function SurahDetailPage({ params }: PageProps) {
         }
       }, 100);
     }
-  };
-
-  const handleUpdateSettings = (newSettings: QuranDisplaySettings) => {
-    setSettings(newSettings);
-    saveQuranSettings(newSettings);
   };
 
   // Toggle individual ayah bookmark
@@ -350,10 +361,16 @@ export default function SurahDetailPage({ params }: PageProps) {
                 progress={audio.progress}
                 duration={audio.duration}
                 repeatMode={audio.repeatMode}
+                volume={audio.volume}
+                isMuted={audio.isMuted}
+                playbackRate={audio.playbackRate}
                 onTogglePlay={audio.togglePlay}
                 onPlayNext={audio.playNext}
                 onPlayPrev={audio.playPrev}
                 onCycleRepeat={audio.cycleRepeatMode}
+                onVolumeChange={audio.setVolume}
+                onToggleMute={audio.toggleMute}
+                onPlaybackRateChange={audio.setPlaybackRate}
                 onClose={audio.stopAudio}
               />
             )}
