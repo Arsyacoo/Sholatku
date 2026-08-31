@@ -11,7 +11,12 @@ import { JuzList } from '@/components/quran/JuzList';
 import { BookmarkedAyahsList } from '@/components/quran/BookmarkedAyahsList';
 import { SURAH_LIST, searchSurahs } from '@/lib/quran/surah-list';
 import { getLastRead, getFavoriteSurahs, toggleFavoriteSurah } from '@/lib/storage/quran-preferences';
-import { getBookmarkedAyahs, toggleBookmarkAyah, SavedAyah } from '@/lib/storage/quran-offline';
+import {
+  getBookmarkedAyahs,
+  migrateLegacySurahCache,
+  toggleBookmarkAyah,
+  SavedAyah,
+} from '@/lib/storage/quran-offline';
 import { LastReadInfo } from '@/types';
 import { BookOpen } from 'lucide-react';
 
@@ -21,6 +26,12 @@ export default function QuranPage() {
   const [lastRead, setLastRead] = useState<LastReadInfo | null>(null);
   const [favorites, setFavorites] = useState<number[]>([]);
   const [bookmarkedAyahs, setBookmarkedAyahs] = useState<SavedAyah[]>([]);
+
+  useEffect(() => {
+    void migrateLegacySurahCache().catch(() => {
+      // Migration is best-effort; the reader can still use legacy fallback data.
+    });
+  }, []);
 
   useEffect(() => {
     setLastRead(getLastRead());

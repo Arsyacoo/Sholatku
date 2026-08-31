@@ -88,8 +88,23 @@ describe('Quran Offline Storage & Bookmark Manager', () => {
   it('clears all IndexedDB records', async () => {
     expect(await saveCachedSurah(mockSurah)).toBe(true);
     expect(await saveCachedSurah({ ...mockSurah, number: 2, name: 'Al-Baqarah' })).toBe(true);
+    localStorage.setItem('sholatku_theme_mode', 'dark');
     expect(await clearCachedSurahs()).toBe(true);
     expect(await getCachedSurahNumbers()).toEqual([]);
+    expect(localStorage.getItem('sholatku_theme_mode')).toBe('dark');
+  });
+
+  it('migrates all valid legacy entries when no surah number is supplied', async () => {
+    localStorage.setItem('sholatku_cached_surah_1', JSON.stringify(mockSurah));
+    localStorage.setItem(
+      'sholatku_cached_surah_2',
+      JSON.stringify({ ...mockSurah, number: 2, name: 'Al-Baqarah' })
+    );
+
+    expect(await migrateLegacySurahCache()).toEqual({ migrated: 2, skipped: 0, failed: 0 });
+    expect(await getCachedSurahNumbers()).toEqual([1, 2]);
+    expect(localStorage.getItem('sholatku_cached_surah_1')).toBeNull();
+    expect(localStorage.getItem('sholatku_cached_surah_2')).toBeNull();
   });
 
   it('migrates a legacy entry and preserves unrelated localStorage keys', async () => {
@@ -123,11 +138,19 @@ describe('Quran Offline Storage & Bookmark Manager', () => {
     (globalThis as any).indexedDB = undefined;
     try {
       expect(await migrateLegacySurahCache(1)).toEqual({ migrated: 0, skipped: 0, failed: 1 });
+      expect(await saveCachedSurah(mockSurah)).toBe(false);
+      expect(await getCachedSurahNumbers()).toEqual([]);
       expect(localStorage.getItem('sholatku_cached_surah_1')).not.toBeNull();
       expect((await getCachedSurah(1))?.name).toBe('Al-Fatihah');
     } finally {
       (globalThis as any).indexedDB = originalIndexedDb;
     }
+  });
+
+  it('rejects malformed Surah records without throwing', async () => {
+    const malformed = { ...mockSurah, ayahs: [{ numberInSurah: 1 }] } as unknown as SurahDetail;
+    expect(await saveCachedSurah(malformed)).toBe(false);
+    expect(await getCachedSurah(1)).toBeNull();
   });
 
   it('toggles individual ayah bookmark correctly', () => {

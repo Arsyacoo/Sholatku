@@ -77,6 +77,7 @@ export default function SurahDetailPage({ params }: PageProps) {
     setIsLoading(true);
     setError(null);
     setIsOfflineSource(false);
+    const abortController = new AbortController();
 
     const fetchSurah = async () => {
       // Migration is lazy and idempotent. It is intentionally best-effort;
@@ -94,7 +95,9 @@ export default function SurahDetailPage({ params }: PageProps) {
       }
 
       try {
-        const res = await fetch(`/api/quran/surah/${surahId}`);
+        const res = await fetch(`/api/quran/surah/${surahId}`, {
+          signal: abortController.signal,
+        });
         if (res.ok) {
           const json = await res.json();
           if (json.data && json.data.ayahs && json.data.ayahs.length > 0) {
@@ -113,7 +116,10 @@ export default function SurahDetailPage({ params }: PageProps) {
             setError('Gagal memuat surat. Periksa koneksi internet Anda.');
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        if (err && typeof err === 'object' && 'name' in err && err.name === 'AbortError') {
+          return;
+        }
         if (!cached && active) {
           setError('Terjadi kendala saat memuat data surat.');
         }
@@ -125,6 +131,7 @@ export default function SurahDetailPage({ params }: PageProps) {
     fetchSurah();
     return () => {
       active = false;
+      abortController.abort();
     };
   }, [surahId]);
 
