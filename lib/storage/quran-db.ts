@@ -397,6 +397,21 @@ export async function getCachedSurahNumbers(): Promise<number[]> {
   }
 }
 
+/** Returns only complete Reader payloads; compact search data is independent. */
+export async function getCompleteCachedSurahNumbers(): Promise<number[]> {
+  const db = await getDatabase();
+  if (!db) return [];
+  try {
+    const records = await db.getAll(QURAN_STORE_NAME);
+    return records
+      .filter((record) => isValidRecord(record) && record.data.ayahs.length === record.data.numberOfAyahs)
+      .map((record) => record.surahNumber)
+      .sort((left, right) => left - right);
+  } catch {
+    return [];
+  }
+}
+
 export async function getCachedSurahInfo(surahNumber: number): Promise<CachedSurahInfo | null> {
   if (!Number.isInteger(surahNumber) || surahNumber < 1 || surahNumber > 114) return null;
   const db = await getDatabase();

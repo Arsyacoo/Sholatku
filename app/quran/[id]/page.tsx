@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, use } from 'react';
+import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Footer } from '@/components/layout/Footer';
@@ -111,11 +112,19 @@ export default function SurahDetailPage({ params }: PageProps) {
             setSurah(json.data);
             setIsOfflineSource(false);
           } else if (!cached && active) {
-            setError('Gagal memuat surat. Data surat tidak tersedia.');
+            setError(
+              typeof navigator !== 'undefined' && !navigator.onLine
+                ? 'Surat ini belum tersedia untuk dibaca offline.'
+                : 'Gagal memuat surat. Data surat tidak tersedia.'
+            );
           }
         } else {
           if (!cached && active) {
-            setError('Gagal memuat surat. Periksa koneksi internet Anda.');
+            setError(
+              typeof navigator !== 'undefined' && !navigator.onLine
+                ? 'Surat ini belum tersedia untuk dibaca offline.'
+                : 'Gagal memuat surat. Periksa koneksi internet Anda.'
+            );
           }
         }
       } catch (err: unknown) {
@@ -123,7 +132,11 @@ export default function SurahDetailPage({ params }: PageProps) {
           return;
         }
         if (!cached && active) {
-          setError('Terjadi kendala saat memuat data surat.');
+          setError(
+            typeof navigator !== 'undefined' && !navigator.onLine
+              ? 'Surat ini belum tersedia untuk dibaca offline.'
+              : 'Terjadi kendala saat memuat data surat.'
+          );
         }
       } finally {
         if (active) setIsLoading(false);
@@ -309,6 +322,14 @@ export default function SurahDetailPage({ params }: PageProps) {
             <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">
               {error || 'Surat tidak ditemukan'}
             </h2>
+            {error === 'Surat ini belum tersedia untuk dibaca offline.' && (
+              <Link
+                href="/quran/offline"
+                className="inline-flex rounded-xl border border-primary-300 px-3 py-2 text-xs font-bold text-primary-700 dark:border-primary-800 dark:text-primary-300"
+              >
+                Kelola Quran Offline
+              </Link>
+            )}
           </div>
         ) : (
           <>

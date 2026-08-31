@@ -5,7 +5,7 @@ import {
   getAllQuranSearchRecords,
   ensureQuranSearchIndex,
   getQuranSearchCoverage,
-  getCachedSurahNumbers,
+  getCompleteCachedSurahNumbers,
   getGlobalQuranSearchCorpus,
 } from '@/lib/storage/quran-db';
 import { searchQuran } from '@/lib/quran/search/search';
@@ -44,7 +44,7 @@ export function useQuranSearch(query: string) {
       await ensureQuranSearchIndex();
       const nextRecords = await getAllQuranSearchRecords();
       const nextCoverage = await getQuranSearchCoverage();
-      const nextCachedSurahNumbers = await getCachedSurahNumbers();
+      const nextCachedSurahNumbers = await getCompleteCachedSurahNumbers();
       const cachedCorpus = await getGlobalQuranSearchCorpus();
 
       setRecords(nextRecords);

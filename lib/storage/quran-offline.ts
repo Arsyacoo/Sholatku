@@ -9,6 +9,7 @@ export {
   getCachedSurahInfo,
   getCachedSurah,
   getCachedSurahNumbers,
+  getCompleteCachedSurahNumbers,
   getEstimatedQuranCacheSize,
   isValidSurahData,
   isSurahCached,
