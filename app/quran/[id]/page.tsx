@@ -30,6 +30,7 @@ import {
 } from '@/lib/storage/quran-offline';
 import { SurahDetail, Ayah, QuranDisplaySettings, LastReadInfo } from '@/types';
 import { BookOpen, Check, WifiOff } from 'lucide-react';
+import { getAyahPage, parseAyahQuery } from '@/lib/quran/reader-deep-link';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -48,6 +49,7 @@ export default function SurahDetailPage({ params }: PageProps) {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [pageSize, setPageSize] = useState<number>(20);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [highlightedAyah, setHighlightedAyah] = useState<number | null>(null);
 
   // Settings, Last Read, Bookmarked Ayahs
   const [settings, setSettings] = useState<QuranDisplaySettings>(getQuranSettings);
@@ -134,6 +136,34 @@ export default function SurahDetailPage({ params }: PageProps) {
       abortController.abort();
     };
   }, [surahId]);
+
+  useEffect(() => {
+    if (!surah) return;
+    const target = parseAyahQuery(new URLSearchParams(window.location.search).get('ayah'), surah.numberOfAyahs);
+    if (!target) return;
+
+    const targetPage = getAyahPage(
+      surah.ayahs.map((ayah) => ayah.numberInSurah),
+      target,
+      pageSize
+    );
+    if (!targetPage) return;
+    setSearchQuery('');
+    if (currentPage !== targetPage) {
+      setCurrentPage(targetPage);
+      return;
+    }
+
+    setHighlightedAyah(target);
+    const scrollTimeout = window.setTimeout(() => {
+      document.getElementById(`ayah-${target}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 75);
+    const highlightTimeout = window.setTimeout(() => setHighlightedAyah(null), 2200);
+    return () => {
+      window.clearTimeout(scrollTimeout);
+      window.clearTimeout(highlightTimeout);
+    };
+  }, [currentPage, pageSize, surah]);
 
   const handleUpdateSettings = useCallback((newSettings: QuranDisplaySettings) => {
     setSettings(newSettings);
@@ -345,6 +375,7 @@ export default function SurahDetailPage({ params }: PageProps) {
                       surahName={surah.name}
                       isPlaying={isPlaying}
                       isLastRead={isLastReadAyah || isBookmarked}
+                      isHighlighted={highlightedAyah === ayah.numberInSurah}
                       arabicFontSize={settings.arabicFontSize}
                       showTranslation={settings.showTranslation}
                       showLatin={settings.showLatin}

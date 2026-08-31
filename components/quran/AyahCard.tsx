@@ -10,6 +10,7 @@ interface AyahCardProps {
   surahName: string;
   isPlaying: boolean;
   isLastRead: boolean;
+  isHighlighted?: boolean;
   arabicFontSize: number;
   showTranslation: boolean;
   showLatin: boolean;
@@ -24,6 +25,7 @@ export const AyahCard: React.FC<AyahCardProps> = ({
   surahName,
   isPlaying,
   isLastRead,
+  isHighlighted = false,
   arabicFontSize,
   showTranslation,
   showLatin,
@@ -62,7 +64,9 @@ export const AyahCard: React.FC<AyahCardProps> = ({
     <div
       id={`ayah-${ayah.numberInSurah}`}
       className={`relative p-5 sm:p-6 rounded-2xl transition-all duration-300 scroll-mt-24 ${
-        isPlaying
+        isHighlighted
+          ? 'bg-primary-50 dark:bg-primary-950/60 border-2 border-primary-500 ring-4 ring-primary-500/20 shadow-md shadow-primary-500/10'
+          : isPlaying
           ? 'bg-primary-50/90 dark:bg-primary-950/70 border-2 border-primary-500 shadow-md shadow-primary-500/10'
           : isLastRead
           ? 'bg-amber-50/40 dark:bg-amber-950/20 border-2 border-gold-400 dark:border-gold-700'
