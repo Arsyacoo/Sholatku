@@ -21,6 +21,8 @@ import {
 import { LastReadInfo } from '@/types';
 import { BookOpen, HardDriveDownload } from 'lucide-react';
 import { getCachedSurahCount } from '@/lib/storage/quran-offline';
+import { useQuranSearch } from '@/hooks/useQuranSearch';
+import { QuranSearchResults } from '@/components/quran/QuranSearchResults';
 
 export default function QuranPage() {
   const [query, setQuery] = useState('');
@@ -29,12 +31,28 @@ export default function QuranPage() {
   const [favorites, setFavorites] = useState<number[]>([]);
   const [bookmarkedAyahs, setBookmarkedAyahs] = useState<SavedAyah[]>([]);
   const [cachedSurahCount, setCachedSurahCount] = useState(0);
+  const quranSearch = useQuranSearch(query);
 
   useEffect(() => {
     void migrateLegacySurahCache().catch(() => {
       // Migration is best-effort; the reader can still use legacy fallback data.
     });
   }, []);
+
+  useEffect(() => {
+    const initialQuery = new URLSearchParams(window.location.search).get('q') ?? '';
+    setQuery(initialQuery);
+  }, []);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      const url = new URL(window.location.href);
+      if (query.trim()) url.searchParams.set('q', query);
+      else url.searchParams.delete('q');
+      window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+    }, 200);
+    return () => window.clearTimeout(timeout);
+  }, [query]);
 
   useEffect(() => {
     setLastRead(getLastRead());
@@ -97,7 +115,14 @@ export default function QuranPage() {
         />
 
         {/* Content Body */}
-        {activeTab === 'juz' ? (
+        {activeTab === 'surah' && query.trim() ? (
+          <QuranSearchResults
+            query={query}
+            response={quranSearch}
+            isSearching={quranSearch.isSearching}
+            onLoadMore={quranSearch.loadMore}
+          />
+        ) : activeTab === 'juz' ? (
           <JuzList />
         ) : activeTab === 'bookmarks' ? (
           <BookmarkedAyahsList

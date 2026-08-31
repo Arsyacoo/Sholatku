@@ -29,17 +29,20 @@ export const SurahSearchFilter: React.FC<SurahSearchFilterProps> = ({
       {/* Search bar */}
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => onQueryChange(e.target.value)}
-          placeholder="Cari surat (misal: Yasin, Al-Kahf, 18, Gua)..."
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => onQueryChange(e.target.value)}
+            placeholder="Cari ayat, surat, atau terjemahan..."
+            aria-label="Cari ayat, surat, atau terjemahan Al-Qur'an"
           className="w-full pl-11 pr-10 py-3 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 shadow-2xs"
         />
         {query && (
           <button
+            type="button"
             onClick={() => onQueryChange('')}
             className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"
+            aria-label="Bersihkan pencarian Quran"
           >
             <X className="w-4 h-4" />
           </button>
