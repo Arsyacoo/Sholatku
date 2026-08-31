@@ -16,6 +16,14 @@ import {
   toggleBookmarkAyah,
   SavedAyah,
 } from '@/lib/storage/quran-offline';
+import {
+  getFavoriteSurahs,
+  getLastRead,
+  getQuranSettings,
+  saveLastRead,
+  saveQuranSettings,
+  toggleFavoriteSurah,
+} from '@/lib/storage/quran-preferences';
 import { SurahDetail } from '@/types';
 
 // Mock localStorage in Node environment
@@ -189,5 +197,32 @@ describe('Quran Offline Storage & Bookmark Manager', () => {
     const result2 = toggleBookmarkAyah(ayahToBookmark);
     expect(result2.isBookmarked).toBe(false);
     expect(result2.list.length).toBe(0);
+  });
+
+  it('deletes Quran cache without touching bookmarks, favorites, last read, or settings', async () => {
+    const ayahToBookmark: SavedAyah = {
+      surahNumber: 1,
+      surahName: 'Al-Fatihah',
+      ayahNumber: 1,
+      arabText: mockSurah.ayahs[0].arabText,
+      translation: mockSurah.ayahs[0].translation,
+      timestamp: Date.now(),
+    };
+    toggleBookmarkAyah(ayahToBookmark);
+    saveLastRead({ surahNumber: 1, surahName: 'Al-Fatihah', ayahNumber: 1, timestamp: Date.now() });
+    toggleFavoriteSurah(114);
+    saveQuranSettings({ ...getQuranSettings(), audioVolume: 42, audioMuted: true, playbackRate: 0.5 });
+
+    await saveCachedSurah(mockSurah);
+    expect(await deleteCachedSurah(1)).toBe(true);
+    await saveCachedSurah(mockSurah);
+    expect(await clearCachedSurahs()).toBe(true);
+
+    expect(getBookmarkedAyahs()).toHaveLength(1);
+    expect(getFavoriteSurahs()).toContain(114);
+    expect(getLastRead()?.surahNumber).toBe(1);
+    expect(getQuranSettings().audioVolume).toBe(42);
+    expect(getQuranSettings().audioMuted).toBe(true);
+    expect(getQuranSettings().playbackRate).toBe(0.5);
   });
 });
