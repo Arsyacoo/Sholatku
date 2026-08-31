@@ -2,7 +2,15 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { ArrowLeft, CheckCircle2, Download, HardDriveDownload, Loader2, Trash2, XCircle } from 'lucide-react';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Download,
+  HardDriveDownload,
+  Loader2,
+  Trash2,
+  XCircle,
+} from 'lucide-react';
 import { SURAH_LIST } from '@/lib/quran/surah-list';
 import { useQuranOfflineManager, type OfflineSurahAction } from '@/hooks/useQuranOfflineManager';
 import { Modal } from '@/components/ui/Modal';
@@ -33,8 +41,19 @@ export function OfflineManager() {
     errorById,
     downloadSurah,
     removeSurah,
+    bulkStatus,
+    bulkProgress,
+    failedBulkIds,
+    bulkError,
+    storageWarning,
+    startBulkDownload,
+    resumeBulkDownload,
+    retryFailedDownloads,
+    cancelBulkDownload,
+    clearAllOffline,
   } = useQuranOfflineManager();
   const [deleteTarget, setDeleteTarget] = useState<(typeof SURAH_LIST)[number] | null>(null);
+  const [clearAllTarget, setClearAllTarget] = useState(false);
 
   const getAction = (number: number, isCached: boolean): OfflineSurahAction =>
     actionById[number] || (isCached ? 'available' : 'idle');
@@ -103,16 +122,94 @@ export function OfflineManager() {
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            disabled
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white opacity-60"
-            aria-label="Download semua Al-Qur'an akan tersedia setelah manager diaktifkan"
-          >
-            <Download className="h-4 w-4" aria-hidden="true" />
-            Download Semua Al-Qur&apos;an
-          </button>
+          {bulkStatus === 'downloading' ? (
+            <button
+              type="button"
+              onClick={cancelBulkDownload}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-300 bg-white px-4 py-2.5 text-sm font-bold text-red-700 transition hover:bg-red-50 dark:border-red-800 dark:bg-surface-900 dark:text-red-300 dark:hover:bg-red-950/30"
+            >
+              <XCircle className="h-4 w-4" aria-hidden="true" />
+              Batal
+            </button>
+          ) : bulkStatus === 'paused' ? (
+            <button
+              type="button"
+              onClick={() => void resumeBulkDownload()}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-primary-700"
+            >
+              <Download className="h-4 w-4" aria-hidden="true" />
+              Lanjutkan Download
+            </button>
+          ) : failedBulkIds.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => void retryFailedDownloads()}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-primary-700"
+            >
+              <Download className="h-4 w-4" aria-hidden="true" />
+              Coba Lagi ({failedBulkIds.length})
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void startBulkDownload()}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-primary-700"
+            >
+              <Download className="h-4 w-4" aria-hidden="true" />
+              Download Semua Al-Qur&apos;an
+            </button>
+          )}
         </div>
+        {(bulkStatus !== 'idle' || bulkError || storageWarning) && (
+          <div className="mt-4 space-y-2" aria-live="polite">
+            {bulkStatus === 'downloading' && (
+              <p className="text-sm font-semibold text-primary-700 dark:text-primary-300">
+                Sedang mengunduh teks Quran dengan maksimal 3 koneksi bersamaan.
+              </p>
+            )}
+            {bulkStatus === 'paused' && (
+              <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                Download dijeda. Surah yang sudah selesai tetap tersimpan dan dapat dilanjutkan.
+              </p>
+            )}
+            {bulkStatus === 'completed' && failedBulkIds.length === 0 && (
+              <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                Semua teks Surah sudah tersedia offline.
+              </p>
+            )}
+            {failedBulkIds.length > 0 && (
+              <p className="text-sm font-semibold text-red-700 dark:text-red-300">
+                {failedBulkIds.length} Surah gagal diunduh. Gunakan tombol coba lagi untuk mengulangi yang gagal.
+              </p>
+            )}
+            {bulkError && <p className="text-sm text-red-600 dark:text-red-400">{bulkError}</p>}
+            {storageWarning && <p className="text-sm text-amber-700 dark:text-amber-300">{storageWarning}</p>}
+            <div className="flex items-center gap-3">
+              <progress
+                className="h-2 flex-1 accent-primary-600"
+                value={bulkProgress.completed}
+                max={bulkProgress.total}
+                aria-label={`Progress download Quran: ${bulkProgress.completed} dari ${bulkProgress.total} Surah`}
+              />
+              <span className="shrink-0 text-xs font-bold text-slate-600 dark:text-slate-300">
+                {bulkProgress.completed} / {bulkProgress.total}
+              </span>
+            </div>
+          </div>
+        )}
+        {cachedCount > 0 && (
+          <div className="mt-4 flex justify-end">
+            <button
+              type="button"
+              disabled={bulkStatus === 'downloading'}
+              onClick={() => setClearAllTarget(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-red-600 transition hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50 dark:text-red-400"
+            >
+              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+              Hapus semua Surah offline
+            </button>
+          </div>
+        )}
       </section>
 
       <section className="space-y-3" aria-labelledby="offline-surah-heading">
@@ -132,7 +229,7 @@ export function OfflineManager() {
             const info = infoById.get(surah.number);
             return (
               <article
-            key={surah.number}
+                key={surah.number}
                 className="flex items-center justify-between gap-3 rounded-2xl border border-surface-200 bg-white p-3.5 dark:border-surface-800 dark:bg-surface-900"
               >
                 <div className="flex min-w-0 items-center gap-3">
@@ -164,8 +261,9 @@ export function OfflineManager() {
                   {getAction(surah.number, isCached) === 'idle' && (
                     <button
                       type="button"
+                      disabled={bulkStatus === 'downloading'}
                       onClick={() => void downloadSurah(surah.number)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-primary-300 px-2.5 py-1.5 text-xs font-bold text-primary-700 transition hover:bg-primary-50 dark:border-primary-800 dark:text-primary-300 dark:hover:bg-primary-950/50"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-primary-300 px-2.5 py-1.5 text-xs font-bold text-primary-700 transition hover:bg-primary-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-primary-800 dark:text-primary-300 dark:hover:bg-primary-950/50"
                       aria-label={`Download ${surah.name} untuk offline`}
                     >
                       <Download className="h-3.5 w-3.5" aria-hidden="true" /> Download
@@ -196,8 +294,23 @@ export function OfflineManager() {
                       </button>
                     </div>
                   )}
+                  {getAction(surah.number, isCached) === 'delete-failed' && (
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-red-600 dark:text-red-400" role="status">
+                        <XCircle className="h-4 w-4" aria-hidden="true" /> Gagal menghapus
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => void removeSurah(surah.number)}
+                        className="text-[11px] font-bold text-primary-700 hover:underline dark:text-primary-300"
+                        aria-label={`Coba lagi menghapus ${surah.name}`}
+                      >
+                        Coba Lagi
+                      </button>
+                    </div>
+                  )}
                   {info && <p className="mt-0.5 text-[10px] text-slate-400">{formatBytes(info.estimatedSize)}</p>}
-                  {errorById[surah.number] && getAction(surah.number, isCached) === 'failed' && (
+                  {errorById[surah.number] && ['failed', 'delete-failed'].includes(getAction(surah.number, isCached)) && (
                     <p className="mt-0.5 max-w-[150px] text-[10px] text-red-500">{errorById[surah.number]}</p>
                   )}
                 </div>
@@ -232,6 +345,33 @@ export function OfflineManager() {
             }}
           >
             Hapus
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={clearAllTarget}
+        onClose={() => setClearAllTarget(false)}
+        title="Hapus semua Surah offline?"
+        maxWidth="sm"
+      >
+        <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+          Seluruh teks Surah yang tersimpan akan dihapus dari perangkat. Bookmark, favorit, terakhir dibaca,
+          dan pengaturan Quran tetap aman.
+        </p>
+        <div className="mt-6 flex justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={() => setClearAllTarget(false)}>
+            Batal
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            onClick={async () => {
+              const cleared = await clearAllOffline();
+              if (cleared) setClearAllTarget(false);
+            }}
+          >
+            Hapus Semua
           </Button>
         </div>
       </Modal>

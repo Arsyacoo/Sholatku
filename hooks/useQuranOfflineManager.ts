@@ -2,15 +2,36 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  clearCachedSurahs,
   deleteCachedSurah,
   getAllCachedSurahInfo,
+  getCachedSurahNumbers,
   getEstimatedQuranCacheSize,
   type CachedSurahInfo,
 } from '@/lib/storage/quran-db';
 import { getStorageEstimate, type StorageEstimate } from '@/lib/storage/storage-estimate';
 import { downloadSurahText } from '@/lib/quran/offline-download';
+import {
+  DEFAULT_QURAN_DOWNLOAD_CONCURRENCY,
+  getMissingQuranSurahNumbers,
+  runQuranDownloadQueue,
+} from '@/lib/quran/offline-queue';
+import { SURAH_LIST } from '@/lib/quran/surah-list';
 
-export type OfflineSurahAction = 'idle' | 'downloading' | 'available' | 'failed' | 'deleting';
+export type OfflineSurahAction =
+  | 'idle'
+  | 'downloading'
+  | 'available'
+  | 'failed'
+  | 'delete-failed'
+  | 'deleting';
+
+export type BulkDownloadStatus = 'idle' | 'downloading' | 'paused' | 'completed' | 'error';
+
+export interface BulkDownloadProgress {
+  completed: number;
+  total: number;
+}
 
 export function useQuranOfflineManager() {
   const [cachedInfo, setCachedInfo] = useState<CachedSurahInfo[]>([]);
@@ -20,6 +41,15 @@ export function useQuranOfflineManager() {
   const [actionById, setActionById] = useState<Record<number, OfflineSurahAction>>({});
   const [errorById, setErrorById] = useState<Record<number, string>>({});
   const activeDownloads = useRef(new Set<number>());
+  const bulkController = useRef<AbortController | null>(null);
+  const [bulkStatus, setBulkStatus] = useState<BulkDownloadStatus>('idle');
+  const [bulkProgress, setBulkProgress] = useState<BulkDownloadProgress>({
+    completed: 0,
+    total: SURAH_LIST.length,
+  });
+  const [failedBulkIds, setFailedBulkIds] = useState<number[]>([]);
+  const [bulkError, setBulkError] = useState<string | null>(null);
+  const [storageWarning, setStorageWarning] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     setIsLoading(true);
@@ -44,6 +74,7 @@ export function useQuranOfflineManager() {
 
   const downloadSurah = useCallback(
     async (surahNumber: number) => {
+      if (bulkController.current) return false;
       if (activeDownloads.current.has(surahNumber)) return false;
       if (cachedInfo.some((info) => info.surahNumber === surahNumber)) {
         setActionById((current) => ({ ...current, [surahNumber]: 'available' }));
@@ -103,7 +134,7 @@ export function useQuranOfflineManager() {
           ...current,
           [surahNumber]: error instanceof Error ? error.message : 'Gagal menghapus Surah.',
         }));
-        setActionById((current) => ({ ...current, [surahNumber]: 'failed' }));
+        setActionById((current) => ({ ...current, [surahNumber]: 'delete-failed' }));
         return false;
       } finally {
         activeDownloads.current.delete(surahNumber);
@@ -111,6 +142,118 @@ export function useQuranOfflineManager() {
     },
     [refresh]
   );
+
+  const runBulkDownload = useCallback(
+    async (requestedIds: number[]) => {
+      if (bulkController.current || activeDownloads.current.size > 0) return false;
+
+      const cachedNumbers = await getCachedSurahNumbers();
+      const missingIds = getMissingQuranSurahNumbers(requestedIds, cachedNumbers);
+      const alreadyCompleted = SURAH_LIST.length - missingIds.length;
+      setBulkProgress({ completed: alreadyCompleted, total: SURAH_LIST.length });
+      setBulkError(null);
+      setFailedBulkIds([]);
+      setStorageWarning(
+        storageEstimate?.percentage !== null && storageEstimate?.percentage !== undefined && storageEstimate.percentage >= 90
+          ? 'Penyimpanan hampir penuh. Download dapat berhenti jika kuota perangkat tidak mencukupi.'
+          : null
+      );
+
+      if (missingIds.length === 0) {
+        setBulkStatus('completed');
+        await refresh();
+        return true;
+      }
+
+      const controller = new AbortController();
+      bulkController.current = controller;
+      setBulkStatus('downloading');
+
+      try {
+        const result = await runQuranDownloadQueue(missingIds, {
+          concurrency: DEFAULT_QURAN_DOWNLOAD_CONCURRENCY,
+          signal: controller.signal,
+          download: async (surahNumber, signal) => {
+            setActionById((current) => ({ ...current, [surahNumber]: 'downloading' }));
+            try {
+              await downloadSurahText(surahNumber, { signal });
+              setActionById((current) => ({ ...current, [surahNumber]: 'available' }));
+            } catch (error) {
+              if (!(error && typeof error === 'object' && 'name' in error && error.name === 'AbortError')) {
+                const message = error instanceof Error ? error.message : 'Gagal mengunduh Surah.';
+                setErrorById((current) => ({ ...current, [surahNumber]: message }));
+                setActionById((current) => ({ ...current, [surahNumber]: 'failed' }));
+              }
+              throw error;
+            }
+          },
+          onProgress: (completed) => {
+            setBulkProgress({ completed: alreadyCompleted + completed, total: SURAH_LIST.length });
+          },
+        });
+
+        setFailedBulkIds(result.failedIds);
+        if (result.failedIds.length > 0) {
+          setBulkError(`${result.failedIds.length} Surah gagal diunduh. Silakan coba lagi.`);
+        }
+        if (result.cancelled || result.paused || result.remainingIds.length > 0) {
+          setBulkStatus('paused');
+        } else {
+          setBulkStatus('completed');
+          setBulkProgress({ completed: SURAH_LIST.length, total: SURAH_LIST.length });
+        }
+        await refresh();
+        return result.failedIds.length === 0 && result.remainingIds.length === 0;
+      } catch (error) {
+        setBulkStatus('error');
+        setBulkError(error instanceof Error ? error.message : 'Download Quran gagal.');
+        return false;
+      } finally {
+        bulkController.current = null;
+      }
+    },
+    [refresh, storageEstimate]
+  );
+
+  const startBulkDownload = useCallback(
+    () => runBulkDownload(SURAH_LIST.map((surah) => surah.number)),
+    [runBulkDownload]
+  );
+
+  const resumeBulkDownload = useCallback(
+    () => runBulkDownload(SURAH_LIST.map((surah) => surah.number)),
+    [runBulkDownload]
+  );
+
+  const retryFailedDownloads = useCallback(
+    () => runBulkDownload(failedBulkIds),
+    [failedBulkIds, runBulkDownload]
+  );
+
+  const cancelBulkDownload = useCallback(() => {
+    bulkController.current?.abort();
+  }, []);
+
+  const clearAllOffline = useCallback(async () => {
+    if (bulkController.current) bulkController.current.abort();
+    const cleared = await clearCachedSurahs();
+    if (!cleared) return false;
+    setActionById({});
+    setErrorById({});
+    setBulkStatus('idle');
+    setBulkProgress({ completed: 0, total: SURAH_LIST.length });
+    setFailedBulkIds([]);
+    setBulkError(null);
+    setStorageWarning(null);
+    await refresh();
+    return true;
+  }, [refresh]);
+
+  useEffect(() => {
+    return () => {
+      bulkController.current?.abort();
+    };
+  }, []);
 
   useEffect(() => {
     void refresh();
@@ -139,5 +282,15 @@ export function useQuranOfflineManager() {
     errorById,
     downloadSurah,
     removeSurah,
+    bulkStatus,
+    bulkProgress,
+    failedBulkIds,
+    bulkError,
+    storageWarning,
+    startBulkDownload,
+    resumeBulkDownload,
+    retryFailedDownloads,
+    cancelBulkDownload,
+    clearAllOffline,
   };
 }
