@@ -1,6 +1,6 @@
 import { normalizeArabicText, normalizeSearchText } from './normalize';
 import { looksLikeAyahReference, parseAyahReference } from './parser';
-import { createSurahSearchResult, searchSurahMetadata } from './surah-search';
+import { searchSurahMetadata } from './surah-search';
 import type {
   AyahSearchResult,
   QuranSearchCoverage,

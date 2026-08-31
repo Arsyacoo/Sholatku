@@ -2,17 +2,21 @@ import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { SurahDetail } from '@/types';
 import { createQuranSearchRecords } from '@/lib/quran/search/index-record';
 import {
+  QURAN_SEARCH_CORPUS_SCHEMA_VERSION,
   QURAN_SEARCH_INDEX_SCHEMA_VERSION,
   type QuranSearchCoverage,
+  type QuranSearchCorpusMetadata,
   type QuranSearchRecord,
 } from '@/lib/quran/search/types';
 
 export const QURAN_DB_NAME = 'sholatku';
-export const QURAN_DB_VERSION = 3;
+export const QURAN_DB_VERSION = 4;
 export const QURAN_DATA_SCHEMA_VERSION = 1;
 export const QURAN_STORE_NAME = 'surahs';
 export const QURAN_METADATA_STORE_NAME = 'surahMetadata';
 export const QURAN_SEARCH_STORE_NAME = 'searchIndex';
+export const QURAN_GLOBAL_CORPUS_STORE_NAME = 'globalSearchCorpus';
+export const QURAN_GLOBAL_CORPUS_METADATA_STORE_NAME = 'globalSearchCorpusMetadata';
 export const LEGACY_SURAH_CACHE_PREFIX = 'sholatku_cached_surah_';
 
 export interface CachedSurahRecord {
@@ -41,6 +45,14 @@ interface QuranDatabaseSchema extends DBSchema {
   searchIndex: {
     key: string;
     value: QuranSearchRecord;
+  };
+  globalSearchCorpus: {
+    key: string;
+    value: QuranSearchRecord;
+  };
+  globalSearchCorpusMetadata: {
+    key: string;
+    value: QuranSearchCorpusMetadata;
   };
 }
 
@@ -143,6 +155,25 @@ function isValidSearchRecord(value: unknown): value is QuranSearchRecord {
   );
 }
 
+function isValidCorpusMetadata(value: unknown): value is QuranSearchCorpusMetadata {
+  if (!isObject(value)) return false;
+  const indexedSurahs = value.indexedSurahs;
+  const totalSurahs = value.totalSurahs;
+  const totalRecords = value.totalRecords;
+  return (
+    value.schemaVersion === QURAN_SEARCH_CORPUS_SCHEMA_VERSION &&
+    Number.isFinite(value.cachedAt) &&
+    Number.isInteger(indexedSurahs) &&
+    (indexedSurahs as number) >= 0 &&
+    (indexedSurahs as number) <= 114 &&
+    Number.isInteger(totalSurahs) &&
+    totalSurahs === 114 &&
+    Number.isInteger(totalRecords) &&
+    (totalRecords as number) >= 0 &&
+    value.isComplete === ((indexedSurahs as number) === totalSurahs)
+  );
+}
+
 async function getDatabase(): Promise<IDBPDatabase<QuranDatabaseSchema> | null> {
   // Checking this before the memoized promise also lets callers gracefully
   // degrade if IndexedDB becomes unavailable during a private browsing session.
@@ -159,6 +190,12 @@ async function getDatabase(): Promise<IDBPDatabase<QuranDatabaseSchema> | null> 
       }
       if (!db.objectStoreNames.contains(QURAN_SEARCH_STORE_NAME)) {
         db.createObjectStore(QURAN_SEARCH_STORE_NAME);
+      }
+      if (!db.objectStoreNames.contains(QURAN_GLOBAL_CORPUS_STORE_NAME)) {
+        db.createObjectStore(QURAN_GLOBAL_CORPUS_STORE_NAME);
+      }
+      if (!db.objectStoreNames.contains(QURAN_GLOBAL_CORPUS_METADATA_STORE_NAME)) {
+        db.createObjectStore(QURAN_GLOBAL_CORPUS_METADATA_STORE_NAME);
       }
     },
   }).catch(() => {
@@ -458,6 +495,57 @@ export async function getAllQuranSearchRecords(): Promise<QuranSearchRecord[]> {
     return records.filter(isValidSearchRecord);
   } catch {
     return [];
+  }
+}
+
+export interface CachedGlobalQuranSearchCorpus {
+  records: QuranSearchRecord[];
+  metadata: QuranSearchCorpusMetadata | null;
+}
+
+export async function getGlobalQuranSearchCorpus(): Promise<CachedGlobalQuranSearchCorpus> {
+  const db = await getDatabase();
+  if (!db) return { records: [], metadata: null };
+  try {
+    const [rawRecords, rawMetadata] = await Promise.all([
+      db.getAll(QURAN_GLOBAL_CORPUS_STORE_NAME),
+      db.get(QURAN_GLOBAL_CORPUS_METADATA_STORE_NAME, 'metadata'),
+    ]);
+    const records = rawRecords.filter(isValidSearchRecord);
+    const metadata = isValidCorpusMetadata(rawMetadata) ? rawMetadata : null;
+    if (!metadata || metadata.totalRecords !== records.length) {
+      return { records, metadata: null };
+    }
+    return { records, metadata };
+  } catch {
+    return { records: [], metadata: null };
+  }
+}
+
+export async function saveGlobalQuranSearchCorpus(
+  records: QuranSearchRecord[],
+  metadata: QuranSearchCorpusMetadata
+): Promise<boolean> {
+  const db = await getDatabase();
+  if (!db || !isValidCorpusMetadata(metadata)) return false;
+  const validRecords = records.filter(isValidSearchRecord);
+  if (validRecords.length !== records.length || metadata.totalRecords !== validRecords.length) return false;
+
+  try {
+    const transaction = db.transaction(
+      [QURAN_GLOBAL_CORPUS_STORE_NAME, QURAN_GLOBAL_CORPUS_METADATA_STORE_NAME],
+      'readwrite'
+    );
+    const store = transaction.objectStore(QURAN_GLOBAL_CORPUS_STORE_NAME);
+    await store.clear();
+    for (const record of validRecords) await store.put(record, record.id);
+    await transaction.objectStore(QURAN_GLOBAL_CORPUS_METADATA_STORE_NAME).put(metadata, 'metadata');
+    await transaction.done;
+
+    const saved = await getGlobalQuranSearchCorpus();
+    return saved.metadata?.cachedAt === metadata.cachedAt && saved.records.length === validRecords.length;
+  } catch {
+    return false;
   }
 }
 
