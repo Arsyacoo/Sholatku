@@ -23,6 +23,7 @@ import {
 import {
   saveCachedSurah,
   getCachedSurah,
+  migrateLegacySurahCache,
   toggleBookmarkAyah,
   getBookmarkedAyahs,
   SavedAyah,
@@ -70,26 +71,42 @@ export default function SurahDetailPage({ params }: PageProps) {
   useEffect(() => {
     let active = true;
 
-    // Check offline cache first for instant render
-    const cached = getCachedSurah(surahId);
-    if (cached) {
-      setSurah(cached);
-      setIsLoading(false);
-      setIsOfflineSource(true);
-    }
+    // Reset route-local state so a previous surah cannot flash while the new
+    // IndexedDB read is in flight.
+    setSurah(null);
+    setIsLoading(true);
+    setError(null);
+    setIsOfflineSource(false);
 
     const fetchSurah = async () => {
-      if (!cached) setIsLoading(true);
-      setError(null);
+      // Migration is lazy and idempotent. It is intentionally best-effort;
+      // getCachedSurah still reads a legacy entry if IndexedDB is unavailable.
+      await migrateLegacySurahCache(surahId);
+      if (!active) return;
+
+      const cached = await getCachedSurah(surahId);
+      if (!active) return;
+
+      if (cached) {
+        setSurah(cached);
+        setIsLoading(false);
+        setIsOfflineSource(true);
+      }
 
       try {
         const res = await fetch(`/api/quran/surah/${surahId}`);
         if (res.ok) {
           const json = await res.json();
+          if (json.data && json.data.ayahs && json.data.ayahs.length > 0) {
+            // Cache writes are non-blocking for rendering and are safe if the
+            // browser denies IndexedDB access.
+            void saveCachedSurah(json.data);
+          }
           if (active && json.data && json.data.ayahs && json.data.ayahs.length > 0) {
             setSurah(json.data);
-            saveCachedSurah(json.data);
             setIsOfflineSource(false);
+          } else if (!cached && active) {
+            setError('Gagal memuat surat. Data surat tidak tersedia.');
           }
         } else {
           if (!cached && active) {

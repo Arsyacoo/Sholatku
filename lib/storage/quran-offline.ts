@@ -1,4 +1,14 @@
-import { SurahDetail, Ayah } from '@/types';
+import { Ayah } from '@/types';
+
+export {
+  clearCachedSurahs,
+  deleteCachedSurah,
+  getCachedSurah,
+  getCachedSurahNumbers,
+  isValidSurahData,
+  migrateLegacySurahCache,
+  saveCachedSurah,
+} from './quran-db';
 
 export interface SavedAyah {
   surahNumber: number;
@@ -10,38 +20,8 @@ export interface SavedAyah {
 }
 
 const KEYS = {
-  SURAH_CACHE_PREFIX: 'sholatku_cached_surah_',
   BOOKMARKED_AYAHS: 'sholatku_bookmarked_ayahs_v1',
 };
-
-/**
- * Saves a full surah into offline local cache
- */
-export function saveCachedSurah(surah: SurahDetail): void {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(
-      `${KEYS.SURAH_CACHE_PREFIX}${surah.number}`,
-      JSON.stringify(surah)
-    );
-  } catch (e) {
-    console.warn('Failed to cache surah:', e);
-  }
-}
-
-/**
- * Retrieves a cached surah from local storage
- */
-export function getCachedSurah(surahNumber: number): SurahDetail | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = localStorage.getItem(`${KEYS.SURAH_CACHE_PREFIX}${surahNumber}`);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {
-    console.warn('Failed to read cached surah:', e);
-  }
-  return null;
-}
 
 /**
  * Gets list of all bookmarked individual ayahs

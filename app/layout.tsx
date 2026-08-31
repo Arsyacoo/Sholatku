@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { PwaProvider } from '@/components/layout/PwaProvider';
 
 export const metadata: Metadata = {
   title: 'Sholatku — Jadwal Waktu Sholat & Arah Kiblat Akurat',
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
   authors: [{ name: 'Sholatku Team' }],
   manifest: '/manifest.webmanifest',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/icon.svg',
     apple: '/icon-192.png',
   },
 };
@@ -67,7 +68,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen flex flex-col font-sans bg-surface-50 dark:bg-surface-950 text-slate-900 dark:text-slate-100 antialiased selection:bg-primary-500 selection:text-white pb-20 md:pb-0">
-        {children}
+        <PwaProvider>{children}</PwaProvider>
       </body>
     </html>
   );

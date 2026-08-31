@@ -21,7 +21,8 @@ Aplikasi web modern, presisi, dan elegan untuk jadwal waktu sholat harian, hitun
 - **🔊 Pemutar Audio Murottal Interaktif:** Audio lantunan per ayat dengan *active highlighting* dan *auto-scroll* otomatis mengikuti bacaan.
 - **🎙️ Pilihan Qari:** Syaikh Misyari Rasyid Al-Afasy, Abdullah Al-Juhany, Abdul Muhsin Al-Qasim, dan Mahmoud Khalil Al-Husary.
 - **🔖 Bookmark & Koleksi Ayat:** Tandai bacaan terakhir (*Last Read*) dan simpan ayat-ayat favorit ke tab koleksi pribadi.
-- **📦 Mode Offline (*Offline-First Cache*):** Surat yang pernah dibuka otomatis tersimpan di perangkat sehingga tetap bisa dibaca tanpa koneksi internet.
+- **📦 Mode Offline (*Offline-First Cache*):** Surat yang pernah dibuka otomatis tersimpan di IndexedDB sehingga tetap bisa dibaca tanpa koneksi internet. Cache audio tidak diunduh otomatis.
+- **📱 PWA siap produksi:** Service worker hanya aktif pada build produksi, memiliki halaman fallback offline, dan menampilkan prompt pembaruan yang tidak mengganggu sesi membaca.
 
 ## 🛠️ Teknologi
 
@@ -29,8 +30,9 @@ Aplikasi web modern, presisi, dan elegan untuk jadwal waktu sholat harian, hitun
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS
 - **Icons:** Lucide Icons
-- **Testing:** Vitest (20 Unit Tests)
-- **Design Standards:** Impeccable Craft
+- **PWA & caching:** Serwist
+- **Client storage:** IndexedDB melalui `idb` (schema `sholatku` v1)
+- **Testing:** Vitest (30 Unit Tests)
 
 ## 🚀 Memulai (Development)
 
@@ -60,6 +62,8 @@ npm test
 ```bash
 npm run build
 ```
+
+Service worker `public/sw.js` dibuat otomatis oleh build produksi dan sengaja tidak disimpan di Git. Untuk detail strategi cache, skema IndexedDB, migrasi cache lama, serta checklist verifikasi offline, lihat [`docs/PWA_OFFLINE_ARCHITECTURE.md`](docs/PWA_OFFLINE_ARCHITECTURE.md).
 
 ## 📄 Lisensi
 MIT License &copy; 2026 Sholatku
