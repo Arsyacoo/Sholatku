@@ -43,8 +43,8 @@ export function ConnectionStatus() {
       )}
       <span>
         {isOnline
-          ? 'Koneksi kembali. Data terbaru siap dimuat.'
-          : 'Anda sedang offline. Data tersimpan tetap tersedia.'}
+          ? 'Koneksi kembali tersedia.'
+          : 'Offline — menggunakan data yang tersimpan di perangkat.'}
       </span>
     </div>
   );

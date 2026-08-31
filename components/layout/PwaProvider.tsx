@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { RefreshCw, X } from 'lucide-react';
 import { SerwistProvider, useSerwist } from '@serwist/next/react';
 import { ConnectionStatus } from './ConnectionStatus';
@@ -9,23 +9,76 @@ function PwaUpdatePrompt() {
   const { serwist } = useSerwist();
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const reloadTriggered = useRef(false);
+  const updateTimeout = useRef<number | null>(null);
 
   useEffect(() => {
     if (!serwist) return;
-    const onWaiting = () => setUpdateAvailable(true);
+    const onWaiting = () => {
+      reloadTriggered.current = false;
+      if (updateTimeout.current !== null) {
+        window.clearTimeout(updateTimeout.current);
+        updateTimeout.current = null;
+      }
+      setUpdating(false);
+      setUpdateAvailable(true);
+    };
+    const onRedundant = () => {
+      if (updateTimeout.current !== null) {
+        window.clearTimeout(updateTimeout.current);
+        updateTimeout.current = null;
+      }
+      setUpdating(false);
+      setUpdateAvailable(false);
+    };
+
     serwist.addEventListener('waiting', onWaiting);
-    return () => serwist.removeEventListener('waiting', onWaiting);
+    serwist.addEventListener('redundant', onRedundant);
+    return () => {
+      serwist.removeEventListener('waiting', onWaiting);
+      serwist.removeEventListener('redundant', onRedundant);
+      if (updateTimeout.current !== null) {
+        window.clearTimeout(updateTimeout.current);
+        updateTimeout.current = null;
+      }
+    };
   }, [serwist]);
 
   const applyUpdate = () => {
-    if (!serwist) return;
+    if (!serwist || updating) return;
     setUpdating(true);
+
     // The worker has skipWaiting disabled by default. We only activate and
     // reload after an explicit user action, so an active reading session stays
     // on its current version.
-    const onControlling = () => window.location.reload();
-    serwist.addEventListener('controlling', onControlling);
-    serwist.messageSkipWaiting();
+    const handleControlling = () => {
+      if (reloadTriggered.current) return;
+      reloadTriggered.current = true;
+      serwist.removeEventListener('controlling', handleControlling);
+      if (updateTimeout.current !== null) {
+        window.clearTimeout(updateTimeout.current);
+        updateTimeout.current = null;
+      }
+      window.location.reload();
+    };
+
+    serwist.addEventListener('controlling', handleControlling);
+
+    try {
+      serwist.messageSkipWaiting();
+    } catch {
+      serwist.removeEventListener('controlling', handleControlling);
+      setUpdating(false);
+      return;
+    }
+
+    // A waiting worker can disappear or fail activation. Avoid leaving the
+    // prompt permanently disabled when no controlling event arrives.
+    updateTimeout.current = window.setTimeout(() => {
+      serwist.removeEventListener('controlling', handleControlling);
+      setUpdating(false);
+      updateTimeout.current = null;
+    }, 10000);
   };
 
   if (!updateAvailable) return null;
