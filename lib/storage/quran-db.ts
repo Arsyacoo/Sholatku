@@ -2,8 +2,10 @@ import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { SurahDetail } from '@/types';
 
 export const QURAN_DB_NAME = 'sholatku';
-export const QURAN_DB_VERSION = 1;
+export const QURAN_DB_VERSION = 2;
+export const QURAN_DATA_SCHEMA_VERSION = 1;
 export const QURAN_STORE_NAME = 'surahs';
+export const QURAN_METADATA_STORE_NAME = 'surahMetadata';
 export const LEGACY_SURAH_CACHE_PREFIX = 'sholatku_cached_surah_';
 
 export interface CachedSurahRecord {
@@ -11,12 +13,23 @@ export interface CachedSurahRecord {
   data: SurahDetail;
   cachedAt: number;
   schemaVersion: number;
+  estimatedSize?: number;
+}
+
+export interface CachedSurahInfo {
+  surahNumber: number;
+  cachedAt: number;
+  estimatedSize: number;
 }
 
 interface QuranDatabaseSchema extends DBSchema {
   surahs: {
     key: number;
     value: CachedSurahRecord;
+  };
+  surahMetadata: {
+    key: number;
+    value: CachedSurahInfo;
   };
 }
 
@@ -39,6 +52,18 @@ function getBrowserStorage(): Storage | null {
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
+}
+
+export function estimateSurahSize(surah: SurahDetail): number {
+  try {
+    const serialized = JSON.stringify(surah);
+    if (typeof TextEncoder !== 'undefined') {
+      return new TextEncoder().encode(serialized).byteLength;
+    }
+    return serialized.length * 2;
+  } catch {
+    return 0;
+  }
 }
 
 /** A deliberately conservative guard so corrupted cache data never reaches the reader. */
@@ -69,8 +94,19 @@ function isValidRecord(value: unknown, surahNumber?: number): value is CachedSur
     Number.isInteger(value.surahNumber) &&
     (surahNumber === undefined || value.surahNumber === surahNumber) &&
     Number.isFinite(value.cachedAt) &&
-    value.schemaVersion === QURAN_DB_VERSION &&
+    value.schemaVersion === QURAN_DATA_SCHEMA_VERSION &&
     isValidSurahData(value.data)
+  );
+}
+
+function isValidInfo(value: unknown, surahNumber?: number): value is CachedSurahInfo {
+  if (!isObject(value)) return false;
+  return (
+    Number.isInteger(value.surahNumber) &&
+    (surahNumber === undefined || value.surahNumber === surahNumber) &&
+    Number.isFinite(value.cachedAt) &&
+    Number.isFinite(value.estimatedSize) &&
+    (value.estimatedSize as number) >= 0
   );
 }
 
@@ -84,6 +120,9 @@ async function getDatabase(): Promise<IDBPDatabase<QuranDatabaseSchema> | null> 
     upgrade(db) {
       if (!db.objectStoreNames.contains(QURAN_STORE_NAME)) {
         db.createObjectStore(QURAN_STORE_NAME);
+      }
+      if (!db.objectStoreNames.contains(QURAN_METADATA_STORE_NAME)) {
+        db.createObjectStore(QURAN_METADATA_STORE_NAME);
       }
     },
   }).catch(() => {
@@ -110,17 +149,32 @@ async function saveToIndexedDb(surah: SurahDetail): Promise<boolean> {
   const db = await getDatabase();
   if (!db || !isValidSurahData(surah)) return false;
 
+  const estimatedSize = estimateSurahSize(surah);
   const record: CachedSurahRecord = {
     surahNumber: surah.number,
     data: surah,
     cachedAt: Date.now(),
-    schemaVersion: QURAN_DB_VERSION,
+    schemaVersion: QURAN_DATA_SCHEMA_VERSION,
+    estimatedSize,
+  };
+  const info: CachedSurahInfo = {
+    surahNumber: surah.number,
+    cachedAt: record.cachedAt,
+    estimatedSize,
   };
 
   try {
-    await db.put(QURAN_STORE_NAME, record, surah.number);
+    const transaction = db.transaction(
+      [QURAN_STORE_NAME, QURAN_METADATA_STORE_NAME],
+      'readwrite'
+    );
+    await transaction.objectStore(QURAN_STORE_NAME).put(record, surah.number);
+    await transaction.objectStore(QURAN_METADATA_STORE_NAME).put(info, surah.number);
+    await transaction.done;
+
     const saved = await db.get(QURAN_STORE_NAME, surah.number);
-    return isValidRecord(saved, surah.number);
+    const savedInfo = await db.get(QURAN_METADATA_STORE_NAME, surah.number);
+    return isValidRecord(saved, surah.number) && isValidInfo(savedInfo, surah.number);
   } catch {
     return false;
   }
@@ -187,7 +241,13 @@ export async function deleteCachedSurah(surahNumber: number): Promise<boolean> {
   const db = await getDatabase();
   if (!db || !Number.isInteger(surahNumber)) return false;
   try {
-    await db.delete(QURAN_STORE_NAME, surahNumber);
+    const transaction = db.transaction(
+      [QURAN_STORE_NAME, QURAN_METADATA_STORE_NAME],
+      'readwrite'
+    );
+    await transaction.objectStore(QURAN_STORE_NAME).delete(surahNumber);
+    await transaction.objectStore(QURAN_METADATA_STORE_NAME).delete(surahNumber);
+    await transaction.done;
     return true;
   } catch {
     return false;
@@ -207,11 +267,89 @@ export async function getCachedSurahNumbers(): Promise<number[]> {
   }
 }
 
+export async function getCachedSurahInfo(surahNumber: number): Promise<CachedSurahInfo | null> {
+  if (!Number.isInteger(surahNumber) || surahNumber < 1 || surahNumber > 114) return null;
+  const db = await getDatabase();
+  if (!db) return null;
+
+  try {
+    const metadata = await db.get(QURAN_METADATA_STORE_NAME, surahNumber);
+    if (isValidInfo(metadata, surahNumber)) return metadata;
+
+    // Records written by schema v1 predate the metadata store. Backfill one
+    // record lazily, without requiring a destructive data migration.
+    const record = await db.get(QURAN_STORE_NAME, surahNumber);
+    if (!isValidRecord(record, surahNumber)) return null;
+
+    const info: CachedSurahInfo = {
+      surahNumber,
+      cachedAt: record.cachedAt,
+      estimatedSize:
+        typeof record.estimatedSize === 'number'
+          ? record.estimatedSize
+          : estimateSurahSize(record.data),
+    };
+    if (!isValidInfo(info, surahNumber)) return null;
+
+    try {
+      await db.put(QURAN_METADATA_STORE_NAME, info, surahNumber);
+    } catch {
+      // Metadata is an optimization; the underlying Surah remains usable.
+    }
+    return info;
+  } catch {
+    return null;
+  }
+}
+
+export async function getAllCachedSurahInfo(): Promise<CachedSurahInfo[]> {
+  const db = await getDatabase();
+  if (!db) return [];
+
+  try {
+    const metadata = (await db.getAll(QURAN_METADATA_STORE_NAME)).filter((item) =>
+      isValidInfo(item)
+    );
+    const byNumber = new Map(metadata.map((item) => [item.surahNumber, item]));
+    const keys = await db.getAllKeys(QURAN_STORE_NAME);
+
+    // Lazily hydrate metadata for records created before schema v2.
+    for (const key of keys) {
+      if (typeof key !== 'number' || !Number.isInteger(key) || byNumber.has(key)) continue;
+      const info = await getCachedSurahInfo(key);
+      if (info) byNumber.set(key, info);
+    }
+
+    return [...byNumber.values()].sort((a, b) => a.surahNumber - b.surahNumber);
+  } catch {
+    return [];
+  }
+}
+
+export async function isSurahCached(surahNumber: number): Promise<boolean> {
+  return (await getCachedSurahInfo(surahNumber)) !== null;
+}
+
+export async function getCachedSurahCount(): Promise<number> {
+  return (await getAllCachedSurahInfo()).length;
+}
+
+export async function getEstimatedQuranCacheSize(): Promise<number> {
+  const infos = await getAllCachedSurahInfo();
+  return infos.reduce((total, info) => total + info.estimatedSize, 0);
+}
+
 export async function clearCachedSurahs(): Promise<boolean> {
   const db = await getDatabase();
   if (!db) return false;
   try {
-    await db.clear(QURAN_STORE_NAME);
+    const transaction = db.transaction(
+      [QURAN_STORE_NAME, QURAN_METADATA_STORE_NAME],
+      'readwrite'
+    );
+    await transaction.objectStore(QURAN_STORE_NAME).clear();
+    await transaction.objectStore(QURAN_METADATA_STORE_NAME).clear();
+    await transaction.done;
     return true;
   } catch {
     return false;

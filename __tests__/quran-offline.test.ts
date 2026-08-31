@@ -3,9 +3,14 @@ import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import {
   clearCachedSurahs,
   deleteCachedSurah,
+  getAllCachedSurahInfo,
+  getCachedSurahCount,
+  getCachedSurahInfo,
   getCachedSurahNumbers,
+  getEstimatedQuranCacheSize,
   saveCachedSurah,
   getCachedSurah,
+  isSurahCached,
   migrateLegacySurahCache,
   getBookmarkedAyahs,
   toggleBookmarkAyah,
@@ -83,6 +88,18 @@ describe('Quran Offline Storage & Bookmark Manager', () => {
     expect(await deleteCachedSurah(1)).toBe(true);
     expect(await getCachedSurah(1)).toBeNull();
     expect(await getCachedSurahNumbers()).toEqual([]);
+    expect(await isSurahCached(1)).toBe(false);
+  });
+
+  it('exposes lightweight metadata, count, and estimated size', async () => {
+    expect(await saveCachedSurah(mockSurah)).toBe(true);
+    const info = await getCachedSurahInfo(1);
+    expect(info?.surahNumber).toBe(1);
+    expect(info?.estimatedSize).toBeGreaterThan(0);
+    expect(await isSurahCached(1)).toBe(true);
+    expect(await getCachedSurahCount()).toBe(1);
+    expect(await getAllCachedSurahInfo()).toHaveLength(1);
+    expect(await getEstimatedQuranCacheSize()).toBe(info?.estimatedSize);
   });
 
   it('clears all IndexedDB records', async () => {

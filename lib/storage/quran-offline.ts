@@ -3,9 +3,15 @@ import { Ayah } from '@/types';
 export {
   clearCachedSurahs,
   deleteCachedSurah,
+  estimateSurahSize,
+  getAllCachedSurahInfo,
+  getCachedSurahCount,
+  getCachedSurahInfo,
   getCachedSurah,
   getCachedSurahNumbers,
+  getEstimatedQuranCacheSize,
   isValidSurahData,
+  isSurahCached,
   migrateLegacySurahCache,
   saveCachedSurah,
 } from './quran-db';
