@@ -1,9 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle2, Download, HardDriveDownload, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, CheckCircle2, Download, HardDriveDownload, Loader2, Trash2, XCircle } from 'lucide-react';
 import { SURAH_LIST } from '@/lib/quran/surah-list';
-import { useQuranOfflineManager } from '@/hooks/useQuranOfflineManager';
+import { useQuranOfflineManager, type OfflineSurahAction } from '@/hooks/useQuranOfflineManager';
+import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
 
 function formatBytes(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes <= 0) return 'Belum tersedia';
@@ -19,8 +22,22 @@ function formatBytes(bytes: number): string {
 }
 
 export function OfflineManager() {
-  const { cachedIds, infoById, cachedCount, estimatedSize, storageEstimate, isLoading } =
-    useQuranOfflineManager();
+  const {
+    cachedIds,
+    infoById,
+    cachedCount,
+    estimatedSize,
+    storageEstimate,
+    isLoading,
+    actionById,
+    errorById,
+    downloadSurah,
+    removeSurah,
+  } = useQuranOfflineManager();
+  const [deleteTarget, setDeleteTarget] = useState<(typeof SURAH_LIST)[number] | null>(null);
+
+  const getAction = (number: number, isCached: boolean): OfflineSurahAction =>
+    actionById[number] || (isCached ? 'available' : 'idle');
 
   return (
     <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
@@ -115,7 +132,7 @@ export function OfflineManager() {
             const info = infoById.get(surah.number);
             return (
               <article
-                key={surah.number}
+            key={surah.number}
                 className="flex items-center justify-between gap-3 rounded-2xl border border-surface-200 bg-white p-3.5 dark:border-surface-800 dark:bg-surface-900"
               >
                 <div className="flex min-w-0 items-center gap-3">
@@ -128,22 +145,96 @@ export function OfflineManager() {
                   </div>
                 </div>
                 <div className="shrink-0 text-right">
-                  {isCached ? (
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 dark:text-emerald-300">
-                      <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                      <span>Tersedia Offline</span>
+                  {getAction(surah.number, isCached) === 'available' && (
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                        <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                        <span>Tersedia Offline</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteTarget(surah)}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-red-600 hover:text-red-700 dark:text-red-400"
+                        aria-label={`Hapus ${surah.name} dari penyimpanan offline`}
+                      >
+                        <Trash2 className="h-3 w-3" aria-hidden="true" /> Hapus
+                      </button>
+                    </div>
+                  )}
+                  {getAction(surah.number, isCached) === 'idle' && (
+                    <button
+                      type="button"
+                      onClick={() => void downloadSurah(surah.number)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-primary-300 px-2.5 py-1.5 text-xs font-bold text-primary-700 transition hover:bg-primary-50 dark:border-primary-800 dark:text-primary-300 dark:hover:bg-primary-950/50"
+                      aria-label={`Download ${surah.name} untuk offline`}
+                    >
+                      <Download className="h-3.5 w-3.5" aria-hidden="true" /> Download
+                    </button>
+                  )}
+                  {getAction(surah.number, isCached) === 'downloading' && (
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary-700 dark:text-primary-300" role="status">
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Mengunduh...
                     </span>
-                  ) : (
-                    <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">Belum tersimpan</span>
+                  )}
+                  {getAction(surah.number, isCached) === 'deleting' && (
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500" role="status">
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Menghapus...
+                    </span>
+                  )}
+                  {getAction(surah.number, isCached) === 'failed' && (
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-red-600 dark:text-red-400" role="status">
+                        <XCircle className="h-4 w-4" aria-hidden="true" /> Gagal mengunduh
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => void downloadSurah(surah.number)}
+                        className="text-[11px] font-bold text-primary-700 hover:underline dark:text-primary-300"
+                        aria-label={`Coba lagi download ${surah.name}`}
+                      >
+                        Coba Lagi
+                      </button>
+                    </div>
                   )}
                   {info && <p className="mt-0.5 text-[10px] text-slate-400">{formatBytes(info.estimatedSize)}</p>}
+                  {errorById[surah.number] && getAction(surah.number, isCached) === 'failed' && (
+                    <p className="mt-0.5 max-w-[150px] text-[10px] text-red-500">{errorById[surah.number]}</p>
+                  )}
                 </div>
               </article>
             );
           })}
         </div>
       </section>
+
+      <Modal
+        isOpen={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        title={deleteTarget ? `Hapus ${deleteTarget.name}?` : 'Hapus Surah?'}
+        maxWidth="sm"
+      >
+        <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+          Surah ini tidak lagi tersedia ketika perangkat offline. Bookmark, favorit, terakhir dibaca,
+          dan pengaturan Quran tidak akan dihapus.
+        </p>
+        <div className="mt-6 flex justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={() => setDeleteTarget(null)}>
+            Batal
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            isLoading={deleteTarget ? actionById[deleteTarget.number] === 'deleting' : false}
+            onClick={async () => {
+              if (!deleteTarget) return;
+              const removed = await removeSurah(deleteTarget.number);
+              if (removed) setDeleteTarget(null);
+            }}
+          >
+            Hapus
+          </Button>
+        </div>
+      </Modal>
     </main>
   );
 }
-
