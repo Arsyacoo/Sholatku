@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { normalizeArabicText, normalizeSearchText } from '@/lib/quran/search/normalize';
 import { parseAyahReference } from '@/lib/quran/search/parser';
 import { searchQuran } from '@/lib/quran/search/search';
+import { SURAH_LIST } from '@/lib/quran/surah-list';
 import type { QuranSearchRecord } from '@/lib/quran/search/types';
 
 const records: QuranSearchRecord[] = [
@@ -100,5 +101,22 @@ describe('Quran search engine', () => {
     expect(page.results).toHaveLength(1);
     expect(page.hasMore).toBe(true);
     expect(page.coverage).toMatchObject({ indexedSurahs: 2, totalSurahs: 114, isComplete: false });
+  });
+
+  it('finds Surah metadata with zero cached Ayah records', () => {
+    const result = searchQuran([], 'imran', { surahs: SURAH_LIST });
+    expect(result.surahs[0]).toMatchObject({
+      surahNumber: 3,
+      surahName: "Ali 'Imran",
+      numberOfAyahs: 200,
+      readerAvailableOffline: false,
+    });
+    expect(result.results).toHaveLength(1);
+    expect(result.coverage.indexedSurahs).toBe(0);
+  });
+
+  it('searches Arabic Surah metadata without cached Reader data', () => {
+    const result = searchQuran([], 'البقرة', { surahs: SURAH_LIST });
+    expect(result.surahs[0]).toMatchObject({ surahNumber: 2, surahName: 'Al-Baqarah' });
   });
 });

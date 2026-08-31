@@ -1,5 +1,6 @@
 import { normalizeArabicText, normalizeSearchText } from './normalize';
 import { looksLikeAyahReference, parseAyahReference } from './parser';
+import { createSurahSearchResult, searchSurahMetadata } from './surah-search';
 import type {
   AyahSearchResult,
   QuranSearchCoverage,
@@ -8,11 +9,14 @@ import type {
   QuranSearchResult,
   SurahSearchResult,
 } from './types';
+import type { SurahInfo } from '@/types';
 
 export interface QuranSearchOptions {
   limit?: number;
   offset?: number;
   coverage?: QuranSearchCoverage;
+  surahs?: readonly SurahInfo[];
+  cachedSurahNumbers?: Iterable<number>;
 }
 
 const DEFAULT_LIMIT = 20;
@@ -36,18 +40,7 @@ function createAyahResult(record: QuranSearchRecord, matchType: AyahSearchResult
     translation: record.translation,
     matchType,
     score,
-  };
-}
-
-function createSurahResult(record: QuranSearchRecord, score: number): SurahSearchResult {
-  return {
-    kind: 'surah',
-    id: `surah:${record.surahNumber}`,
-    surahNumber: record.surahNumber,
-    surahName: record.surahName,
-    surahNameArabic: record.surahNameArabic,
-    matchType: 'surah',
-    score,
+    readerAvailableOffline: false,
   };
 }
 
@@ -64,6 +57,47 @@ function setBestCandidate(
   if (!current || result.score > current.score) candidates.set(key, result);
 }
 
+function withReaderAvailability(
+  result: AyahSearchResult,
+  cachedSurahNumbers?: Iterable<number>
+): AyahSearchResult {
+  return {
+    ...result,
+    readerAvailableOffline: cachedSurahNumbers
+      ? new Set(cachedSurahNumbers).has(result.surahNumber)
+      : false,
+  };
+}
+
+function getMetadataSurahs(records: QuranSearchRecord[], surahs?: readonly SurahInfo[]): readonly SurahInfo[] {
+  if (surahs?.length) return surahs;
+  const byNumber = new Map<number, SurahInfo>();
+  for (const record of records) {
+    if (byNumber.has(record.surahNumber)) continue;
+    byNumber.set(record.surahNumber, {
+      number: record.surahNumber,
+      name: record.surahName,
+      arabicName: record.surahNameArabic ?? '',
+      translation: '',
+      numberOfAyahs: record.ayahNumber,
+      revelation: 'Makkiyah',
+    });
+  }
+  return [...byNumber.values()];
+}
+
+function emptyResponse(coverage: QuranSearchCoverage, emptyReason: QuranSearchResponse['emptyReason']): QuranSearchResponse {
+  return {
+    results: [],
+    surahs: [],
+    ayahs: [],
+    hasMore: false,
+    totalMatches: 0,
+    coverage,
+    emptyReason,
+  };
+}
+
 /** Searches only the compact local index; no network request is made here. */
 export function searchQuran(
   records: QuranSearchRecord[],
@@ -76,57 +110,82 @@ export function searchQuran(
   const offset = Math.max(0, Math.floor(options.offset ?? 0));
 
   if (!trimmedQuery) {
-    return { results: [], hasMore: false, totalMatches: 0, coverage, emptyReason: 'empty' };
+    return emptyResponse(coverage, 'empty');
   }
   if (!looksLikeAyahReference(trimmedQuery) && normalizeSearchText(trimmedQuery).length < 2) {
-    return { results: [], hasMore: false, totalMatches: 0, coverage, emptyReason: 'too-short' };
+    return emptyResponse(coverage, 'too-short');
   }
+
+  const cachedSurahNumbers = options.cachedSurahNumbers ? new Set(options.cachedSurahNumbers) : undefined;
+  const metadata = getMetadataSurahs(records, options.surahs);
+  const surahResults = searchSurahMetadata(metadata, trimmedQuery, { cachedSurahNumbers });
 
   if (looksLikeAyahReference(trimmedQuery)) {
     const reference = parseAyahReference(trimmedQuery);
     if (!reference) {
-      return { results: [], hasMore: false, totalMatches: 0, coverage, emptyReason: 'invalid-reference' };
+      return emptyResponse(coverage, 'invalid-reference');
     }
     const record = records.find(
       (item) => item.surahNumber === reference.surahNumber && item.ayahNumber === reference.ayahNumber
     );
-    const results = record ? [createAyahResult(record, 'reference', 1000)] : [];
-    return { results, hasMore: false, totalMatches: results.length, coverage };
+    const metadataSurah = metadata.find((surah) => surah.number === reference.surahNumber);
+    const result = record
+      ? withReaderAvailability(createAyahResult(record, 'reference', 1000), cachedSurahNumbers)
+      : metadataSurah
+        ? {
+            kind: 'ayah' as const,
+            id: `${reference.surahNumber}:${reference.ayahNumber}`,
+            surahNumber: metadataSurah.number,
+            surahName: metadataSurah.name,
+            surahNameArabic: metadataSurah.arabicName,
+            ayahNumber: reference.ayahNumber,
+            arabic: '',
+            translation: '',
+            matchType: 'reference' as const,
+            score: 1000,
+            readerAvailableOffline: cachedSurahNumbers?.has(metadataSurah.number) ?? false,
+          }
+        : null;
+    const ayahs = result ? [result] : [];
+    return {
+      results: ayahs,
+      surahs: [],
+      ayahs,
+      directReference: result ?? undefined,
+      hasMore: false,
+      totalMatches: ayahs.length,
+      coverage,
+    };
   }
 
   const normalizedQuery = normalizeSearchText(trimmedQuery);
   const normalizedArabicQuery = normalizeArabicText(trimmedQuery);
   const candidates = new Map<string, QuranSearchResult>();
 
-  for (const record of records) {
-    const surahName = normalizeSearchText(record.surahName);
-    const surahNameArabic = normalizeArabicText(record.surahNameArabic ?? '');
-    if (surahName === normalizedQuery) {
-      candidates.set(`surah:${record.surahNumber}`, createSurahResult(record, 900));
-    } else if (surahName.startsWith(normalizedQuery)) {
-      const key = `surah:${record.surahNumber}`;
-      if (!candidates.has(key)) candidates.set(key, createSurahResult(record, 800));
-    } else if (surahName.includes(normalizedQuery) || (surahNameArabic && surahNameArabic.includes(normalizedArabicQuery))) {
-      const key = `surah:${record.surahNumber}`;
-      if (!candidates.has(key)) candidates.set(key, createSurahResult(record, 700));
-    }
+  for (const result of surahResults) candidates.set(result.id, result);
 
+  for (const record of records) {
     if (record.translationNormalized === normalizedQuery) {
-      setBestCandidate(candidates, record.id, createAyahResult(record, 'translation', 650));
+      setBestCandidate(candidates, record.id, withReaderAvailability(createAyahResult(record, 'translation', 650), cachedSurahNumbers));
     } else if (record.translationNormalized.includes(normalizedQuery)) {
-      setBestCandidate(candidates, record.id, createAyahResult(record, 'translation', 500));
+      setBestCandidate(candidates, record.id, withReaderAvailability(createAyahResult(record, 'translation', 500), cachedSurahNumbers));
     }
 
     if (record.arabicNormalized === normalizedArabicQuery) {
-      setBestCandidate(candidates, record.id, createAyahResult(record, 'arabic', 640));
+      setBestCandidate(candidates, record.id, withReaderAvailability(createAyahResult(record, 'arabic', 640), cachedSurahNumbers));
     } else if (normalizedArabicQuery && record.arabicNormalized.includes(normalizedArabicQuery)) {
-      setBestCandidate(candidates, record.id, createAyahResult(record, 'arabic', 540));
+      setBestCandidate(candidates, record.id, withReaderAvailability(createAyahResult(record, 'arabic', 540), cachedSurahNumbers));
     }
   }
 
   const ranked = [...candidates.values()].sort(compareResults);
+  const results = ranked.slice(offset, offset + limit);
+  const surahs = results.filter((result): result is SurahSearchResult => result.kind === 'surah');
+  const ayahs = results.filter((result): result is AyahSearchResult => result.kind === 'ayah');
   return {
-    results: ranked.slice(offset, offset + limit),
+    results,
+    surahs,
+    ayahs,
     hasMore: offset + limit < ranked.length,
     totalMatches: ranked.length,
     coverage,

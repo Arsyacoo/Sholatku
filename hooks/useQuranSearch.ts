@@ -5,14 +5,17 @@ import {
   getAllQuranSearchRecords,
   ensureQuranSearchIndex,
   getQuranSearchCoverage,
+  getCachedSurahNumbers,
 } from '@/lib/storage/quran-db';
 import { searchQuran } from '@/lib/quran/search/search';
 import type { QuranSearchCoverage, QuranSearchResponse, QuranSearchRecord } from '@/lib/quran/search/types';
+import { SURAH_LIST } from '@/lib/quran/surah-list';
 
 const PAGE_SIZE = 20;
 
 export function useQuranSearch(query: string) {
   const [records, setRecords] = useState<QuranSearchRecord[]>([]);
+  const [cachedSurahNumbers, setCachedSurahNumbers] = useState<number[]>([]);
   const [coverage, setCoverage] = useState<QuranSearchCoverage>({
     indexedSurahs: 0,
     totalSurahs: 114,
@@ -30,9 +33,11 @@ export function useQuranSearch(query: string) {
       await ensureQuranSearchIndex();
       const nextRecords = await getAllQuranSearchRecords();
       const nextCoverage = await getQuranSearchCoverage();
+      const nextCachedSurahNumbers = await getCachedSurahNumbers();
 
       setRecords(nextRecords);
       setCoverage(nextCoverage);
+      setCachedSurahNumbers(nextCachedSurahNumbers);
     } finally {
       setIsLoading(false);
     }
@@ -52,8 +57,14 @@ export function useQuranSearch(query: string) {
   }, [refresh]);
 
   const response: QuranSearchResponse = useMemo(
-    () => searchQuran(records, debouncedQuery, { limit: resultLimit, coverage }),
-    [coverage, debouncedQuery, records, resultLimit]
+    () =>
+      searchQuran(records, debouncedQuery, {
+        limit: resultLimit,
+        coverage,
+        surahs: SURAH_LIST,
+        cachedSurahNumbers,
+      }),
+    [cachedSurahNumbers, coverage, debouncedQuery, records, resultLimit]
   );
 
   const loadMore = useCallback(() => {

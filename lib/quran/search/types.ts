@@ -1,4 +1,7 @@
+import type { SurahInfo } from '@/types';
+
 export const QURAN_SEARCH_INDEX_SCHEMA_VERSION = 1;
+export const QURAN_SEARCH_CORPUS_SCHEMA_VERSION = 1;
 
 export interface QuranSearchRecord {
   id: string;
@@ -20,6 +23,12 @@ export interface QuranSearchCoverage {
   isComplete: boolean;
 }
 
+export interface QuranSearchCorpusMetadata extends QuranSearchCoverage {
+  schemaVersion: number;
+  cachedAt: number;
+  totalRecords: number;
+}
+
 export type QuranSearchMatchType = 'reference' | 'surah' | 'translation' | 'arabic';
 
 export interface QuranSearchResultBase {
@@ -29,10 +38,14 @@ export interface QuranSearchResultBase {
   surahNameArabic?: string;
   matchType: QuranSearchMatchType;
   score: number;
+  readerAvailableOffline: boolean;
 }
 
 export interface SurahSearchResult extends QuranSearchResultBase {
   kind: 'surah';
+  translation: string;
+  numberOfAyahs: number;
+  revelation: SurahInfo['revelation'];
 }
 
 export interface AyahSearchResult extends QuranSearchResultBase {
@@ -48,6 +61,9 @@ export type QuranSearchEmptyReason = 'empty' | 'too-short' | 'invalid-reference'
 
 export interface QuranSearchResponse {
   results: QuranSearchResult[];
+  surahs: SurahSearchResult[];
+  ayahs: AyahSearchResult[];
+  directReference?: AyahSearchResult;
   hasMore: boolean;
   totalMatches: number;
   coverage: QuranSearchCoverage;
