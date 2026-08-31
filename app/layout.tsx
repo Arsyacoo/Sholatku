@@ -20,6 +20,11 @@ export const metadata: Metadata = {
     icon: '/icon.svg',
     apple: '/icon-192.png',
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Sholatku',
+  },
 };
 
 export const viewport: Viewport = {

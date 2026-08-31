@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Sholatku — Jadwal Sholat & Kiblat',
+    name: 'Sholatku',
     short_name: 'Sholatku',
     description: 'Jadwal waktu sholat harian, hitung mundur adzan, dan kompas kiblat akurat.',
     id: '/',
