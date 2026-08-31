@@ -65,5 +65,7 @@ npm run build
 
 Service worker `public/sw.js` dibuat otomatis oleh build produksi dan sengaja tidak disimpan di Git. Untuk detail strategi cache, skema IndexedDB, migrasi cache lama, serta checklist verifikasi offline, lihat [`docs/PWA_OFFLINE_ARCHITECTURE.md`](docs/PWA_OFFLINE_ARCHITECTURE.md).
 
+Untuk prinsip produk dan batas pengalaman Sholatku, lihat [Product Documentation](docs/PRODUCT.md).
+
 ## 📄 Lisensi
 MIT License &copy; 2026 Sholatku

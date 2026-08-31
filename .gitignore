@@ -31,6 +31,23 @@ yarn-error.log*
 # vercel
 .vercel
 
+# --------------------------------------------------
+# Local project workspace
+# --------------------------------------------------
+.local/
+
+# --------------------------------------------------
+# Temporary planning / sprint artifacts at repository root
+# --------------------------------------------------
+/*sprint*.md
+/*SPRINT*.md
+/*implementation-plan*.md
+/*implementation-report*.md
+/*IMPLEMENTATION_PLAN*.md
+/*IMPLEMENTATION_REPORT*.md
+/*agent-notes*.md
+/*development-notes*.md
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
