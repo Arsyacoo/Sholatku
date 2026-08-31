@@ -24,6 +24,7 @@ import {
 import {
   saveCachedSurah,
   getCachedSurah,
+  isCompleteSurahData,
   migrateLegacySurahCache,
   toggleBookmarkAyah,
   getBookmarkedAyahs,
@@ -88,7 +89,8 @@ export default function SurahDetailPage({ params }: PageProps) {
       await migrateLegacySurahCache(surahId);
       if (!active) return;
 
-      const cached = await getCachedSurah(surahId);
+      const cachedCandidate = await getCachedSurah(surahId);
+      const cached = cachedCandidate && isCompleteSurahData(cachedCandidate) ? cachedCandidate : null;
       if (!active) return;
 
       if (cached) {

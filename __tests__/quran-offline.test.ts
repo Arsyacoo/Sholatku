@@ -8,6 +8,7 @@ import {
   getCachedSurahCount,
   getCachedSurahInfo,
   getCachedSurahNumbers,
+  getCompleteCachedSurahNumbers,
   getEstimatedQuranCacheSize,
   saveCachedSurah,
   getCachedSurah,
@@ -17,6 +18,9 @@ import {
   toggleBookmarkAyah,
   SavedAyah,
   getAllQuranSearchRecords,
+  getGlobalQuranSearchCorpus,
+  saveGlobalQuranSearchCorpus,
+  clearGlobalQuranSearchCorpus,
   ensureQuranSearchIndex,
   getQuranSearchCoverage,
   rebuildQuranSearchIndex,
@@ -31,6 +35,7 @@ import {
   toggleFavoriteSurah,
 } from '@/lib/storage/quran-preferences';
 import { SurahDetail } from '@/types';
+import { createQuranSearchRecords } from '@/lib/quran/search/index-record';
 
 // Mock localStorage in Node environment
 const mockStorage: Record<string, string> = {};
@@ -82,6 +87,7 @@ describe('Quran Offline Storage & Bookmark Manager', () => {
 
   beforeEach(async () => {
     await clearCachedSurahs();
+    await clearGlobalQuranSearchCorpus();
   });
 
   it('saves and retrieves cached surah for offline mode', async () => {
@@ -114,6 +120,7 @@ describe('Quran Offline Storage & Bookmark Manager', () => {
     expect(await getCachedSurahCount()).toBe(1);
     expect(await getAllCachedSurahInfo()).toHaveLength(1);
     expect(await getEstimatedQuranCacheSize()).toBe(info?.estimatedSize);
+    expect(await getCompleteCachedSurahNumbers()).toEqual([]);
   });
 
   it('creates compact derived search records and replaces them on update', async () => {
@@ -137,6 +144,25 @@ describe('Quran Offline Storage & Bookmark Manager', () => {
     const updatedRecords = await getAllQuranSearchRecords();
     expect(updatedRecords).toHaveLength(1);
     expect(updatedRecords[0].translation).toBe('Terjemahan diperbarui.');
+  });
+
+  it('keeps the independent global corpus when Reader downloads are cleared', async () => {
+    const records = createQuranSearchRecords(mockSurah, 1);
+    expect(
+      await saveGlobalQuranSearchCorpus(records, {
+        schemaVersion: 1,
+        cachedAt: 1,
+        indexedSurahs: 1,
+        totalSurahs: 114,
+        isComplete: false,
+        totalRecords: records.length,
+      })
+    ).toBe(true);
+
+    expect(await clearCachedSurahs()).toBe(true);
+    const corpus = await getGlobalQuranSearchCorpus();
+    expect(corpus.records).toHaveLength(records.length);
+    expect(corpus.metadata?.indexedSurahs).toBe(1);
   });
 
   it('removes search records with a Surah and clears the derived index with Quran data', async () => {

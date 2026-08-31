@@ -119,4 +119,25 @@ describe('Quran search engine', () => {
     const result = searchQuran([], 'البقرة', { surahs: SURAH_LIST });
     expect(result.surahs[0]).toMatchObject({ surahNumber: 2, surahName: 'Al-Baqarah' });
   });
+
+  it('searches a complete global corpus independently from Reader cache coverage', () => {
+    const result = searchQuran(records, 'sabar', {
+      surahs: SURAH_LIST,
+      coverage: { indexedSurahs: 114, totalSurahs: 114, isComplete: true },
+    });
+    expect(result.ayahs).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: '2:153', matchType: 'translation' })])
+    );
+    expect(result.coverage.isComplete).toBe(true);
+  });
+
+  it('returns a direct reference even before the target Reader Surah is cached', () => {
+    const result = searchQuran([], '2:255', { surahs: SURAH_LIST });
+    expect(result.directReference).toMatchObject({
+      id: '2:255',
+      surahNumber: 2,
+      ayahNumber: 255,
+      readerAvailableOffline: false,
+    });
+  });
 });

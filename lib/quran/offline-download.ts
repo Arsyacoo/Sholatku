@@ -1,7 +1,7 @@
 import type { SurahDetail } from '@/types';
 import {
   getCachedSurah,
-  isValidSurahData,
+  isCompleteSurahData,
   saveCachedSurah,
 } from '@/lib/storage/quran-db';
 
@@ -31,7 +31,7 @@ export async function downloadSurahText(
   }
 
   const existing = await getCachedSurah(surahNumber);
-  if (existing) return existing;
+  if (existing && isCompleteSurahData(existing)) return existing;
 
   let response: Response;
   try {
@@ -56,7 +56,7 @@ export async function downloadSurahText(
     payload && typeof payload === 'object' && 'data' in payload
       ? (payload as { data?: unknown }).data
       : undefined;
-  if (!isValidSurahData(data) || data.number !== surahNumber) {
+  if (!isCompleteSurahData(data) || data.number !== surahNumber) {
     throw new QuranDownloadError('invalid-data', 'Data Surah tidak lengkap.');
   }
 
@@ -66,4 +66,3 @@ export async function downloadSurahText(
 
   return data;
 }
-

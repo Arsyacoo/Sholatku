@@ -111,6 +111,10 @@ export function isValidSurahData(value: unknown): value is SurahDetail {
   });
 }
 
+export function isCompleteSurahData(value: unknown): value is SurahDetail {
+  return isValidSurahData(value) && value.ayahs.length === value.numberOfAyahs;
+}
+
 function isValidRecord(value: unknown, surahNumber?: number): value is CachedSurahRecord {
   if (!isObject(value)) return false;
   return (
@@ -559,6 +563,23 @@ export async function saveGlobalQuranSearchCorpus(
 
     const saved = await getGlobalQuranSearchCorpus();
     return saved.metadata?.cachedAt === metadata.cachedAt && saved.records.length === validRecords.length;
+  } catch {
+    return false;
+  }
+}
+
+export async function clearGlobalQuranSearchCorpus(): Promise<boolean> {
+  const db = await getDatabase();
+  if (!db) return false;
+  try {
+    const transaction = db.transaction(
+      [QURAN_GLOBAL_CORPUS_STORE_NAME, QURAN_GLOBAL_CORPUS_METADATA_STORE_NAME],
+      'readwrite'
+    );
+    await transaction.objectStore(QURAN_GLOBAL_CORPUS_STORE_NAME).clear();
+    await transaction.objectStore(QURAN_GLOBAL_CORPUS_METADATA_STORE_NAME).clear();
+    await transaction.done;
+    return true;
   } catch {
     return false;
   }

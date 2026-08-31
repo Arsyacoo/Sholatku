@@ -122,15 +122,21 @@ function SearchResultItem({
 function coverageMessage(
   isOnline: boolean,
   coverage: QuranSearchResponse['coverage'],
-  corpusStatus: QuranSearchResultsProps['corpusStatus']
+  corpusStatus: QuranSearchResultsProps['corpusStatus'],
+  hasSurahs: boolean,
+  hasAyahs: boolean
 ): string | null {
   if (isOnline) {
     if (corpusStatus === 'loading') return 'Menyiapkan pencarian Al-Quran...';
     if (corpusStatus === 'error') return 'Pencarian seluruh ayat belum dapat dimuat.';
+    if (corpusStatus === 'idle' && !hasSurahs && !hasAyahs && coverage.indexedSurahs === 0) {
+      return 'Menyiapkan pencarian Al-Quran...';
+    }
     if (coverage.isComplete) return null;
     if (coverage.indexedSurahs > 0) return `Pencarian ayat saat ini mencakup ${coverage.indexedSurahs} Surah.`;
     return null;
   }
+  if (hasSurahs && !hasAyahs) return 'Pencarian surat mencakup seluruh 114 Surah.';
   if (coverage.isComplete) return 'Seluruh Al-Quran tersedia untuk pencarian offline.';
   if (coverage.indexedSurahs > 0) return `Offline — pencarian ayat mencakup ${coverage.indexedSurahs} Surah tersimpan.`;
   return 'Pencarian ayat offline belum tersedia.';
@@ -149,11 +155,12 @@ export function QuranSearchResults({
   const { coverage } = response;
   if (!query.trim()) return null;
 
-  const message = coverageMessage(isOnline, coverage, corpusStatus);
   const hasSurahs = response.surahs.length > 0;
   const hasAyahs = response.ayahs.length > 0;
+  const message = coverageMessage(isOnline, coverage, corpusStatus, hasSurahs, hasAyahs);
   const showCorpusError = corpusStatus === 'error' && !hasAyahs && !hasSurahs;
   const showOfflineUnavailable = !isOnline && !hasAyahs && !hasSurahs && coverage.indexedSurahs === 0;
+  const showCorpusPreparing = isOnline && !hasAyahs && !hasSurahs && coverage.indexedSurahs === 0 && corpusStatus !== 'error';
 
   return (
     <section className="space-y-3" aria-live="polite" aria-labelledby="quran-search-results-heading">
@@ -189,7 +196,11 @@ export function QuranSearchResults({
           <XCircle className="mx-auto h-7 w-7 text-slate-400" aria-hidden="true" />
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Pencarian ayat offline belum tersedia.</p>
         </div>
-      ) : !hasSurahs && !hasAyahs && corpusStatus !== 'loading' ? (
+      ) : showCorpusPreparing ? (
+        <div className="rounded-2xl border border-primary-200 bg-primary-50/60 p-6 text-center text-sm text-primary-800 dark:border-primary-900 dark:bg-primary-950/30 dark:text-primary-200">
+          Menyiapkan pencarian Al-Quran...
+        </div>
+      ) : !hasSurahs && !hasAyahs ? (
         <div className="rounded-2xl border border-surface-200 bg-white p-6 text-center dark:border-surface-800 dark:bg-surface-900">
           <XCircle className="mx-auto h-7 w-7 text-slate-400" aria-hidden="true" />
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
