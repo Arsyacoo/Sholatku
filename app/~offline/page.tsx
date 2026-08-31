@@ -16,8 +16,8 @@ export default function OfflinePage() {
             Koneksi internet sedang tidak tersedia
           </h1>
           <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-            Surat Al-Qur&apos;an yang pernah dibuka tetap dapat dibaca dari perangkat ini.
-            Coba kembali saat koneksi sudah pulih untuk memuat halaman terbaru.
+            Beberapa fitur tetap tersedia menggunakan data yang tersimpan di perangkat.
+            Surat Al-Qur&apos;an yang pernah dibuka tetap dapat dibaca secara offline.
           </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">

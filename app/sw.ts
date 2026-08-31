@@ -19,6 +19,7 @@ declare global {
 declare const self: ServiceWorkerGlobalScope;
 
 const cacheableResponses = new CacheableResponsePlugin({ statuses: [200] });
+const CACHE_VERSION = 'v1';
 let serwist: Serwist;
 
 const navigationFallback: SerwistPlugin = {
@@ -35,26 +36,39 @@ serwist = new Serwist({
   runtimeCaching: [
     {
       matcher: ({ request, sameOrigin }) =>
-        sameOrigin && (request.mode === 'navigate' || request.destination === 'document'),
+        sameOrigin &&
+        request.method === 'GET' &&
+        (request.mode === 'navigate' || request.destination === 'document'),
       handler: new NetworkFirst({
-        cacheName: 'sholatku-pages',
+        cacheName: `sholatku-pages-${CACHE_VERSION}`,
         networkTimeoutSeconds: 4,
         plugins: [
           cacheableResponses,
-          new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 }),
+          new ExpirationPlugin({
+            maxEntries: 20,
+            maxAgeSeconds: 60 * 60 * 24,
+            purgeOnQuotaError: true,
+          }),
           navigationFallback,
         ],
       }),
     },
     {
       matcher: ({ request, sameOrigin, url }) =>
-        sameOrigin && request.method === 'GET' && url.pathname.startsWith('/api/'),
+        sameOrigin &&
+        request.method === 'GET' &&
+        (url.pathname.startsWith('/api/prayer-times') ||
+          url.pathname.startsWith('/api/quran/surah')),
       handler: new NetworkFirst({
-        cacheName: 'sholatku-api',
+        cacheName: `sholatku-api-${CACHE_VERSION}`,
         networkTimeoutSeconds: 5,
         plugins: [
           cacheableResponses,
-          new ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 60 * 60 * 24 }),
+          new ExpirationPlugin({
+            maxEntries: 32,
+            maxAgeSeconds: 60 * 60 * 24,
+            purgeOnQuotaError: true,
+          }),
         ],
       }),
     },
@@ -63,12 +77,17 @@ serwist = new Serwist({
         sameOrigin &&
         request.method === 'GET' &&
         (url.pathname.startsWith('/_next/static/') ||
-          url.pathname.startsWith('/_next/image')),
+          url.pathname.startsWith('/_next/image') ||
+          request.destination === 'image'),
       handler: new CacheFirst({
-        cacheName: 'sholatku-static',
+        cacheName: `sholatku-static-${CACHE_VERSION}`,
         plugins: [
           cacheableResponses,
-          new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 }),
+          new ExpirationPlugin({
+            maxEntries: 100,
+            maxAgeSeconds: 60 * 60 * 24 * 30,
+            purgeOnQuotaError: true,
+          }),
         ],
       }),
     },
@@ -78,10 +97,14 @@ serwist = new Serwist({
         request.method === 'GET' &&
         (request.destination === 'style' || request.destination === 'font'),
       handler: new StaleWhileRevalidate({
-        cacheName: 'sholatku-styles',
+        cacheName: `sholatku-styles-${CACHE_VERSION}`,
         plugins: [
           cacheableResponses,
-          new ExpirationPlugin({ maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 30 }),
+          new ExpirationPlugin({
+            maxEntries: 30,
+            maxAgeSeconds: 60 * 60 * 24 * 30,
+            purgeOnQuotaError: true,
+          }),
         ],
       }),
     },
@@ -91,10 +114,14 @@ serwist = new Serwist({
         request.destination === 'font' &&
         new URL(request.url).origin === 'https://fonts.gstatic.com',
       handler: new CacheFirst({
-        cacheName: 'sholatku-fonts',
+        cacheName: `sholatku-fonts-${CACHE_VERSION}`,
         plugins: [
           cacheableResponses,
-          new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 30 }),
+          new ExpirationPlugin({
+            maxEntries: 20,
+            maxAgeSeconds: 60 * 60 * 24 * 30,
+            purgeOnQuotaError: true,
+          }),
         ],
       }),
     },
