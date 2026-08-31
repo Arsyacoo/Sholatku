@@ -14,6 +14,9 @@ export {
   isSurahCached,
   migrateLegacySurahCache,
   saveCachedSurah,
+  getAllQuranSearchRecords,
+  getQuranSearchCoverage,
+  rebuildQuranSearchIndex,
 } from './quran-db';
 
 export interface SavedAyah {

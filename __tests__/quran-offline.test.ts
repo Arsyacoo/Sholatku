@@ -1,5 +1,6 @@
 import 'fake-indexeddb/auto';
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
+import { openDB } from 'idb';
 import {
   clearCachedSurahs,
   deleteCachedSurah,
@@ -15,7 +16,11 @@ import {
   getBookmarkedAyahs,
   toggleBookmarkAyah,
   SavedAyah,
+  getAllQuranSearchRecords,
+  getQuranSearchCoverage,
+  rebuildQuranSearchIndex,
 } from '@/lib/storage/quran-offline';
+import { QURAN_DB_NAME, QURAN_DB_VERSION, QURAN_SEARCH_STORE_NAME } from '@/lib/storage/quran-db';
 import {
   getFavoriteSurahs,
   getLastRead,
@@ -108,6 +113,53 @@ describe('Quran Offline Storage & Bookmark Manager', () => {
     expect(await getCachedSurahCount()).toBe(1);
     expect(await getAllCachedSurahInfo()).toHaveLength(1);
     expect(await getEstimatedQuranCacheSize()).toBe(info?.estimatedSize);
+  });
+
+  it('creates compact derived search records and replaces them on update', async () => {
+    expect(await saveCachedSurah(mockSurah)).toBe(true);
+    const firstRecords = await getAllQuranSearchRecords();
+    expect(firstRecords).toHaveLength(1);
+    expect(firstRecords[0]).toMatchObject({
+      id: '1:1',
+      surahNumber: 1,
+      ayahNumber: 1,
+      surahName: 'Al-Fatihah',
+      translation: mockSurah.ayahs[0].translation,
+      schemaVersion: 1,
+    });
+    expect(firstRecords[0]).not.toHaveProperty('audio');
+
+    await saveCachedSurah({
+      ...mockSurah,
+      ayahs: [{ ...mockSurah.ayahs[0], translation: 'Terjemahan diperbarui.' }],
+    });
+    const updatedRecords = await getAllQuranSearchRecords();
+    expect(updatedRecords).toHaveLength(1);
+    expect(updatedRecords[0].translation).toBe('Terjemahan diperbarui.');
+  });
+
+  it('removes search records with a Surah and clears the derived index with Quran data', async () => {
+    expect(await saveCachedSurah(mockSurah)).toBe(true);
+    expect((await getQuranSearchCoverage()).indexedSurahs).toBe(1);
+    expect(await deleteCachedSurah(1)).toBe(true);
+    expect(await getAllQuranSearchRecords()).toEqual([]);
+
+    expect(await saveCachedSurah(mockSurah)).toBe(true);
+    expect(await clearCachedSurahs()).toBe(true);
+    expect(await getAllQuranSearchRecords()).toEqual([]);
+    expect((await getQuranSearchCoverage()).indexedSurahs).toBe(0);
+  });
+
+  it('rebuilds the derived index from cached Surah data without re-downloading', async () => {
+    expect(await saveCachedSurah(mockSurah)).toBe(true);
+    const db = await openDB(QURAN_DB_NAME, QURAN_DB_VERSION);
+    await db.clear(QURAN_SEARCH_STORE_NAME);
+    db.close();
+
+    expect(await getAllQuranSearchRecords()).toEqual([]);
+    expect(await rebuildQuranSearchIndex()).toBe(true);
+    expect(await getAllQuranSearchRecords()).toHaveLength(1);
+    expect(await getCachedSurah(1)).not.toBeNull();
   });
 
   it('clears all IndexedDB records', async () => {

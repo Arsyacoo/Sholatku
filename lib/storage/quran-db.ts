@@ -1,11 +1,18 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { SurahDetail } from '@/types';
+import { createQuranSearchRecords } from '@/lib/quran/search/index-record';
+import {
+  QURAN_SEARCH_INDEX_SCHEMA_VERSION,
+  type QuranSearchCoverage,
+  type QuranSearchRecord,
+} from '@/lib/quran/search/types';
 
 export const QURAN_DB_NAME = 'sholatku';
-export const QURAN_DB_VERSION = 2;
+export const QURAN_DB_VERSION = 3;
 export const QURAN_DATA_SCHEMA_VERSION = 1;
 export const QURAN_STORE_NAME = 'surahs';
 export const QURAN_METADATA_STORE_NAME = 'surahMetadata';
+export const QURAN_SEARCH_STORE_NAME = 'searchIndex';
 export const LEGACY_SURAH_CACHE_PREFIX = 'sholatku_cached_surah_';
 
 export interface CachedSurahRecord {
@@ -30,6 +37,10 @@ interface QuranDatabaseSchema extends DBSchema {
   surahMetadata: {
     key: number;
     value: CachedSurahInfo;
+  };
+  searchIndex: {
+    key: string;
+    value: QuranSearchRecord;
   };
 }
 
@@ -110,6 +121,28 @@ function isValidInfo(value: unknown, surahNumber?: number): value is CachedSurah
   );
 }
 
+function isValidSearchRecord(value: unknown): value is QuranSearchRecord {
+  if (!isObject(value)) return false;
+  const surahNumber = value.surahNumber;
+  const ayahNumber = value.ayahNumber;
+  return (
+    typeof value.id === 'string' &&
+    Number.isInteger(surahNumber) &&
+    (surahNumber as number) >= 1 &&
+    (surahNumber as number) <= 114 &&
+    typeof value.surahName === 'string' &&
+    (value.surahNameArabic === undefined || typeof value.surahNameArabic === 'string') &&
+    Number.isInteger(ayahNumber) &&
+    (ayahNumber as number) >= 1 &&
+    typeof value.arabic === 'string' &&
+    typeof value.arabicNormalized === 'string' &&
+    typeof value.translation === 'string' &&
+    typeof value.translationNormalized === 'string' &&
+    Number.isFinite(value.indexedAt) &&
+    value.schemaVersion === QURAN_SEARCH_INDEX_SCHEMA_VERSION
+  );
+}
+
 async function getDatabase(): Promise<IDBPDatabase<QuranDatabaseSchema> | null> {
   // Checking this before the memoized promise also lets callers gracefully
   // degrade if IndexedDB becomes unavailable during a private browsing session.
@@ -123,6 +156,9 @@ async function getDatabase(): Promise<IDBPDatabase<QuranDatabaseSchema> | null> 
       }
       if (!db.objectStoreNames.contains(QURAN_METADATA_STORE_NAME)) {
         db.createObjectStore(QURAN_METADATA_STORE_NAME);
+      }
+      if (!db.objectStoreNames.contains(QURAN_SEARCH_STORE_NAME)) {
+        db.createObjectStore(QURAN_SEARCH_STORE_NAME);
       }
     },
   }).catch(() => {
@@ -174,7 +210,63 @@ async function saveToIndexedDb(surah: SurahDetail): Promise<boolean> {
 
     const saved = await db.get(QURAN_STORE_NAME, surah.number);
     const savedInfo = await db.get(QURAN_METADATA_STORE_NAME, surah.number);
-    return isValidRecord(saved, surah.number) && isValidInfo(savedInfo, surah.number);
+    const primarySaved = isValidRecord(saved, surah.number) && isValidInfo(savedInfo, surah.number);
+    if (!primarySaved) return false;
+
+    // Search data is derived and intentionally isolated from the primary
+    // transaction. An index failure must never make a healthy Surah disappear.
+    await replaceSearchRecordsForSurah(surah);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function replaceSearchRecordsForSurah(surah: SurahDetail): Promise<boolean> {
+  const db = await getDatabase();
+  if (!db) return false;
+  try {
+    const transaction = db.transaction(QURAN_SEARCH_STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(QURAN_SEARCH_STORE_NAME);
+    const keys = await store.getAllKeys();
+    const prefix = `${surah.number}:`;
+    for (const key of keys) {
+      if (typeof key === 'string' && key.startsWith(prefix)) await store.delete(key);
+    }
+    for (const record of createQuranSearchRecords(surah)) await store.put(record, record.id);
+    await transaction.done;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function removeSearchRecordsForSurah(surahNumber: number): Promise<boolean> {
+  const db = await getDatabase();
+  if (!db) return false;
+  try {
+    const transaction = db.transaction(QURAN_SEARCH_STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(QURAN_SEARCH_STORE_NAME);
+    const keys = await store.getAllKeys();
+    const prefix = `${surahNumber}:`;
+    for (const key of keys) {
+      if (typeof key === 'string' && key.startsWith(prefix)) await store.delete(key);
+    }
+    await transaction.done;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function clearSearchIndex(): Promise<boolean> {
+  const db = await getDatabase();
+  if (!db) return false;
+  try {
+    const transaction = db.transaction(QURAN_SEARCH_STORE_NAME, 'readwrite');
+    await transaction.objectStore(QURAN_SEARCH_STORE_NAME).clear();
+    await transaction.done;
+    return true;
   } catch {
     return false;
   }
@@ -248,6 +340,7 @@ export async function deleteCachedSurah(surahNumber: number): Promise<boolean> {
     await transaction.objectStore(QURAN_STORE_NAME).delete(surahNumber);
     await transaction.objectStore(QURAN_METADATA_STORE_NAME).delete(surahNumber);
     await transaction.done;
+    await removeSearchRecordsForSurah(surahNumber);
     return true;
   } catch {
     return false;
@@ -350,8 +443,62 @@ export async function clearCachedSurahs(): Promise<boolean> {
     await transaction.objectStore(QURAN_STORE_NAME).clear();
     await transaction.objectStore(QURAN_METADATA_STORE_NAME).clear();
     await transaction.done;
+    await clearSearchIndex();
     return true;
   } catch {
+    return false;
+  }
+}
+
+export async function getAllQuranSearchRecords(): Promise<QuranSearchRecord[]> {
+  const db = await getDatabase();
+  if (!db) return [];
+  try {
+    const records = await db.getAll(QURAN_SEARCH_STORE_NAME);
+    return records.filter(isValidSearchRecord);
+  } catch {
+    return [];
+  }
+}
+
+export async function getQuranSearchCoverage(): Promise<QuranSearchCoverage> {
+  const db = await getDatabase();
+  if (!db) return { indexedSurahs: 0, totalSurahs: 114, isComplete: false };
+  try {
+    const keys = await db.getAllKeys(QURAN_SEARCH_STORE_NAME);
+    const indexedSurahs = new Set<number>();
+    for (const key of keys) {
+      if (typeof key !== 'string') continue;
+      const [surahNumber] = key.split(':');
+      const parsed = Number(surahNumber);
+      if (Number.isInteger(parsed) && parsed >= 1 && parsed <= 114) indexedSurahs.add(parsed);
+    }
+    return {
+      indexedSurahs: indexedSurahs.size,
+      totalSurahs: 114,
+      isComplete: indexedSurahs.size === 114,
+    };
+  } catch {
+    return { indexedSurahs: 0, totalSurahs: 114, isComplete: false };
+  }
+}
+
+export async function rebuildQuranSearchIndex(): Promise<boolean> {
+  const db = await getDatabase();
+  if (!db) return false;
+  try {
+    const cachedRecords = (await db.getAll(QURAN_STORE_NAME)).filter((record) =>
+      isValidRecord(record)
+    );
+    const searchRecords = cachedRecords.flatMap((record) => createQuranSearchRecords(record.data));
+    const transaction = db.transaction(QURAN_SEARCH_STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(QURAN_SEARCH_STORE_NAME);
+    await store.clear();
+    for (const record of searchRecords) await store.put(record, record.id);
+    await transaction.done;
+    return true;
+  } catch {
+    // Rebuild is derived-data maintenance; primary Quran records remain intact.
     return false;
   }
 }
