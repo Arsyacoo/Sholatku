@@ -15,6 +15,7 @@ export {
   migrateLegacySurahCache,
   saveCachedSurah,
   getAllQuranSearchRecords,
+  ensureQuranSearchIndex,
   getQuranSearchCoverage,
   rebuildQuranSearchIndex,
 } from './quran-db';

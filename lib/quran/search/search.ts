@@ -55,6 +55,15 @@ function compareResults(left: QuranSearchResult, right: QuranSearchResult): numb
   return right.score - left.score || left.surahNumber - right.surahNumber || left.id.localeCompare(right.id);
 }
 
+function setBestCandidate(
+  candidates: Map<string, QuranSearchResult>,
+  key: string,
+  result: QuranSearchResult
+): void {
+  const current = candidates.get(key);
+  if (!current || result.score > current.score) candidates.set(key, result);
+}
+
 /** Searches only the compact local index; no network request is made here. */
 export function searchQuran(
   records: QuranSearchRecord[],
@@ -103,15 +112,15 @@ export function searchQuran(
     }
 
     if (record.translationNormalized === normalizedQuery) {
-      candidates.set(record.id, createAyahResult(record, 'translation', 650));
+      setBestCandidate(candidates, record.id, createAyahResult(record, 'translation', 650));
     } else if (record.translationNormalized.includes(normalizedQuery)) {
-      candidates.set(record.id, createAyahResult(record, 'translation', 500));
+      setBestCandidate(candidates, record.id, createAyahResult(record, 'translation', 500));
     }
 
     if (record.arabicNormalized === normalizedArabicQuery) {
-      candidates.set(record.id, createAyahResult(record, 'arabic', 640));
+      setBestCandidate(candidates, record.id, createAyahResult(record, 'arabic', 640));
     } else if (normalizedArabicQuery && record.arabicNormalized.includes(normalizedArabicQuery)) {
-      candidates.set(record.id, createAyahResult(record, 'arabic', 540));
+      setBestCandidate(candidates, record.id, createAyahResult(record, 'arabic', 540));
     }
   }
 

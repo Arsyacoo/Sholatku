@@ -5,6 +5,7 @@ import {
   normalizeQuranSettings,
 } from '@/lib/storage/quran-preferences';
 import { QURAN_PLAYBACK_RATES } from '@/types';
+import { getAyahPage, parseAyahQuery } from '@/lib/quran/reader-deep-link';
 
 describe('Quran Ayah Reader & Audio Hook Constants', () => {
   it('contains valid qari options with audio keys', () => {
@@ -53,5 +54,13 @@ describe('Quran Ayah Reader & Audio Hook Constants', () => {
     expect(normalized.audioVolume).toBe(100);
     expect(normalized.audioMuted).toBe(false);
     expect(normalized.playbackRate).toBe(1);
+  });
+
+  it('resolves valid deep-link Ayah targets and their paginated page', () => {
+    expect(parseAyahQuery('255', 286)).toBe(255);
+    expect(parseAyahQuery('0', 286)).toBeNull();
+    expect(parseAyahQuery('9999', 286)).toBeNull();
+    expect(getAyahPage([1, 2, 3, 4, 5], 5, 2)).toBe(3);
+    expect(getAyahPage([1, 2, 3], 9, 2)).toBeNull();
   });
 });

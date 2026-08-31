@@ -74,6 +74,22 @@ describe('Quran search engine', () => {
     );
   });
 
+  it('keeps the strongest match type when one Ayah matches multiple fields', () => {
+    const result = searchQuran(
+      [
+        {
+          ...records[0],
+          translation: 'sabar',
+          translationNormalized: 'sabar',
+          arabic: 'سَبَرَ',
+          arabicNormalized: 'سبر',
+        },
+      ],
+      'sabar'
+    );
+    expect(result.results[0]).toMatchObject({ id: '2:153', matchType: 'translation', score: 650 });
+  });
+
   it('returns direct references, bounded pages, and honest empty-query states', () => {
     expect(searchQuran(records, '2:255').results[0]).toMatchObject({ id: '2:255', matchType: 'reference' });
     expect(searchQuran(records, '2:9999').emptyReason).toBe('invalid-reference');

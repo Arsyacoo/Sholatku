@@ -461,6 +461,32 @@ export async function getAllQuranSearchRecords(): Promise<QuranSearchRecord[]> {
   }
 }
 
+export async function ensureQuranSearchIndex(): Promise<boolean> {
+  const db = await getDatabase();
+  if (!db) return false;
+  try {
+    const [rawRecords, cachedKeys] = await Promise.all([
+      db.getAll(QURAN_SEARCH_STORE_NAME),
+      db.getAllKeys(QURAN_STORE_NAME),
+    ]);
+    const validRecords = rawRecords.filter(isValidSearchRecord);
+    const hasInvalidRecords = validRecords.length !== rawRecords.length;
+    const indexedSurahs = new Set(validRecords.map((record) => record.surahNumber));
+    const cachedSurahs = new Set(
+      cachedKeys.filter((key): key is number => typeof key === 'number' && Number.isInteger(key))
+    );
+    const coverageMatches =
+      indexedSurahs.size === cachedSurahs.size &&
+      [...indexedSurahs].every((surahNumber) => cachedSurahs.has(surahNumber));
+
+    if (hasInvalidRecords || !coverageMatches) return rebuildQuranSearchIndex();
+    return true;
+  } catch {
+    // Search recovery is best-effort; never touch healthy primary Quran data.
+    return false;
+  }
+}
+
 export async function getQuranSearchCoverage(): Promise<QuranSearchCoverage> {
   const db = await getDatabase();
   if (!db) return { indexedSurahs: 0, totalSurahs: 114, isComplete: false };

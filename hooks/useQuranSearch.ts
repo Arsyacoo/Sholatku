@@ -3,9 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   getAllQuranSearchRecords,
-  getCachedSurahNumbers,
+  ensureQuranSearchIndex,
   getQuranSearchCoverage,
-  rebuildQuranSearchIndex,
 } from '@/lib/storage/quran-db';
 import { searchQuran } from '@/lib/quran/search/search';
 import type { QuranSearchCoverage, QuranSearchResponse, QuranSearchRecord } from '@/lib/quran/search/types';
@@ -26,19 +25,11 @@ export function useQuranSearch(query: string) {
   const refresh = useCallback(async () => {
     setIsLoading(true);
     try {
-      let nextRecords = await getAllQuranSearchRecords();
-      let nextCoverage = await getQuranSearchCoverage();
-
-      // Existing Surah cache from before the search index is populated once,
-      // so old offline content becomes searchable without a re-download.
-      if (nextRecords.length === 0 && nextCoverage.indexedSurahs === 0) {
-        const cachedNumbers = await getCachedSurahNumbers();
-        if (cachedNumbers.length > 0) {
-          await rebuildQuranSearchIndex();
-          nextRecords = await getAllQuranSearchRecords();
-          nextCoverage = await getQuranSearchCoverage();
-        }
-      }
+      // Existing caches and derived indexes can be recovered without a
+      // re-download when records are missing, corrupt, or from an older schema.
+      await ensureQuranSearchIndex();
+      const nextRecords = await getAllQuranSearchRecords();
+      const nextCoverage = await getQuranSearchCoverage();
 
       setRecords(nextRecords);
       setCoverage(nextCoverage);

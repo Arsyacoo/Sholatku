@@ -17,6 +17,7 @@ import {
   toggleBookmarkAyah,
   SavedAyah,
   getAllQuranSearchRecords,
+  ensureQuranSearchIndex,
   getQuranSearchCoverage,
   rebuildQuranSearchIndex,
 } from '@/lib/storage/quran-offline';
@@ -160,6 +161,21 @@ describe('Quran Offline Storage & Bookmark Manager', () => {
     expect(await rebuildQuranSearchIndex()).toBe(true);
     expect(await getAllQuranSearchRecords()).toHaveLength(1);
     expect(await getCachedSurah(1)).not.toBeNull();
+  });
+
+  it('recovers a corrupt or old-version search record without deleting Quran data', async () => {
+    expect(await saveCachedSurah(mockSurah)).toBe(true);
+    const db = await openDB(QURAN_DB_NAME, QURAN_DB_VERSION);
+    await db.put(
+      QURAN_SEARCH_STORE_NAME,
+      { id: '1:1', surahNumber: 1, ayahNumber: 1, schemaVersion: 99 },
+      '1:1'
+    );
+    db.close();
+
+    expect(await ensureQuranSearchIndex()).toBe(true);
+    expect(await getAllQuranSearchRecords()).toHaveLength(1);
+    expect((await getCachedSurah(1))?.name).toBe('Al-Fatihah');
   });
 
   it('clears all IndexedDB records', async () => {
