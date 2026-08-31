@@ -1,6 +1,11 @@
 /** Normalizes Latin/Indonesian text for deterministic, case-insensitive search. */
 export function normalizeSearchText(value: string): string {
-  return value.normalize('NFKC').toLowerCase().trim().replace(/\s+/g, ' ');
+  return value
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[-–—]+/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
 }
 
 /** Removes common Arabic marks for comparison while preserving display text. */
