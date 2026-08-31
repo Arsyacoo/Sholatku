@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Footer } from '@/components/layout/Footer';
@@ -18,7 +19,8 @@ import {
   SavedAyah,
 } from '@/lib/storage/quran-offline';
 import { LastReadInfo } from '@/types';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, HardDriveDownload } from 'lucide-react';
+import { getCachedSurahCount } from '@/lib/storage/quran-offline';
 
 export default function QuranPage() {
   const [query, setQuery] = useState('');
@@ -26,6 +28,7 @@ export default function QuranPage() {
   const [lastRead, setLastRead] = useState<LastReadInfo | null>(null);
   const [favorites, setFavorites] = useState<number[]>([]);
   const [bookmarkedAyahs, setBookmarkedAyahs] = useState<SavedAyah[]>([]);
+  const [cachedSurahCount, setCachedSurahCount] = useState(0);
 
   useEffect(() => {
     void migrateLegacySurahCache().catch(() => {
@@ -37,6 +40,7 @@ export default function QuranPage() {
     setLastRead(getLastRead());
     setFavorites(getFavoriteSurahs());
     setBookmarkedAyahs(getBookmarkedAyahs());
+    void getCachedSurahCount().then(setCachedSurahCount);
   }, []);
 
   const handleToggleFavorite = (surahNumber: number) => {
@@ -64,6 +68,22 @@ export default function QuranPage() {
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Banner Last Read / Introduction */}
         <LastReadCard lastRead={lastRead} />
+
+        <section className="flex flex-col gap-3 rounded-2xl border border-primary-200 bg-primary-50/70 p-4 dark:border-primary-900 dark:bg-primary-950/30 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <HardDriveDownload className="mt-0.5 h-5 w-5 shrink-0 text-primary-700 dark:text-primary-300" aria-hidden="true" />
+            <div>
+              <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Quran Offline</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400">{cachedSurahCount} Surah tersimpan di perangkat</p>
+            </div>
+          </div>
+          <Link
+            href="/quran/offline"
+            className="inline-flex items-center justify-center rounded-xl border border-primary-300 px-3 py-2 text-xs font-bold text-primary-700 transition hover:bg-white dark:border-primary-800 dark:text-primary-300 dark:hover:bg-surface-900"
+          >
+            Kelola Offline
+          </Link>
+        </section>
 
         {/* Search & Tabs */}
         <SurahSearchFilter
