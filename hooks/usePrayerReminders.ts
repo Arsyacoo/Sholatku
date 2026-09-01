@@ -20,6 +20,7 @@ export function usePrayerReminders({
   reminderSettings,
 }: UsePrayerRemindersOptions): void {
   const schedulerRef = useRef<PrayerReminderScheduler | null>(null);
+  const tomorrowCacheRef = useRef<{ key: string; schedule?: DailyPrayerSchedule } | null>(null);
   if (!schedulerRef.current) schedulerRef.current = new PrayerReminderScheduler();
 
   useEffect(() => {
@@ -29,16 +30,31 @@ export function usePrayerReminders({
     let cancelled = false;
     const now = new Date();
     const isAfterIsha = now.getTime() >= parsePrayerDateTime(schedule.date, schedule.timings.isha).getTime();
+    const contextKey = [
+      schedule.date,
+      location.latitude,
+      location.longitude,
+      location.timezone,
+      settings.method,
+      settings.madhab,
+      JSON.stringify(settings.adjustments),
+    ].join('|');
 
     const start = async () => {
       let tomorrowSchedule: DailyPrayerSchedule | undefined;
       if (isAfterIsha) {
-        const tomorrow = new Date(now);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        try {
-          tomorrowSchedule = await getDailyPrayerTimes(location, settings, tomorrow);
-        } catch {
-          tomorrowSchedule = undefined;
+        if (tomorrowCacheRef.current?.key === contextKey) {
+          tomorrowSchedule = tomorrowCacheRef.current.schedule;
+        } else {
+          const tomorrow = new Date(now);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          try {
+            tomorrowSchedule = await getDailyPrayerTimes(location, settings, tomorrow);
+          } catch {
+            tomorrowSchedule = undefined;
+          } finally {
+            tomorrowCacheRef.current = { key: contextKey, schedule: tomorrowSchedule };
+          }
         }
       }
       if (cancelled) return;

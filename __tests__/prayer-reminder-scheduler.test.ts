@@ -104,6 +104,26 @@ describe('prayer reminder scheduler lifecycle', () => {
     scheduler.stop();
   });
 
+  it('replaces stale events when prayer settings are recalculated', () => {
+    const notify = vi.fn();
+    const scheduler = new PrayerReminderScheduler(notify);
+    const firstEvent = buildPrayerReminderEvents(schedule, allEnabled, new Date(2026, 8, 1, 3, 0)).find(
+      (item) => item.id === '2026-09-01-fajr-10'
+    )!;
+    const updatedEvent = {
+      ...firstEvent,
+      id: '2026-09-01-fajr-5',
+      offsetMinutes: 5 as const,
+      reminderAt: new Date(2026, 8, 1, 4, 30),
+    };
+
+    scheduler.recalculate([firstEvent], new Date(2026, 8, 1, 4, 20));
+    scheduler.update([updatedEvent], new Date(2026, 8, 1, 4, 30));
+    expect(notify).toHaveBeenCalledTimes(1);
+    expect(notify).toHaveBeenCalledWith(expect.objectContaining({ id: '2026-09-01-fajr-5' }));
+    scheduler.stop();
+  });
+
   it('cleans up its timer on stop', () => {
     vi.useFakeTimers();
     const notify = vi.fn();

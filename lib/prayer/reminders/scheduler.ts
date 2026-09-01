@@ -73,9 +73,9 @@ export class PrayerReminderScheduler {
     this.recalculate();
   }
 
-  update(events: PrayerReminderEvent[]): void {
+  update(events: PrayerReminderEvent[], now: Date = new Date()): void {
     this.events = [...events];
-    this.recalculate();
+    this.recalculate(undefined, now);
   }
 
   recalculate(events?: PrayerReminderEvent[], now: Date = new Date()): void {

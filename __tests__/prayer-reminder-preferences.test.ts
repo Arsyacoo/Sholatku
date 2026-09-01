@@ -82,4 +82,20 @@ describe('Prayer reminder capability detection', () => {
       (globalThis as any).navigator = originalNavigator;
     }
   });
+
+  it('does not overstate persistent support when service workers are unavailable', () => {
+    class MockNotification {
+      static permission = 'granted' as NotificationPermission;
+    }
+    (globalThis as any).window = { Notification: MockNotification, isSecureContext: true };
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: {},
+    });
+    const capabilities = getPrayerReminderCapabilities();
+    expect(capabilities.notificationsSupported).toBe(true);
+    expect(capabilities.serviceWorkerSupported).toBe(false);
+    expect(capabilities.canShowPersistentNotification).toBe(false);
+    expect(capabilities.exactBackgroundSchedulingGuaranteed).toBe(false);
+  });
 });
