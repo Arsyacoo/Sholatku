@@ -55,8 +55,24 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
   const [capabilities, setCapabilities] = useState<PrayerReminderCapabilities>(INITIAL_CAPABILITIES);
 
   useEffect(() => {
-    setPermissionState(getNotificationPermission());
-    setCapabilities(getPrayerReminderCapabilities());
+    const refreshNotificationState = () => {
+      setPermissionState(getNotificationPermission());
+      setCapabilities(getPrayerReminderCapabilities());
+    };
+
+    refreshNotificationState();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshNotificationState();
+    };
+
+    window.addEventListener('focus', refreshNotificationState);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', refreshNotificationState);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   const requestPermission = async () => {
