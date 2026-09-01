@@ -52,6 +52,7 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
 }) => {
   const [permissionState, setPermissionState] = useState<NotificationPermission | 'unsupported'>('unsupported');
   const [isSendingTest, setIsSendingTest] = useState(false);
+  const [testMessage, setTestMessage] = useState<string | null>(null);
   const [capabilities, setCapabilities] = useState<PrayerReminderCapabilities>(INITIAL_CAPABILITIES);
 
   useEffect(() => {
@@ -78,12 +79,30 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
   const requestPermission = async () => {
     const result = await requestPrayerNotificationPermission();
     setPermissionState(result);
+    setTestMessage(
+      result === 'granted'
+        ? 'Notifikasi diizinkan. Anda dapat mengirim notifikasi tes.'
+        : result === 'denied'
+        ? 'Izin notifikasi diblokir oleh browser.'
+        : null
+    );
   };
 
   const handleTestNotification = async () => {
     setIsSendingTest(true);
-    await sendTestNotification();
-    setIsSendingTest(false);
+    setTestMessage(null);
+    try {
+      const delivered = await sendTestNotification();
+      setTestMessage(
+        delivered
+          ? 'Notifikasi tes dikirim. Suara mengikuti pengaturan notifikasi perangkat.'
+          : 'Notifikasi tes tidak dapat dikirim. Periksa izin situs dan pengaturan notifikasi perangkat.'
+      );
+    } catch {
+      setTestMessage('Notifikasi tes gagal dikirim. Periksa izin situs dan pengaturan notifikasi perangkat.');
+    } finally {
+      setIsSendingTest(false);
+    }
   };
 
   const handleReminderChange = (prayer: keyof PrayerReminderSettings, selected: string) => {
@@ -194,6 +213,12 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
             </span>
           )}
         </div>
+
+        {testMessage && (
+          <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-300" role="status" aria-live="polite">
+            {testMessage}
+          </p>
+        )}
 
         <p className="flex items-start gap-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
           <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />

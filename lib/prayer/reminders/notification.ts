@@ -40,6 +40,7 @@ async function displayNotification(title: string, body: string, tag: string): Pr
           icon: '/icon-192.png',
           badge: '/icon-192.png',
           tag,
+          silent: false,
           data: { url: '/' },
         });
         return true;
@@ -54,6 +55,7 @@ async function displayNotification(title: string, body: string, tag: string): Pr
       body,
       icon: '/icon-192.png',
       tag,
+      silent: false,
       data: { url: '/' },
     });
     return true;
