@@ -17,6 +17,17 @@ export interface CalculationMethod {
 
 export type Madhab = 'shafii' | 'hanafi';
 
+export const PRAYER_REMINDER_PRAYERS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
+export type PrayerReminderPrayer = (typeof PRAYER_REMINDER_PRAYERS)[number];
+export type PrayerReminderOffset = 0 | 5 | 10 | 15 | 30;
+
+export interface PrayerReminderPreference {
+  enabled: boolean;
+  offsetMinutes: PrayerReminderOffset;
+}
+
+export type PrayerReminderSettings = Record<PrayerReminderPrayer, PrayerReminderPreference>;
+
 export interface PrayerAdjustment {
   fajr: number;    // minute offset e.g. 0, +1, -1
   sunrise: number;
