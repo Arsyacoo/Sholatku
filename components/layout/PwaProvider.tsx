@@ -108,6 +108,42 @@ function PwaUpdatePrompt() {
 }
 
 export function PwaProvider({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    if (
+      process.env.NODE_ENV !== 'development' ||
+      typeof navigator === 'undefined' ||
+      !('serviceWorker' in navigator)
+    ) {
+      return;
+    }
+
+    const unregisterStaleDevelopmentWorker = async () => {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+
+      await Promise.all(
+        registrations
+          .filter((registration) => {
+            const scriptUrl =
+              registration.active?.scriptURL ??
+              registration.waiting?.scriptURL ??
+              registration.installing?.scriptURL;
+            if (!scriptUrl) return false;
+
+            try {
+              return new URL(scriptUrl).pathname === '/sw.js';
+            } catch {
+              return false;
+            }
+          })
+          .map((registration) => registration.unregister())
+      );
+    };
+
+    void unregisterStaleDevelopmentWorker().catch(() => {
+      // Service worker cleanup is best-effort and should never block the app.
+    });
+  }, []);
+
   return (
     <SerwistProvider
       swUrl="/sw.js"
