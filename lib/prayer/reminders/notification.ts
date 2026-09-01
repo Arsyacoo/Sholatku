@@ -26,8 +26,14 @@ async function displayNotification(title: string, body: string, tag: string): Pr
   if (!notificationApi || notificationApi.permission !== 'granted') return false;
 
   try {
-    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-      const registration = await navigator.serviceWorker.ready;
+    if (
+      typeof navigator !== 'undefined' &&
+      'serviceWorker' in navigator &&
+      typeof navigator.serviceWorker.getRegistration === 'function'
+    ) {
+      // In development Serwist is disabled, so `ready` may never resolve.
+      // A registration lookup lets us fall back to the page Notification API.
+      const registration = await navigator.serviceWorker.getRegistration();
       if (registration?.showNotification) {
         await registration.showNotification(title, {
           body,

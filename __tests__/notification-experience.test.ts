@@ -55,7 +55,7 @@ describe('notification permission experience', () => {
     }
     (globalThis as any).window.Notification = MockNotification;
     (globalThis as any).navigator = {
-      serviceWorker: { ready: Promise.resolve({ showNotification }) },
+      serviceWorker: { getRegistration: vi.fn().mockResolvedValue({ showNotification }) },
     };
 
     expect(await sendTestNotification()).toBe(true);
@@ -63,5 +63,18 @@ describe('notification permission experience', () => {
       'Sholatku',
       expect.objectContaining({ tag: TEST_NOTIFICATION_TAG })
     );
+  });
+
+  it('falls back to page notification when no service worker is registered', async () => {
+    const MockNotification = class {
+      static permission = 'granted' as NotificationPermission;
+      constructor() {}
+    };
+    (globalThis as any).window.Notification = MockNotification;
+    (globalThis as any).navigator = {
+      serviceWorker: { getRegistration: vi.fn().mockResolvedValue(undefined) },
+    };
+
+    expect(await sendTestNotification()).toBe(true);
   });
 });
