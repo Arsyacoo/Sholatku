@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Bell, CheckCircle2, ExternalLink, Send } from 'lucide-react';
 import { Button } from '../ui/Button';
 import type { PrayerReminderOffset, PrayerReminderSettings } from '@/types';
 import { PRAYER_REMINDER_PRAYERS } from '@/types';
 import { getPrayerReminderCapabilities } from '@/lib/prayer/reminders/capabilities';
+import type { PrayerReminderCapabilities } from '@/lib/prayer/reminders/types';
 import {
   getNotificationPermission,
   requestPrayerNotificationPermission,
@@ -34,15 +35,29 @@ const OFFSET_OPTIONS: Array<{ value: 'off' | PrayerReminderOffset; label: string
   { value: 30, label: '30 menit sebelum' },
 ];
 
+const INITIAL_CAPABILITIES: PrayerReminderCapabilities = {
+  notificationsSupported: false,
+  serviceWorkerSupported: false,
+  permission: 'unsupported',
+  canShowPersistentNotification: false,
+  isStandalone: false,
+  secureContext: false,
+  calendarExportSupported: false,
+  exactBackgroundSchedulingGuaranteed: false,
+};
+
 export const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({
   value,
   onChange,
 }) => {
-  const [permissionState, setPermissionState] = useState<NotificationPermission | 'unsupported'>(() =>
-    getNotificationPermission()
-  );
+  const [permissionState, setPermissionState] = useState<NotificationPermission | 'unsupported'>('unsupported');
   const [isSendingTest, setIsSendingTest] = useState(false);
-  const capabilities = getPrayerReminderCapabilities();
+  const [capabilities, setCapabilities] = useState<PrayerReminderCapabilities>(INITIAL_CAPABILITIES);
+
+  useEffect(() => {
+    setPermissionState(getNotificationPermission());
+    setCapabilities(getPrayerReminderCapabilities());
+  }, []);
 
   const requestPermission = async () => {
     const result = await requestPrayerNotificationPermission();

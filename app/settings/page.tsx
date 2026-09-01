@@ -11,17 +11,29 @@ import { NotificationPreferences } from '@/components/settings/NotificationPrefe
 import { PrayerCalendarExport } from '@/components/settings/PrayerCalendarExport';
 import { ThemeSelector } from '@/components/settings/ThemeSelector';
 import { UserSettings, CalculationMethodId, Madhab, PrayerAdjustment } from '@/types';
-import { getPrayerReminderSettings, getSavedSettings, savePrayerReminderSettings, saveSettings } from '@/lib/storage/preferences';
+import { DEFAULT_SETTINGS } from '@/lib/prayer/constants';
+import {
+  getDefaultPrayerReminderSettings,
+  getPrayerReminderSettings,
+  getSavedSettings,
+  savePrayerReminderSettings,
+  saveSettings,
+} from '@/lib/storage/preferences';
 import type { PrayerReminderSettings } from '@/types';
 import { useLocation } from '@/hooks/useLocation';
 import { ArrowLeft, Check } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<UserSettings>(() => getSavedSettings());
-  const [reminderSettings, setReminderSettings] = useState<PrayerReminderSettings>(() => getPrayerReminderSettings());
+  const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
+  const [reminderSettings, setReminderSettings] = useState<PrayerReminderSettings>(getDefaultPrayerReminderSettings);
   const [savedToast, setSavedToast] = useState(false);
   const { location } = useLocation();
+
+  React.useEffect(() => {
+    setSettings(getSavedSettings());
+    setReminderSettings(getPrayerReminderSettings());
+  }, []);
 
   const updateSetting = (updater: (prev: UserSettings) => UserSettings) => {
     setSettings((prev) => {
