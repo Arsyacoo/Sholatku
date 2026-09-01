@@ -8,10 +8,12 @@ import { CalculationMethodSelector } from '@/components/settings/CalculationMeth
 import { MadhabSelector } from '@/components/settings/MadhabSelector';
 import { PrayerAdjustmentEditor } from '@/components/settings/PrayerAdjustmentEditor';
 import { NotificationPreferences } from '@/components/settings/NotificationPreferences';
+import { PrayerCalendarExport } from '@/components/settings/PrayerCalendarExport';
 import { ThemeSelector } from '@/components/settings/ThemeSelector';
 import { UserSettings, CalculationMethodId, Madhab, PrayerAdjustment } from '@/types';
 import { getPrayerReminderSettings, getSavedSettings, savePrayerReminderSettings, saveSettings } from '@/lib/storage/preferences';
 import type { PrayerReminderSettings } from '@/types';
+import { useLocation } from '@/hooks/useLocation';
 import { ArrowLeft, Check } from 'lucide-react';
 import Link from 'next/link';
 
@@ -19,6 +21,7 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<UserSettings>(() => getSavedSettings());
   const [reminderSettings, setReminderSettings] = useState<PrayerReminderSettings>(() => getPrayerReminderSettings());
   const [savedToast, setSavedToast] = useState(false);
+  const { location } = useLocation();
 
   const updateSetting = (updater: (prev: UserSettings) => UserSettings) => {
     setSettings((prev) => {
@@ -105,9 +108,18 @@ export default function SettingsPage() {
             onChange={(next: PrayerReminderSettings) => {
               setReminderSettings(next);
               savePrayerReminderSettings(next);
+              window.dispatchEvent(new CustomEvent('sholatku:prayer-reminders-changed', { detail: next }));
               setSavedToast(true);
               setTimeout(() => setSavedToast(false), 2000);
             }}
+          />
+        </section>
+
+        <section className="pt-4 border-t border-surface-200 dark:border-surface-800">
+          <PrayerCalendarExport
+            location={location}
+            settings={settings}
+            reminderSettings={reminderSettings}
           />
         </section>
       </main>
