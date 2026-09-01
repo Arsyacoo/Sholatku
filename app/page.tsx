@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Footer } from '@/components/layout/Footer';
@@ -13,7 +13,9 @@ import { PrayerScheduleList } from '@/components/prayer/PrayerScheduleList';
 import { useLocation } from '@/hooks/useLocation';
 import { usePrayerTimes } from '@/hooks/usePrayerTimes';
 import { useNextPrayer } from '@/hooks/useNextPrayer';
-import { getSavedSettings } from '@/lib/storage/preferences';
+import { usePrayerReminders } from '@/hooks/usePrayerReminders';
+import { getPrayerReminderSettings, getSavedSettings } from '@/lib/storage/preferences';
+import type { PrayerReminderSettings } from '@/types';
 
 export default function HomePage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -21,6 +23,7 @@ export default function HomePage() {
 
   // Settings from storage
   const [settings] = useState(() => getSavedSettings());
+  const [reminderSettings, setReminderSettings] = useState<PrayerReminderSettings>(() => getPrayerReminderSettings());
 
   // Location Hook
   const {
@@ -42,6 +45,17 @@ export default function HomePage() {
 
   // Next Prayer & Countdown Hook
   const nextPrayerInfo = useNextPrayer(schedule);
+
+  useEffect(() => {
+    const handleReminderSettingsChange = (event: Event) => {
+      const detail = (event as CustomEvent<PrayerReminderSettings>).detail;
+      setReminderSettings(detail || getPrayerReminderSettings());
+    };
+    window.addEventListener('sholatku:prayer-reminders-changed', handleReminderSettingsChange);
+    return () => window.removeEventListener('sholatku:prayer-reminders-changed', handleReminderSettingsChange);
+  }, []);
+
+  usePrayerReminders({ schedule, location, settings, reminderSettings });
 
   return (
     <div className="flex-1 flex flex-col">
