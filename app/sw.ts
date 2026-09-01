@@ -129,3 +129,19 @@ serwist = new Serwist({
 });
 
 serwist.addEventListeners();
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then(async (windowClients) => {
+        const existingClient = windowClients.find((client) => 'focus' in client);
+        if (existingClient) {
+          await existingClient.focus();
+          return;
+        }
+        await self.clients.openWindow('/');
+      })
+  );
+});

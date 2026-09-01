@@ -10,12 +10,14 @@ import { PrayerAdjustmentEditor } from '@/components/settings/PrayerAdjustmentEd
 import { NotificationPreferences } from '@/components/settings/NotificationPreferences';
 import { ThemeSelector } from '@/components/settings/ThemeSelector';
 import { UserSettings, CalculationMethodId, Madhab, PrayerAdjustment } from '@/types';
-import { getSavedSettings, saveSettings } from '@/lib/storage/preferences';
+import { getPrayerReminderSettings, getSavedSettings, savePrayerReminderSettings, saveSettings } from '@/lib/storage/preferences';
+import type { PrayerReminderSettings } from '@/types';
 import { ArrowLeft, Check } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<UserSettings>(() => getSavedSettings());
+  const [reminderSettings, setReminderSettings] = useState<PrayerReminderSettings>(() => getPrayerReminderSettings());
   const [savedToast, setSavedToast] = useState(false);
 
   const updateSetting = (updater: (prev: UserSettings) => UserSettings) => {
@@ -99,14 +101,13 @@ export default function SettingsPage() {
         {/* Notifications */}
         <section className="pt-4 border-t border-surface-200 dark:border-surface-800">
           <NotificationPreferences
-            enabled={settings.enableNotifications}
-            notifyBeforeMinutes={settings.notifyBeforeMinutes}
-            onToggle={(enableNotifications: boolean) =>
-              updateSetting((s) => ({ ...s, enableNotifications }))
-            }
-            onMinutesChange={(notifyBeforeMinutes: number) =>
-              updateSetting((s) => ({ ...s, notifyBeforeMinutes }))
-            }
+            value={reminderSettings}
+            onChange={(next: PrayerReminderSettings) => {
+              setReminderSettings(next);
+              savePrayerReminderSettings(next);
+              setSavedToast(true);
+              setTimeout(() => setSavedToast(false), 2000);
+            }}
           />
         </section>
       </main>
