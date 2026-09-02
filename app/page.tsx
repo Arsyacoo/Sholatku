@@ -14,16 +14,26 @@ import { useLocation } from '@/hooks/useLocation';
 import { usePrayerTimes } from '@/hooks/usePrayerTimes';
 import { useNextPrayer } from '@/hooks/useNextPrayer';
 import { usePrayerReminders } from '@/hooks/usePrayerReminders';
-import { getPrayerReminderSettings, getSavedSettings } from '@/lib/storage/preferences';
-import type { PrayerReminderSettings } from '@/types';
+import { useRamadan } from '@/hooks/useRamadan';
+import { getDefaultRamadanPreferences, getPrayerReminderSettings, getRamadanPreferences, getSavedSettings } from '@/lib/storage/preferences';
+import { DEFAULT_SETTINGS } from '@/lib/prayer/constants';
+import { RamadanHomeCard } from '@/components/prayer/RamadanHomeCard';
+import type { PrayerReminderSettings, RamadanPreferences, UserSettings } from '@/types';
 
 export default function HomePage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [dismissNotice, setDismissNotice] = useState(false);
 
   // Settings from storage
-  const [settings] = useState(() => getSavedSettings());
+  const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [reminderSettings, setReminderSettings] = useState<PrayerReminderSettings>(() => getPrayerReminderSettings());
+  const [ramadanPreferences, setRamadanPreferences] = useState<RamadanPreferences>(getDefaultRamadanPreferences);
+
+  useEffect(() => {
+    setSettings(getSavedSettings());
+    setReminderSettings(getPrayerReminderSettings());
+    setRamadanPreferences(getRamadanPreferences());
+  }, []);
 
   // Location Hook
   const {
@@ -45,6 +55,7 @@ export default function HomePage() {
 
   // Next Prayer & Countdown Hook
   const nextPrayerInfo = useNextPrayer(schedule);
+  const ramadan = useRamadan(schedule, location, settings, ramadanPreferences);
 
   useEffect(() => {
     const handleReminderSettingsChange = (event: Event) => {
@@ -53,6 +64,15 @@ export default function HomePage() {
     };
     window.addEventListener('sholatku:prayer-reminders-changed', handleReminderSettingsChange);
     return () => window.removeEventListener('sholatku:prayer-reminders-changed', handleReminderSettingsChange);
+  }, []);
+
+  useEffect(() => {
+    const handleRamadanPreferencesChange = (event: Event) => {
+      const detail = (event as CustomEvent<RamadanPreferences>).detail;
+      setRamadanPreferences(detail || getRamadanPreferences());
+    };
+    window.addEventListener('sholatku:ramadan-preferences-changed', handleRamadanPreferencesChange);
+    return () => window.removeEventListener('sholatku:ramadan-preferences-changed', handleRamadanPreferencesChange);
   }, []);
 
   usePrayerReminders({ schedule, location, settings, reminderSettings });
@@ -88,6 +108,10 @@ export default function HomePage() {
           prayerInfo={nextPrayerInfo}
           isLoading={isPrayerLoading && !schedule}
         />
+
+        {ramadan.status && ramadan.timing && ramadan.context && (
+          <RamadanHomeCard status={ramadan.status} timing={ramadan.timing} context={ramadan.context} />
+        )}
 
         {/* Today's 6 Prayer Schedules */}
         <div className="pt-2">

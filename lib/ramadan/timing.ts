@@ -43,7 +43,7 @@ export function parseLocalDateTime(date: string, time: string): Date {
 
 export function buildRamadanTiming(
   schedule: RamadanTimingSource,
-  imsakOffsetMinutes = DEFAULT_IMSAK_OFFSET_MINUTES
+  imsakOffsetMinutes: number = DEFAULT_IMSAK_OFFSET_MINUTES
 ): RamadanTiming {
   const offset = normalizeImsakOffset(imsakOffsetMinutes);
   const normalizedDate = normalizeScheduleDate(schedule.date);
@@ -64,7 +64,7 @@ export function buildRamadanTimingFromTimes(
   date: string,
   fajr: string,
   maghrib: string,
-  imsakOffsetMinutes = DEFAULT_IMSAK_OFFSET_MINUTES
+  imsakOffsetMinutes: number = DEFAULT_IMSAK_OFFSET_MINUTES
 ): RamadanTiming {
   return buildRamadanTiming({ date, timings: { fajr, maghrib } }, imsakOffsetMinutes);
 }
