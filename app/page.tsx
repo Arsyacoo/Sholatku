@@ -15,7 +15,7 @@ import { usePrayerTimes } from '@/hooks/usePrayerTimes';
 import { useNextPrayer } from '@/hooks/useNextPrayer';
 import { usePrayerReminders } from '@/hooks/usePrayerReminders';
 import { useRamadan } from '@/hooks/useRamadan';
-import { getDefaultRamadanPreferences, getPrayerReminderSettings, getRamadanPreferences, getSavedSettings } from '@/lib/storage/preferences';
+import { getDefaultPrayerReminderSettings, getDefaultRamadanPreferences, getPrayerReminderSettings, getRamadanPreferences, getSavedSettings } from '@/lib/storage/preferences';
 import { DEFAULT_SETTINGS } from '@/lib/prayer/constants';
 import { RamadanHomeCard } from '@/components/prayer/RamadanHomeCard';
 import type { PrayerReminderSettings, RamadanPreferences, UserSettings } from '@/types';
@@ -26,7 +26,7 @@ export default function HomePage() {
 
   // Settings from storage
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
-  const [reminderSettings, setReminderSettings] = useState<PrayerReminderSettings>(() => getPrayerReminderSettings());
+  const [reminderSettings, setReminderSettings] = useState<PrayerReminderSettings>(getDefaultPrayerReminderSettings);
   const [ramadanPreferences, setRamadanPreferences] = useState<RamadanPreferences>(getDefaultRamadanPreferences);
 
   useEffect(() => {
