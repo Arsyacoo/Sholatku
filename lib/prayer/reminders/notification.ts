@@ -1,4 +1,4 @@
-import type { PrayerReminderEvent } from './types';
+import type { ReminderEvent } from './types';
 
 export const TEST_NOTIFICATION_TAG = 'sholatku-notification-test';
 
@@ -72,13 +72,14 @@ export function sendTestNotification(): Promise<boolean> {
   );
 }
 
-export function sendPrayerReminderNotification(event: PrayerReminderEvent): Promise<boolean> {
+export function sendPrayerReminderNotification(event: ReminderEvent): Promise<boolean> {
   const prayerName = {
     fajr: 'Subuh',
     dhuhr: 'Dzuhur',
     asr: 'Ashar',
     maghrib: 'Maghrib',
     isha: 'Isya',
+    imsak: 'Imsak',
   }[event.prayer];
   const time = event.prayerAt.toLocaleTimeString('id-ID', {
     hour: '2-digit',

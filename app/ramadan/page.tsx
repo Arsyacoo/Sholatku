@@ -7,14 +7,15 @@ import { Navbar } from '@/components/layout/Navbar';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Footer } from '@/components/layout/Footer';
 import { CitySearchModal } from '@/components/location/CitySearchModal';
-import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { RamadanCalendarExport } from '@/components/ramadan/RamadanCalendarExport';
 import { useLocation } from '@/hooks/useLocation';
 import { DEFAULT_SETTINGS } from '@/lib/prayer/constants';
 import { getRelevantRamadanYear, getRamadanDateRange } from '@/lib/ramadan/calendar';
 import { buildRamadanImsakiyah, type RamadanImsakiyahRow } from '@/lib/ramadan/imsakiyah';
 import { getDefaultRamadanPreferences, getRamadanPreferences, getSavedSettings } from '@/lib/storage/preferences';
-import type { RamadanPreferences, UserSettings } from '@/types';
+import type { PrayerReminderSettings, RamadanPreferences, UserSettings } from '@/types';
+import { getPrayerReminderSettings } from '@/lib/storage/preferences';
 
 function formatTime(date: Date): string {
   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
@@ -24,6 +25,7 @@ export default function RamadanPage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [preferences, setPreferences] = useState<RamadanPreferences>(getDefaultRamadanPreferences);
+  const [prayerReminders, setPrayerReminders] = useState<PrayerReminderSettings>(getPrayerReminderSettings);
   const [rows, setRows] = useState<RamadanImsakiyahRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +34,7 @@ export default function RamadanPage() {
   useEffect(() => {
     setSettings(getSavedSettings());
     setPreferences(getRamadanPreferences());
+    setPrayerReminders(getPrayerReminderSettings());
   }, []);
 
   const hijriYear = useMemo(
@@ -170,6 +173,13 @@ export default function RamadanPage() {
         <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
           Jadwal menggunakan lokasi, metode hisab, madhab, dan koreksi menit yang sama dengan halaman jadwal sholat. Perubahan pengaturan akan memuat ulang tabel ini.
         </p>
+        <RamadanCalendarExport
+          rows={rows}
+          hijriYear={hijriYear}
+          location={location}
+          prayerReminderSettings={prayerReminders}
+          ramadanReminderSettings={preferences.reminders}
+        />
       </main>
       <Footer />
       <BottomNav />

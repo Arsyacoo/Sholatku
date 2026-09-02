@@ -27,4 +27,15 @@ export interface PrayerReminderEvent {
   offsetMinutes: PrayerReminderOffset;
 }
 
+export interface RamadanReminderEvent {
+  id: string;
+  date: string;
+  prayer: 'imsak' | 'maghrib';
+  prayerAt: Date;
+  reminderAt: Date;
+  offsetMinutes: PrayerReminderOffset;
+}
+
+export type ReminderEvent = PrayerReminderEvent | RamadanReminderEvent;
+
 export type { PrayerReminderOffset, PrayerReminderPrayer, PrayerReminderPreference, PrayerReminderSettings };

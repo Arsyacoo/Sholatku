@@ -75,7 +75,7 @@ export default function HomePage() {
     return () => window.removeEventListener('sholatku:ramadan-preferences-changed', handleRamadanPreferencesChange);
   }, []);
 
-  usePrayerReminders({ schedule, location, settings, reminderSettings });
+  usePrayerReminders({ schedule, location, settings, reminderSettings, ramadanPreferences });
 
   return (
     <div className="flex-1 flex flex-col">

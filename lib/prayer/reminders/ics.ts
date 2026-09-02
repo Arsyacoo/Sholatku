@@ -1,4 +1,5 @@
-import type { MonthlyPrayerItem, PrayerReminderSettings, UserLocation } from '@/types';
+import type { MonthlyPrayerItem, PrayerReminderSettings, RamadanReminderSettings, UserLocation } from '@/types';
+import type { RamadanImsakiyahRow } from '@/lib/ramadan/imsakiyah';
 import { PRAYER_REMINDER_PRAYERS } from '@/types';
 
 const PRAYER_LABELS: Record<(typeof PRAYER_REMINDER_PRAYERS)[number], string> = {
@@ -92,6 +93,79 @@ export function generatePrayerCalendarIcs(
           'END:VALARM'
         );
       }
+      lines.push('END:VEVENT');
+    }
+  }
+
+  lines.push('END:VCALENDAR');
+  return `${lines.join('\r\n')}\r\n`;
+}
+
+function formatLocalTime(date: Date): string {
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
+function appendAlarm(lines: string[], label: string, preference?: { enabled: boolean; offsetMinutes: number }) {
+  if (!preference?.enabled) return;
+  const trigger = preference.offsetMinutes === 0 ? 'PT0M' : `-PT${preference.offsetMinutes}M`;
+  lines.push(
+    'BEGIN:VALARM',
+    'ACTION:DISPLAY',
+    `DESCRIPTION:${escapeIcsText(`Pengingat ${label}`)}`,
+    `TRIGGER:${trigger}`,
+    'END:VALARM'
+  );
+}
+
+export function getRamadanCalendarFilename(hijriYear: number): string {
+  return `sholatku-ramadan-${hijriYear}.ics`;
+}
+
+/** Exports only the Ramadan utility times, while retaining the existing ICS timezone conventions. */
+export function generateRamadanCalendarIcs(
+  rows: readonly RamadanImsakiyahRow[],
+  location: UserLocation,
+  prayerReminderSettings: PrayerReminderSettings,
+  ramadanReminderSettings?: RamadanReminderSettings,
+  hijriYear?: number,
+  generatedAt: Date = new Date()
+): string {
+  const timezone = safeTimezoneId(location.timezone);
+  const name = hijriYear ? `Sholatku - Ramadan ${hijriYear} H` : 'Sholatku - Ramadan';
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Sholatku//Ramadan Imsakiyah//ID',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    `X-WR-CALNAME:${escapeIcsText(name)}`,
+    ...(timezone ? [`X-WR-TIMEZONE:${timezone}`] : []),
+  ];
+
+  const events = [
+    { key: 'imsak' as const, label: 'Imsak', preference: ramadanReminderSettings?.imsak },
+    { key: 'fajr' as const, label: 'Subuh', preference: prayerReminderSettings.fajr },
+    { key: 'maghrib' as const, label: 'Maghrib', preference: ramadanReminderSettings?.maghrib ?? prayerReminderSettings.maghrib },
+  ];
+
+  for (const row of rows) {
+    for (const event of events) {
+      const eventDate = event.key === 'imsak' ? row.timing.imsakAt : event.key === 'fajr' ? row.timing.fajrAt : row.timing.maghribAt;
+      const time = formatLocalTime(eventDate);
+      const start = toIcsDateTime(row.date, time);
+      const end = addMinutes(row.date, time, 10);
+      const dateTimePrefix = timezone ? `;TZID=${timezone}` : '';
+      lines.push(
+        'BEGIN:VEVENT',
+        `UID:${row.date}-ramadan-${event.key}@sholatku`,
+        `DTSTAMP:${utcTimestamp(generatedAt)}`,
+        `DTSTART${dateTimePrefix}:${start}`,
+        `DTEND${dateTimePrefix}:${end}`,
+        `SUMMARY:${escapeIcsText(`Sholatku - ${event.label}`)}`,
+        `DESCRIPTION:${escapeIcsText(`${event.label} Ramadan berdasarkan jadwal Sholatku di ${location.displayName}.`)}`,
+        `LOCATION:${escapeIcsText(location.displayName)}`
+      );
+      appendAlarm(lines, event.label, event.preference);
       lines.push('END:VEVENT');
     }
   }

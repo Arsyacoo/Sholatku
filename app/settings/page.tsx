@@ -10,16 +10,20 @@ import { PrayerAdjustmentEditor } from '@/components/settings/PrayerAdjustmentEd
 import { NotificationPreferences } from '@/components/settings/NotificationPreferences';
 import { PrayerCalendarExport } from '@/components/settings/PrayerCalendarExport';
 import { ThemeSelector } from '@/components/settings/ThemeSelector';
+import { RamadanPreferences } from '@/components/settings/RamadanPreferences';
 import { UserSettings, CalculationMethodId, Madhab, PrayerAdjustment } from '@/types';
 import { DEFAULT_SETTINGS } from '@/lib/prayer/constants';
 import {
   getDefaultPrayerReminderSettings,
+  getDefaultRamadanPreferences,
   getPrayerReminderSettings,
+  getRamadanPreferences,
   getSavedSettings,
   savePrayerReminderSettings,
+  saveRamadanPreferences,
   saveSettings,
 } from '@/lib/storage/preferences';
-import type { PrayerReminderSettings } from '@/types';
+import type { PrayerReminderSettings, RamadanPreferences as RamadanPreferencesValue } from '@/types';
 import { useLocation } from '@/hooks/useLocation';
 import { ArrowLeft, Check } from 'lucide-react';
 import Link from 'next/link';
@@ -27,12 +31,14 @@ import Link from 'next/link';
 export default function SettingsPage() {
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [reminderSettings, setReminderSettings] = useState<PrayerReminderSettings>(getDefaultPrayerReminderSettings);
+  const [ramadanPreferences, setRamadanPreferences] = useState<RamadanPreferencesValue>(getDefaultRamadanPreferences);
   const [savedToast, setSavedToast] = useState(false);
   const { location } = useLocation();
 
   React.useEffect(() => {
     setSettings(getSavedSettings());
     setReminderSettings(getPrayerReminderSettings());
+    setRamadanPreferences(getRamadanPreferences());
   }, []);
 
   const updateSetting = (updater: (prev: UserSettings) => UserSettings) => {
@@ -121,6 +127,19 @@ export default function SettingsPage() {
               setReminderSettings(next);
               savePrayerReminderSettings(next);
               window.dispatchEvent(new CustomEvent('sholatku:prayer-reminders-changed', { detail: next }));
+              setSavedToast(true);
+              setTimeout(() => setSavedToast(false), 2000);
+            }}
+          />
+        </section>
+
+        <section className="pt-4 border-t border-surface-200 dark:border-surface-800">
+          <RamadanPreferences
+            value={ramadanPreferences}
+            onChange={(next) => {
+              setRamadanPreferences(next);
+              saveRamadanPreferences(next);
+              window.dispatchEvent(new CustomEvent('sholatku:ramadan-preferences-changed', { detail: next }));
               setSavedToast(true);
               setTimeout(() => setSavedToast(false), 2000);
             }}

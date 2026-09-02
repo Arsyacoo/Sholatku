@@ -1,16 +1,20 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import type { DailyPrayerSchedule, PrayerReminderSettings, UserLocation, UserSettings } from '@/types';
+import type { DailyPrayerSchedule, PrayerReminderSettings, RamadanPreferences, UserLocation, UserSettings } from '@/types';
 import { getDailyPrayerTimes } from '@/lib/prayer/api';
-import { parsePrayerDateTime, buildPrayerReminderEvents } from '@/lib/prayer/reminders/schedule';
+import { parsePrayerDateTime, buildPrayerReminderEvents, buildRamadanReminderEvents } from '@/lib/prayer/reminders/schedule';
 import { PrayerReminderScheduler } from '@/lib/prayer/reminders/scheduler';
+import { getRamadanStatus } from '@/lib/ramadan/calendar';
+import { buildRamadanTiming } from '@/lib/ramadan/timing';
+import type { ReminderEvent } from '@/lib/prayer/reminders/types';
 
 interface UsePrayerRemindersOptions {
   schedule: DailyPrayerSchedule | null;
   location: UserLocation;
   settings: UserSettings;
   reminderSettings: PrayerReminderSettings;
+  ramadanPreferences?: RamadanPreferences;
 }
 
 export function usePrayerReminders({
@@ -18,6 +22,7 @@ export function usePrayerReminders({
   location,
   settings,
   reminderSettings,
+  ramadanPreferences,
 }: UsePrayerRemindersOptions): void {
   const schedulerRef = useRef<PrayerReminderScheduler | null>(null);
   const tomorrowCacheRef = useRef<{ key: string; schedule?: DailyPrayerSchedule } | null>(null);
@@ -58,7 +63,19 @@ export function usePrayerReminders({
         }
       }
       if (cancelled) return;
-      scheduler.start(buildPrayerReminderEvents(schedule, reminderSettings, new Date(), tomorrowSchedule));
+      const events: ReminderEvent[] = buildPrayerReminderEvents(schedule, reminderSettings, new Date(), tomorrowSchedule);
+      if (ramadanPreferences) {
+        const ramadanStatus = getRamadanStatus(new Date(), ramadanPreferences, location.timezone);
+        if (ramadanStatus.isRamadan) {
+          events.push(
+            ...buildRamadanReminderEvents(
+              buildRamadanTiming(schedule, ramadanPreferences.imsakOffsetMinutes),
+              ramadanPreferences.reminders
+            )
+          );
+        }
+      }
+      scheduler.start(events);
     };
 
     start();
@@ -82,5 +99,6 @@ export function usePrayerReminders({
     settings.madhab,
     JSON.stringify(settings.adjustments),
     JSON.stringify(reminderSettings),
+    JSON.stringify(ramadanPreferences),
   ]);
 }

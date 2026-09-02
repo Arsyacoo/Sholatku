@@ -1,4 +1,4 @@
-import type { PrayerReminderEvent } from './types';
+import type { ReminderEvent } from './types';
 import { sendPrayerReminderNotification } from './notification';
 import { getDueReminderEvents, getNextReminderEvent } from './schedule';
 
@@ -57,10 +57,10 @@ export function clearFiredReminderEvents(): void {
   }
 }
 
-export type ReminderNotificationSink = (event: PrayerReminderEvent) => void | Promise<unknown>;
+export type ReminderNotificationSink = (event: ReminderEvent) => void | Promise<unknown>;
 
 export class PrayerReminderScheduler {
-  private events: PrayerReminderEvent[] = [];
+  private events: ReminderEvent[] = [];
   private timer: ReturnType<typeof setTimeout> | null = null;
   private readonly notify: ReminderNotificationSink;
 
@@ -68,17 +68,17 @@ export class PrayerReminderScheduler {
     this.notify = notify;
   }
 
-  start(events: PrayerReminderEvent[]): void {
+  start(events: ReminderEvent[]): void {
     this.events = [...events];
     this.recalculate();
   }
 
-  update(events: PrayerReminderEvent[], now: Date = new Date()): void {
+  update(events: ReminderEvent[], now: Date = new Date()): void {
     this.events = [...events];
     this.recalculate(undefined, now);
   }
 
-  recalculate(events?: PrayerReminderEvent[], now: Date = new Date()): void {
+  recalculate(events?: ReminderEvent[], now: Date = new Date()): void {
     if (events) this.events = [...events];
     this.clearTimer();
 
