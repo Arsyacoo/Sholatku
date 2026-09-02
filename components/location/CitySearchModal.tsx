@@ -1,12 +1,19 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, MapPin, Navigation, Check, Loader2 } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { CitySearchResult, UserLocation } from '@/types';
-import { searchCities } from '@/lib/location/geocoding';
+import {
+  CITY_SEARCH_DEBOUNCE_MS,
+  CITY_SEARCH_MIN_LENGTH,
+  normalizeCityQuery,
+  searchCities,
+} from '@/lib/location/geocoding';
 import { POPULAR_CITIES } from '@/lib/location/cities-id';
+import { isNetworkRequestError } from '@/lib/network/fetch';
+import { LatestRequestController } from '@/lib/network/latest-request';
 
 interface CitySearchModalProps {
   isOpen: boolean;
@@ -28,36 +35,59 @@ export const CitySearchModal: React.FC<CitySearchModalProps> = ({
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<CitySearchResult[]>(POPULAR_CITIES.slice(0, 10));
   const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<'timeout' | 'network' | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
+  const requestsRef = useRef<LatestRequestController | null>(null);
+  if (!requestsRef.current) requestsRef.current = new LatestRequestController();
 
   useEffect(() => {
     if (!isOpen) {
+      requestsRef.current?.cancel();
       setQuery('');
       setResults(POPULAR_CITIES.slice(0, 10));
+      setSearchError(null);
+      setIsSearching(false);
       return;
     }
   }, [isOpen]);
 
   useEffect(() => {
-    let active = true;
+    if (!isOpen) return;
+    const normalizedQuery = normalizeCityQuery(query);
+    requestsRef.current?.cancel();
+    setSearchError(null);
+    if (!normalizedQuery) {
+      setResults(POPULAR_CITIES.slice(0, 10));
+      setIsSearching(false);
+      return;
+    }
+    if (normalizedQuery.length < CITY_SEARCH_MIN_LENGTH) {
+      setResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setResults([]);
+    setIsSearching(true);
     const timer = setTimeout(async () => {
-      setIsSearching(true);
+      const request = requestsRef.current!.begin();
       try {
-        const res = await searchCities(query);
-        if (active) {
-          setResults(res);
-        }
-      } catch (e) {
-        console.error(e);
+        const nextResults = await searchCities(query, { signal: request.signal });
+        if (request.isCurrent()) setResults(nextResults);
+      } catch (error) {
+        if (!request.isCurrent() || isNetworkRequestError(error, 'aborted')) return;
+        setSearchError(isNetworkRequestError(error, 'timeout') ? 'timeout' : 'network');
       } finally {
-        if (active) setIsSearching(false);
+        if (request.isCurrent()) setIsSearching(false);
+        requestsRef.current?.finish(request);
       }
-    }, 200);
+    }, CITY_SEARCH_DEBOUNCE_MS);
 
     return () => {
-      active = false;
       clearTimeout(timer);
+      requestsRef.current?.cancel();
     };
-  }, [query]);
+  }, [isOpen, query, retryKey]);
 
   const handleSelect = (city: CitySearchResult) => {
     onSelectCity(city);
@@ -107,7 +137,26 @@ export const CitySearchModal: React.FC<CitySearchModalProps> = ({
 
         {/* Results List */}
         <div className="max-h-72 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-          {results.length === 0 ? (
+          {isSearching ? (
+            <div className="text-center py-8 text-sm text-slate-500" aria-live="polite">
+              Mencari lokasi...
+            </div>
+          ) : normalizeCityQuery(query).length > 0 && normalizeCityQuery(query).length < CITY_SEARCH_MIN_LENGTH ? (
+            <div className="text-center py-8 text-sm text-slate-500">
+              Ketik minimal {CITY_SEARCH_MIN_LENGTH} karakter untuk mencari lokasi.
+            </div>
+          ) : searchError ? (
+            <div className="space-y-3 py-8 text-center text-sm text-slate-500" role="status">
+              <p>
+                {searchError === 'timeout'
+                  ? 'Pencarian lokasi terlalu lama. Silakan coba lagi.'
+                  : 'Layanan pencarian lokasi sedang tidak tersedia.'}
+              </p>
+              <Button variant="outline" size="sm" onClick={() => setRetryKey((value) => value + 1)}>
+                Coba Lagi
+              </Button>
+            </div>
+          ) : results.length === 0 ? (
             <div className="text-center py-8 text-sm text-slate-500">
               Tidak ditemukan kota dengan kata kunci &ldquo;{query}&rdquo;
             </div>

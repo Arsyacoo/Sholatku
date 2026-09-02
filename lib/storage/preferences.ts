@@ -129,7 +129,9 @@ function normalizeUserLocation(value: unknown): UserLocation {
     country: safeText(value.country, DEFAULT_LOCATION.country),
     latitude,
     longitude,
-    timezone: isValidTimeZone(value.timezone) ? value.timezone : DEFAULT_LOCATION.timezone,
+    timezone: value.timezone === undefined
+      ? undefined
+      : isValidTimeZone(value.timezone) ? value.timezone : DEFAULT_LOCATION.timezone,
     isAutoDetected: typeof value.isAutoDetected === 'boolean' ? value.isAutoDetected : false,
     displayName: safeText(value.displayName, DEFAULT_LOCATION.displayName),
   };

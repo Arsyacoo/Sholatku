@@ -28,6 +28,15 @@ describe('persisted preference validation', () => {
     expect(getSavedLocation().latitude).toBe(-6.1754);
     expect(getSavedSettings().method).toBe('20');
     expect(getSavedSettings().madhab).toBe('shafii');
+    storage.sholatku_user_location_v1 = JSON.stringify({
+      city: 'Remote City',
+      country: 'Indonesia',
+      latitude: -7,
+      longitude: 110,
+      isAutoDetected: false,
+      displayName: 'Remote City',
+    });
+    expect(getSavedLocation().timezone).toBeUndefined();
     storage.sholatku_user_location_v1 = '{broken';
     storage.sholatku_user_settings_v1 = '{broken';
     expect(() => getSavedLocation()).not.toThrow();
