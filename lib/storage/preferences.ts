@@ -9,17 +9,100 @@ import {
   PRAYER_REMINDER_PRAYERS,
   RamadanPreferences,
   RamadanMode,
+  PrayerScheduleCacheContext,
 } from '@/types';
 import { DEFAULT_LOCATION, DEFAULT_SETTINGS } from '../prayer/constants';
 import { DEFAULT_IMSAK_OFFSET_MINUTES, IMSAK_OFFSET_OPTIONS } from '../ramadan/timing';
+import { isValidTimeZone, normalizeTimeZone } from '../time/timezone';
+import { parseProviderGregorianDate } from '../prayer/date';
 
 const KEYS = {
   LOCATION: 'sholatku_user_location_v1',
   SETTINGS: 'sholatku_user_settings_v1',
-  CACHE_SCHEDULE: 'sholatku_cached_schedule_v1',
+  CACHE_SCHEDULE_LEGACY: 'sholatku_cached_schedule_v1',
+  CACHE_SCHEDULE: 'sholatku_cached_schedule_v2',
   PRAYER_REMINDERS: 'sholatku_prayer_reminders_v1',
   RAMADAN_PREFERENCES: 'sholatku_ramadan_preferences_v1',
 };
+
+const CACHE_VERSION = 2 as const;
+const CACHE_COORDINATE_PRECISION = 4;
+
+interface CachedPrayerScheduleRecord {
+  version: typeof CACHE_VERSION;
+  context: PrayerScheduleCacheContext;
+  schedule: DailyPrayerSchedule;
+  cachedAt: number;
+}
+
+function normalizeCoordinate(value: number): number {
+  return Number(value.toFixed(CACHE_COORDINATE_PRECISION));
+}
+
+export function buildPrayerScheduleCacheContext(
+  date: string,
+  location: UserLocation,
+  settings: UserSettings
+): PrayerScheduleCacheContext {
+  const canonicalDate = parseProviderGregorianDate(date);
+  if (!canonicalDate) throw new Error('Invalid prayer cache date');
+  return {
+    date: canonicalDate,
+    latitude: normalizeCoordinate(location.latitude),
+    longitude: normalizeCoordinate(location.longitude),
+    timezone: normalizeTimeZone(location.timezone),
+    method: settings.method,
+    madhab: settings.madhab,
+    adjustments: {
+      fajr: settings.adjustments.fajr,
+      sunrise: settings.adjustments.sunrise,
+      dhuhr: settings.adjustments.dhuhr,
+      asr: settings.adjustments.asr,
+      maghrib: settings.adjustments.maghrib,
+      isha: settings.adjustments.isha,
+    },
+  };
+}
+
+function isValidPrayerSchedule(value: unknown): value is DailyPrayerSchedule {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const candidate = value as DailyPrayerSchedule;
+  const timings = candidate.timings;
+  return (
+    typeof candidate.date === 'string' && !!parseProviderGregorianDate(candidate.date) &&
+    typeof candidate.readableDate === 'string' && isValidTimeZone(candidate.timezone) &&
+    Number.isFinite(candidate.offset) && !!timings && typeof timings === 'object' &&
+    ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'].every((key) => {
+      const time = timings[key as keyof typeof timings];
+      return typeof time === 'string' && /^\d{2}:\d{2}$/.test(time);
+    }) && ['api', 'cache', 'offline', 'calculated'].includes(candidate.source)
+  );
+}
+
+function isValidCacheContext(value: unknown): value is PrayerScheduleCacheContext {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const context = value as PrayerScheduleCacheContext;
+  const adjustments = context.adjustments;
+  return (
+    typeof context.date === 'string' && !!parseProviderGregorianDate(context.date) &&
+    typeof context.latitude === 'number' && Number.isFinite(context.latitude) && context.latitude >= -90 && context.latitude <= 90 &&
+    typeof context.longitude === 'number' && Number.isFinite(context.longitude) && context.longitude >= -180 && context.longitude <= 180 &&
+    isValidTimeZone(context.timezone) && typeof context.method === 'string' && typeof context.madhab === 'string' &&
+    !!adjustments && typeof adjustments === 'object' &&
+    ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'].every((key) => {
+      const value = adjustments[key as keyof typeof adjustments];
+      return typeof value === 'number' && Number.isFinite(value);
+    })
+  );
+}
+
+function matchesCacheContext(a: PrayerScheduleCacheContext, b: PrayerScheduleCacheContext): boolean {
+  return a.date === b.date &&
+    normalizeCoordinate(a.latitude) === normalizeCoordinate(b.latitude) &&
+    normalizeCoordinate(a.longitude) === normalizeCoordinate(b.longitude) &&
+    a.timezone === b.timezone && a.method === b.method && a.madhab === b.madhab &&
+    JSON.stringify(a.adjustments) === JSON.stringify(b.adjustments);
+}
 
 const REMINDER_OFFSETS: readonly PrayerReminderOffset[] = [0, 5, 10, 15, 30];
 
@@ -95,23 +178,38 @@ export function saveSettings(settings: UserSettings): void {
   }
 }
 
-export function getCachedSchedule(): DailyPrayerSchedule | null {
+export function getCachedSchedule(context?: PrayerScheduleCacheContext): DailyPrayerSchedule | null {
   if (typeof window === 'undefined') return null;
+  if (!context) return null;
   try {
     const raw = localStorage.getItem(KEYS.CACHE_SCHEDULE);
-    if (raw) {
-      return JSON.parse(raw);
-    }
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<CachedPrayerScheduleRecord>;
+    if (
+      parsed.version !== CACHE_VERSION ||
+      !isValidCacheContext(parsed.context) ||
+      !isValidPrayerSchedule(parsed.schedule) ||
+      !matchesCacheContext(parsed.context, context) ||
+      parsed.schedule.date !== context.date
+    ) return null;
+    return { ...parsed.schedule, source: 'cache' };
   } catch (e) {
     console.warn('Failed to read cached schedule:', e);
   }
   return null;
 }
 
-export function saveCachedSchedule(schedule: DailyPrayerSchedule): void {
+export function saveCachedSchedule(schedule: DailyPrayerSchedule, context: PrayerScheduleCacheContext): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(KEYS.CACHE_SCHEDULE, JSON.stringify(schedule));
+    const record: CachedPrayerScheduleRecord = {
+      version: CACHE_VERSION,
+      context,
+      schedule,
+      cachedAt: Date.now(),
+    };
+    localStorage.setItem(KEYS.CACHE_SCHEDULE, JSON.stringify(record));
+    localStorage.removeItem(KEYS.CACHE_SCHEDULE_LEGACY);
   } catch (e) {
     console.warn('Failed to save cached schedule:', e);
   }
