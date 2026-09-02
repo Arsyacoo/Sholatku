@@ -7,14 +7,18 @@ import {
   PrayerReminderSettings,
   PrayerReminderOffset,
   PRAYER_REMINDER_PRAYERS,
+  RamadanPreferences,
+  RamadanMode,
 } from '@/types';
 import { DEFAULT_LOCATION, DEFAULT_SETTINGS } from '../prayer/constants';
+import { DEFAULT_IMSAK_OFFSET_MINUTES, IMSAK_OFFSET_OPTIONS } from '../ramadan/timing';
 
 const KEYS = {
   LOCATION: 'sholatku_user_location_v1',
   SETTINGS: 'sholatku_user_settings_v1',
   CACHE_SCHEDULE: 'sholatku_cached_schedule_v1',
   PRAYER_REMINDERS: 'sholatku_prayer_reminders_v1',
+  RAMADAN_PREFERENCES: 'sholatku_ramadan_preferences_v1',
 };
 
 const REMINDER_OFFSETS: readonly PrayerReminderOffset[] = [0, 5, 10, 15, 30];
@@ -155,4 +159,71 @@ export function resetPrayerReminderSettings(): PrayerReminderSettings {
   const defaults = getDefaultPrayerReminderSettings();
   savePrayerReminderSettings(defaults);
   return defaults;
+}
+
+export function getDefaultRamadanPreferences(): RamadanPreferences {
+  return {
+    mode: 'automatic',
+    imsakOffsetMinutes: DEFAULT_IMSAK_OFFSET_MINUTES,
+    showHomeCard: true,
+    reminders: {
+      imsak: { enabled: false, offsetMinutes: 0 },
+      maghrib: { enabled: false, offsetMinutes: 0 },
+    },
+  };
+}
+
+function isRamadanMode(value: unknown): value is RamadanMode {
+  return value === 'automatic' || value === 'enabled' || value === 'disabled';
+}
+
+function isImsakOffset(value: unknown): value is RamadanPreferences['imsakOffsetMinutes'] {
+  return IMSAK_OFFSET_OPTIONS.includes(value as RamadanPreferences['imsakOffsetMinutes']);
+}
+
+function normalizeRamadanPreferences(value: unknown): RamadanPreferences {
+  const defaults = getDefaultRamadanPreferences();
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return defaults;
+  const input = value as Record<string, unknown>;
+  const reminders = input.reminders as Record<string, unknown> | undefined;
+  const normalizeReminder = (candidate: unknown) => {
+    if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) return { ...defaults.reminders.imsak };
+    const item = candidate as Record<string, unknown>;
+    return {
+      enabled: typeof item.enabled === 'boolean' ? item.enabled : false,
+      offsetMinutes: isReminderOffset(item.offsetMinutes) ? item.offsetMinutes : 0,
+    };
+  };
+  return {
+    mode: isRamadanMode(input.mode) ? input.mode : defaults.mode,
+    imsakOffsetMinutes: isImsakOffset(input.imsakOffsetMinutes)
+      ? input.imsakOffsetMinutes
+      : defaults.imsakOffsetMinutes,
+    showHomeCard: typeof input.showHomeCard === 'boolean' ? input.showHomeCard : defaults.showHomeCard,
+    reminders: {
+      imsak: normalizeReminder(reminders?.imsak),
+      maghrib: normalizeReminder(reminders?.maghrib),
+    },
+  };
+}
+
+export function getRamadanPreferences(): RamadanPreferences {
+  const defaults = getDefaultRamadanPreferences();
+  if (typeof window === 'undefined') return defaults;
+  try {
+    const raw = localStorage.getItem(KEYS.RAMADAN_PREFERENCES);
+    return raw ? normalizeRamadanPreferences(JSON.parse(raw)) : defaults;
+  } catch (e) {
+    console.warn('Failed to read Ramadan preferences from localStorage:', e);
+    return defaults;
+  }
+}
+
+export function saveRamadanPreferences(preferences: RamadanPreferences): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(KEYS.RAMADAN_PREFERENCES, JSON.stringify(normalizeRamadanPreferences(preferences)));
+  } catch (e) {
+    console.warn('Failed to save Ramadan preferences:', e);
+  }
 }
