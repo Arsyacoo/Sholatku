@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, ChevronDown } from 'lucide-react';
 
@@ -79,24 +79,38 @@ function SelectComponent<T extends string | number>({
     if (!isOpen) setActiveIndex(getSelectableIndex(options, value));
   }, [isOpen, options, value]);
 
-  const updatePosition = () => {
+  const updatePosition = useCallback(() => {
     if (!triggerRef.current || typeof window === 'undefined') return;
     const rect = triggerRef.current.getBoundingClientRect();
     const viewportPadding = 8;
-    const maxHeight = Math.min(320, Math.max(160, window.innerHeight - viewportPadding * 2));
-    const opensUp = rect.bottom + maxHeight + 4 > window.innerHeight - viewportPadding && rect.top > maxHeight;
-    const top = opensUp
-      ? Math.max(viewportPadding, rect.top - maxHeight - 4)
-      : Math.min(window.innerHeight - maxHeight - viewportPadding, rect.bottom + 4);
+    const menuGap = 4;
+    const menuMaxHeight = 320;
+    const estimatedHeight = Math.min(menuMaxHeight, Math.max(40, options.length * 40 + 8));
+    const measuredHeight = Math.max(40, menuRef.current?.scrollHeight ?? estimatedHeight);
+    const desiredHeight = Math.min(menuMaxHeight, measuredHeight);
+    const spaceBelow = Math.max(0, window.innerHeight - rect.bottom - viewportPadding - menuGap);
+    const spaceAbove = Math.max(0, rect.top - viewportPadding - menuGap);
+    const opensUp = spaceBelow < desiredHeight && spaceAbove > spaceBelow;
+    const availableSpace = opensUp ? spaceAbove : spaceBelow;
+    const maxHeight = Math.max(80, Math.min(menuMaxHeight, availableSpace || menuMaxHeight));
+    const visibleHeight = Math.min(desiredHeight, maxHeight);
+    const preferredTop = opensUp
+      ? rect.top - visibleHeight - menuGap
+      : rect.bottom + menuGap;
+    const top = clamp(
+      preferredTop,
+      viewportPadding,
+      Math.max(viewportPadding, window.innerHeight - visibleHeight - viewportPadding)
+    );
     const width = Math.min(Math.max(rect.width, 180), window.innerWidth - viewportPadding * 2);
     const left = clamp(rect.left, viewportPadding, window.innerWidth - width - viewportPadding);
     setPosition({ top, left, width, maxHeight });
-  };
+  }, [options]);
 
-  const close = (restoreFocus = true) => {
+  const close = useCallback((restoreFocus = true) => {
     setIsOpen(false);
     if (restoreFocus) window.setTimeout(() => triggerRef.current?.focus(), 0);
-  };
+  }, []);
 
   const open = () => {
     if (disabled || !options.some((option) => !option.disabled)) return;
@@ -122,7 +136,7 @@ function SelectComponent<T extends string | number>({
       window.removeEventListener('resize', handleViewportChange);
       window.removeEventListener('scroll', handleViewportChange, true);
     };
-  }, [isOpen]);
+  }, [close, isOpen, updatePosition]);
 
   useEffect(() => {
     if (!isOpen || activeIndex < 0) return;
