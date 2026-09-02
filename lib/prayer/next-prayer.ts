@@ -1,12 +1,15 @@
 import { DailyPrayerSchedule, NextPrayerInfo, PrayerKey, PrayerTimeItem } from '@/types';
 import { PRAYER_NAMES } from './constants';
+import { addDaysToCanonicalDate } from './date';
+import { formatDateInTimeZone, normalizeTimeZone, zonedTimeToUtc } from '../time/timezone';
 
 const PRAYER_ORDER: PrayerKey[] = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
 
 /**
  * Parses "HH:mm" time string against a given date in the target timezone or local.
  */
-export function parseTimeToDate(timeStr: string, baseDate: Date): Date {
+export function parseTimeToDate(timeStr: string, baseDate: Date, timeZone?: string): Date {
+  if (timeZone) return zonedTimeToUtc(formatDateInTimeZone(baseDate, timeZone), timeStr, normalizeTimeZone(timeZone));
   const [hours, minutes] = timeStr.split(':').map(Number);
   const d = new Date(baseDate);
   d.setHours(hours, minutes, 0, 0);
@@ -43,11 +46,12 @@ export function calculateNextPrayer(
   tomorrowFajrTime?: string
 ): NextPrayerInfo {
   const { timings } = schedule;
+  const timezone = normalizeTimeZone(schedule.timezone);
 
   // Build timestamps for today
   const prayerItems: PrayerTimeItem[] = PRAYER_ORDER.map((key) => {
     const timeStr = timings[key] || '00:00';
-    const dateObj = parseTimeToDate(timeStr, now);
+    const dateObj = zonedTimeToUtc(schedule.date, timeStr, timezone);
     const names = PRAYER_NAMES[key] || { id: key, ar: key };
 
     return {
@@ -121,9 +125,11 @@ export function calculateNextPrayer(
     isTomorrowFajr = true;
 
     // Tomorrow's Fajr timestamp
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowFajrDate = parseTimeToDate(tomorrowFajrTime || timings.fajr, tomorrow);
+    const tomorrowFajrDate = zonedTimeToUtc(
+      addDaysToCanonicalDate(schedule.date, 1),
+      tomorrowFajrTime || timings.fajr,
+      timezone
+    );
 
     targetTimestamp = tomorrowFajrDate.getTime();
     previousTimestamp = isha.timestamp;

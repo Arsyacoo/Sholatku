@@ -1,6 +1,7 @@
 import type { MonthlyPrayerItem, PrayerReminderSettings, RamadanReminderSettings, UserLocation } from '@/types';
 import type { RamadanImsakiyahRow } from '@/lib/ramadan/imsakiyah';
 import { PRAYER_REMINDER_PRAYERS } from '@/types';
+import { formatTimeInTimeZone } from '@/lib/time/timezone';
 
 const PRAYER_LABELS: Record<(typeof PRAYER_REMINDER_PRAYERS)[number], string> = {
   fajr: 'Subuh',
@@ -101,10 +102,6 @@ export function generatePrayerCalendarIcs(
   return `${lines.join('\r\n')}\r\n`;
 }
 
-function formatLocalTime(date: Date): string {
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-}
-
 function appendAlarm(lines: string[], label: string, preference?: { enabled: boolean; offsetMinutes: number }) {
   if (!preference?.enabled) return;
   const trigger = preference.offsetMinutes === 0 ? 'PT0M' : `-PT${preference.offsetMinutes}M`;
@@ -151,7 +148,7 @@ export function generateRamadanCalendarIcs(
   for (const row of rows) {
     for (const event of events) {
       const eventDate = event.key === 'imsak' ? row.timing.imsakAt : event.key === 'fajr' ? row.timing.fajrAt : row.timing.maghribAt;
-      const time = formatLocalTime(eventDate);
+      const time = formatTimeInTimeZone(eventDate, timezone || 'UTC');
       const start = toIcsDateTime(row.date, time);
       const end = addMinutes(row.date, time, 10);
       const dateTimePrefix = timezone ? `;TZID=${timezone}` : '';

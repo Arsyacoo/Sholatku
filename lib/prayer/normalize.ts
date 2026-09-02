@@ -1,5 +1,5 @@
 import { DailyPrayerSchedule, MonthlyPrayerItem, PrayerAdjustment } from '@/types';
-import { formatIndonesianDate, getApproximateHijriDate } from '../time/timezone';
+import { formatDateInTimeZone, formatIndonesianDateInTimeZone, getApproximateHijriDate, getTimeZoneOffsetMinutes, normalizeTimeZone } from '../time/timezone';
 import { canonicalDateToUtcDate, parseProviderGregorianDate } from './date';
 
 /**
@@ -35,7 +35,8 @@ export function applyTimeOffset(timeStr: string, offsetMinutes: number): string 
 export function normalizeAlAdhanDay(
   raw: any,
   adjustments?: PrayerAdjustment,
-  source: 'api' | 'cache' | 'offline' | 'calculated' = 'api'
+  source: 'api' | 'cache' | 'offline' | 'calculated' = 'api',
+  fallbackTimezone?: string
 ): DailyPrayerSchedule {
   const timings = raw.timings || {};
   const dateMeta = raw.date || {};
@@ -74,7 +75,8 @@ export function normalizeAlAdhanDay(
     throw new Error('Provider returned an invalid Gregorian prayer date');
   }
 
-  const readableDate = formatIndonesianDate(canonicalDateToUtcDate(dateStr));
+  const timezone = normalizeTimeZone(meta.timezone, fallbackTimezone);
+  const readableDate = formatIndonesianDateInTimeZone(canonicalDateToUtcDate(dateStr), timezone);
 
   const hijriMonthEn = hijri.month?.en || 'Safar';
   const hijriMonthAr = hijri.month?.ar || 'صفر';
@@ -90,8 +92,10 @@ export function normalizeAlAdhanDay(
       year: hijriYear,
       formatted: `${hijriDay} ${hijriMonthEn} ${hijriYear} H`,
     },
-    timezone: meta.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
-    offset: meta.offset || 7,
+    timezone,
+    offset: typeof meta.offset === 'number'
+      ? meta.offset
+      : getTimeZoneOffsetMinutes(canonicalDateToUtcDate(dateStr), timezone) / 60,
     timings: cleanTimings,
     source,
     meta: {
@@ -105,21 +109,23 @@ export function normalizeAlAdhanDay(
 /**
  * Normalizes AlAdhan monthly calendar response into `MonthlyPrayerItem[]`
  */
-export function normalizeAlAdhanMonth(rawArray: any[], adjustments?: PrayerAdjustment): MonthlyPrayerItem[] {
-  const todayStr = new Date().toISOString().split('T')[0];
+export function normalizeAlAdhanMonth(rawArray: any[], adjustments?: PrayerAdjustment, fallbackTimezone?: string): MonthlyPrayerItem[] {
+  const timezone = normalizeTimeZone(fallbackTimezone);
+  const todayStr = formatDateInTimeZone(new Date(), timezone);
 
   return rawArray.map((dayData: any) => {
-    const norm = normalizeAlAdhanDay(dayData, adjustments);
+    const norm = normalizeAlAdhanDay(dayData, adjustments, 'api', timezone);
     const dateParts = norm.date.split('-');
     const dayNum = parseInt(dateParts[2] || '1', 10);
     const dayName = norm.readableDate.split(',')[0];
 
     return {
       date: norm.date,
+      timezone: norm.timezone,
       dayNumber: isNaN(dayNum) ? 1 : dayNum,
       dayName: dayName || 'Hari',
       hijriFormatted: norm.hijriDate.formatted,
-      isToday: norm.date === todayStr || norm.readableDate === formatIndonesianDate(new Date()),
+      isToday: norm.date === todayStr,
       timings: {
         fajr: norm.timings.fajr,
         sunrise: norm.timings.sunrise,

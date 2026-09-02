@@ -6,10 +6,11 @@ import { getDailyPrayerTimes } from '@/lib/prayer/api';
 import { getRamadanContext } from '@/lib/ramadan/context';
 import { getRamadanStatus } from '@/lib/ramadan/calendar';
 import { buildRamadanTiming, normalizeScheduleDate } from '@/lib/ramadan/timing';
+import { addDaysToCanonicalDate } from '@/lib/prayer/date';
+import { zonedTimeToUtc } from '@/lib/time/timezone';
 
-function addDays(date: string, amount: number): Date {
-  const [year, month, day] = normalizeScheduleDate(date).split('-').map(Number);
-  return new Date(year, month - 1, day + amount, 12, 0, 0, 0);
+function addDays(date: string, amount: number, timeZone: string): Date {
+  return zonedTimeToUtc(addDaysToCanonicalDate(normalizeScheduleDate(date), amount), '12:00', timeZone);
 }
 
 function preferenceKey(preferences: RamadanPreferences): string {
@@ -68,7 +69,7 @@ export function useRamadan(
 
     let active = true;
     setIsLoadingNextDay(true);
-    getDailyPrayerTimes(location, settings, addDays(timing.date, 1))
+    getDailyPrayerTimes(location, settings, addDays(timing.date, 1, timing.timezone))
       .then((next) => {
         if (active) setNextDaySchedule(next);
       })

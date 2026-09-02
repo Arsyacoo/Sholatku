@@ -5,6 +5,8 @@ import { DailyPrayerSchedule, NextPrayerInfo, PrayerKey } from '@/types';
 import { PrayerTimeCard } from './PrayerTimeCard';
 import { PRAYER_NAMES } from '@/lib/prayer/constants';
 import { Skeleton } from '../ui/Skeleton';
+import { parsePrayerDateTime } from '@/lib/prayer/reminders/schedule';
+import { getTimeZoneLabel } from '@/lib/time/timezone';
 
 interface PrayerScheduleListProps {
   schedule: DailyPrayerSchedule | null;
@@ -37,7 +39,7 @@ export const PrayerScheduleList: React.FC<PrayerScheduleListProps> = ({
         <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
           Jadwal Sholat Hari Ini
         </h2>
-        <span className="text-xs text-slate-400">Zona {schedule.timezone}</span>
+        <span className="text-xs text-slate-400">Zona {getTimeZoneLabel(schedule.timezone)}</span>
       </div>
 
       <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
@@ -46,10 +48,7 @@ export const PrayerScheduleList: React.FC<PrayerScheduleListProps> = ({
           const names = PRAYER_NAMES[key] || { id: key, ar: key };
 
           // Build today timestamp for comparison
-          const [h, m] = time.split(':').map(Number);
-          const prayerDate = new Date();
-          prayerDate.setHours(h, m, 0, 0);
-          const isPassed = prayerDate.getTime() <= now;
+          const isPassed = parsePrayerDateTime(schedule.date, time, schedule.timezone).getTime() <= now;
 
           const isNext = !nextPrayerInfo?.isTomorrowFajr && nextPrayerInfo?.nextPrayer.id === key;
           const isCurrent = nextPrayerInfo?.currentPrayer?.id === key;
@@ -65,6 +64,7 @@ export const PrayerScheduleList: React.FC<PrayerScheduleListProps> = ({
               isCurrent={isCurrent}
               isNext={isNext}
               isPrayer={key !== 'sunrise'}
+              timezoneLabel={getTimeZoneLabel(schedule.timezone)}
             />
           );
         })}

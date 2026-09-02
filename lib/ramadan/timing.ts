@@ -1,7 +1,10 @@
 import type { RamadanTiming } from '@/types';
+import { parseProviderGregorianDate } from '@/lib/prayer/date';
+import { normalizeTimeZone, zonedTimeToUtc } from '@/lib/time/timezone';
 
 export type RamadanTimingSource = {
   date: string;
+  timezone?: string;
   timings: {
     fajr: string;
     maghrib: string;
@@ -18,27 +21,12 @@ export function normalizeImsakOffset(value: unknown): 5 | 10 | 15 | 20 {
 }
 
 export function normalizeScheduleDate(value: string): string {
-  const parts = value.split('-').map(Number);
-  if (parts.length !== 3 || parts.some((part) => !Number.isFinite(part))) return value;
-  if (parts[0] > 1900) {
-    return `${parts[0]}-${String(parts[1]).padStart(2, '0')}-${String(parts[2]).padStart(2, '0')}`;
-  }
-  return `${parts[2]}-${String(parts[1]).padStart(2, '0')}-${String(parts[0]).padStart(2, '0')}`;
+  return parseProviderGregorianDate(value) ?? value;
 }
 
-export function parseLocalDateTime(date: string, time: string): Date {
+export function parseLocalDateTime(date: string, time: string, timeZone = 'Asia/Jakarta'): Date {
   const normalizedDate = normalizeScheduleDate(date);
-  const [year, month, day] = normalizedDate.split('-').map(Number);
-  const [hours, minutes] = time.split(':').map(Number);
-  return new Date(
-    Number.isFinite(year) ? year : new Date().getFullYear(),
-    Number.isFinite(month) ? month - 1 : 0,
-    Number.isFinite(day) ? day : 1,
-    Number.isFinite(hours) ? hours : 0,
-    Number.isFinite(minutes) ? minutes : 0,
-    0,
-    0
-  );
+  return zonedTimeToUtc(normalizedDate, time, normalizeTimeZone(timeZone));
 }
 
 export function buildRamadanTiming(
@@ -47,12 +35,14 @@ export function buildRamadanTiming(
 ): RamadanTiming {
   const offset = normalizeImsakOffset(imsakOffsetMinutes);
   const normalizedDate = normalizeScheduleDate(schedule.date);
-  const fajrAt = parseLocalDateTime(normalizedDate, schedule.timings.fajr);
-  const maghribAt = parseLocalDateTime(normalizedDate, schedule.timings.maghrib);
+  const timezone = normalizeTimeZone(schedule.timezone);
+  const fajrAt = parseLocalDateTime(normalizedDate, schedule.timings.fajr, timezone);
+  const maghribAt = parseLocalDateTime(normalizedDate, schedule.timings.maghrib, timezone);
   const imsakAt = new Date(fajrAt.getTime() - offset * 60 * 1000);
 
   return {
     date: normalizedDate,
+    timezone,
     imsakAt,
     fajrAt,
     maghribAt,
@@ -64,7 +54,8 @@ export function buildRamadanTimingFromTimes(
   date: string,
   fajr: string,
   maghrib: string,
-  imsakOffsetMinutes: number = DEFAULT_IMSAK_OFFSET_MINUTES
+  imsakOffsetMinutes: number = DEFAULT_IMSAK_OFFSET_MINUTES,
+  timezone = 'Asia/Jakarta'
 ): RamadanTiming {
-  return buildRamadanTiming({ date, timings: { fajr, maghrib } }, imsakOffsetMinutes);
+  return buildRamadanTiming({ date, timezone, timings: { fajr, maghrib } }, imsakOffsetMinutes);
 }

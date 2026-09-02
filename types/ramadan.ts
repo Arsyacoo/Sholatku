@@ -41,6 +41,7 @@ export interface RamadanDateRange {
 
 export interface RamadanTiming {
   date: string;
+  timezone: string;
   imsakAt: Date;
   fajrAt: Date;
   maghribAt: Date;

@@ -2,38 +2,26 @@ import type { DailyPrayerSchedule, PrayerReminderSettings } from '@/types';
 import { PRAYER_REMINDER_PRAYERS } from '@/types';
 import type { PrayerReminderEvent, PrayerReminderPrayer, RamadanReminderEvent, ReminderEvent } from './types';
 import type { RamadanReminderSettings, RamadanTiming } from '@/types';
+import { addDaysToCanonicalDate } from '@/lib/prayer/date';
+import { formatDateInTimeZone, normalizeTimeZone, zonedTimeToUtc } from '@/lib/time/timezone';
 
-function parseDateOnly(date: string): Date {
-  const [year, month, day] = date.split('-').map(Number);
-  return new Date(year, (month || 1) - 1, day || 1, 0, 0, 0, 0);
+export function formatDateOnly(date: Date, timeZone?: string): string {
+  if (timeZone) return formatDateInTimeZone(date, normalizeTimeZone(timeZone));
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-export function formatDateOnly(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
-    date.getDate()
-  ).padStart(2, '0')}`;
-}
-
-export function parsePrayerDateTime(date: string, time: string): Date {
-  const base = parseDateOnly(date);
-  const [hours, minutes] = time.split(':').map(Number);
-  base.setHours(Number.isFinite(hours) ? hours : 0, Number.isFinite(minutes) ? minutes : 0, 0, 0);
-  return base;
-}
-
-function tomorrowDate(date: string): string {
-  const next = parseDateOnly(date);
-  next.setDate(next.getDate() + 1);
-  return formatDateOnly(next);
+export function parsePrayerDateTime(date: string, time: string, timeZone = 'Asia/Jakarta'): Date {
+  return zonedTimeToUtc(date, time, normalizeTimeZone(timeZone));
 }
 
 function createEvent(
   date: string,
   prayer: PrayerReminderPrayer,
   time: string,
-  offsetMinutes: 0 | 5 | 10 | 15 | 30
+  offsetMinutes: 0 | 5 | 10 | 15 | 30,
+  timeZone: string
 ): PrayerReminderEvent {
-  const prayerAt = parsePrayerDateTime(date, time);
+  const prayerAt = parsePrayerDateTime(date, time, timeZone);
   const reminderAt = new Date(prayerAt.getTime() - offsetMinutes * 60 * 1000);
   return {
     id: `${date}-${prayer}-${offsetMinutes}`,
@@ -55,7 +43,7 @@ function appendScheduleEvents(
     const preference = settings[prayer];
     const time = schedule.timings[prayer];
     if (!preference?.enabled || !time) continue;
-    events.push(createEvent(schedule.date, prayer, time, preference.offsetMinutes));
+    events.push(createEvent(schedule.date, prayer, time, preference.offsetMinutes, schedule.timezone));
   }
 }
 
@@ -73,11 +61,11 @@ export function buildPrayerReminderEvents(
   const events: PrayerReminderEvent[] = [];
   appendScheduleEvents(events, schedule, settings);
 
-  const isAfterIsha = now.getTime() >= parsePrayerDateTime(schedule.date, schedule.timings.isha).getTime();
+  const isAfterIsha = now.getTime() >= parsePrayerDateTime(schedule.date, schedule.timings.isha, schedule.timezone).getTime();
   if (isAfterIsha) {
     const nextSchedule = tomorrowSchedule ?? {
       ...schedule,
-      date: tomorrowDate(schedule.date),
+      date: addDaysToCanonicalDate(schedule.date, 1),
     };
     appendScheduleEvents(events, nextSchedule, settings, ['fajr']);
   }

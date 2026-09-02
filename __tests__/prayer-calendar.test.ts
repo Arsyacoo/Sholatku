@@ -26,6 +26,7 @@ const reminders: PrayerReminderSettings = {
 const month: MonthlyPrayerItem[] = [
   {
     date: '2026-09-01',
+    timezone: 'Asia/Jakarta',
     dayNumber: 1,
     dayName: 'Selasa',
     hijriFormatted: '18 Rabiul Awwal 1448 H',
@@ -41,6 +42,7 @@ const month: MonthlyPrayerItem[] = [
   },
   {
     date: '2026-09-02',
+    timezone: 'Asia/Jakarta',
     dayNumber: 2,
     dayName: 'Rabu',
     hijriFormatted: '19 Rabiul Awwal 1448 H',

@@ -48,8 +48,8 @@ export function calculateDistanceToKaaba(lat: number, lon: number): number {
 export function calculateOfflinePrayers(date: Date, lat: number, lon: number, timezoneOffset: number) {
   // Approximate calculation based on solar declination and equation of time
   const dayOfYear = Math.floor(
-    (Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) -
-      Date.UTC(date.getFullYear(), 0, 0)) /
+    (Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) -
+      Date.UTC(date.getUTCFullYear(), 0, 0)) /
       (24 * 60 * 60 * 1000)
   );
 

@@ -1,3 +1,5 @@
+import type { CalculationMethodId, Madhab, PrayerAdjustment } from './settings';
+
 export type PrayerName = 'Fajr' | 'Sunrise' | 'Dhuhr' | 'Asr' | 'Maghrib' | 'Isha';
 
 export type PrayerKey = 'fajr' | 'sunrise' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
@@ -57,6 +59,7 @@ export interface NextPrayerInfo {
 
 export interface MonthlyPrayerItem {
   date: string;
+  timezone: string;
   dayNumber: number;
   dayName: string;
   hijriFormatted: string;
@@ -69,4 +72,14 @@ export interface MonthlyPrayerItem {
     maghrib: string;
     isha: string;
   };
+}
+
+export interface PrayerScheduleCacheContext {
+  date: string;
+  latitude: number;
+  longitude: number;
+  timezone: string;
+  method: CalculationMethodId;
+  madhab: Madhab;
+  adjustments: PrayerAdjustment;
 }

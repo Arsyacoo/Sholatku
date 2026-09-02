@@ -13,6 +13,7 @@ interface PrayerTimeCardProps {
   isCurrent: boolean;
   isNext: boolean;
   isPrayer: boolean;
+  timezoneLabel: string;
 }
 
 export const PrayerTimeCard: React.FC<PrayerTimeCardProps> = ({
@@ -24,6 +25,7 @@ export const PrayerTimeCard: React.FC<PrayerTimeCardProps> = ({
   isCurrent,
   isNext,
   isPrayer,
+  timezoneLabel,
 }) => {
   const getIcon = () => {
     switch (id) {
@@ -127,7 +129,7 @@ export const PrayerTimeCard: React.FC<PrayerTimeCardProps> = ({
           >
             {time}
           </span>
-          <div className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">WIB</div>
+          <div className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">{timezoneLabel}</div>
         </div>
 
         {isPassed && (

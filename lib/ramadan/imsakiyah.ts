@@ -1,6 +1,7 @@
 import type { MonthlyPrayerItem, RamadanDateRange, RamadanTiming, UserLocation, UserSettings } from '@/types';
 import { getMonthlyPrayerTimes } from '@/lib/prayer/api';
 import { buildRamadanTiming, normalizeScheduleDate } from './timing';
+import { formatDateInTimeZone } from '@/lib/time/timezone';
 
 export interface RamadanImsakiyahRow {
   ramadanDay: number;
@@ -39,7 +40,7 @@ export async function buildRamadanImsakiyah(
   const byDate = new Map<string, MonthlyPrayerItem>();
   monthlySchedules.flat().forEach((item) => byDate.set(normalizeScheduleDate(item.date), item));
 
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const today = formatDateInTimeZone(now, location.timezone || 'Asia/Jakarta');
   return range.dates.flatMap((date, index) => {
     const item = byDate.get(date);
     if (!item) return [];

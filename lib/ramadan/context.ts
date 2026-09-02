@@ -1,5 +1,6 @@
 import type { RamadanContext, RamadanTiming } from '@/types';
 import { formatCountdown } from '@/lib/prayer/next-prayer';
+import { formatDateInTimeZone } from '@/lib/time/timezone';
 
 export interface RamadanContextInput {
   now?: Date;
@@ -28,9 +29,8 @@ function createContext(
   };
 }
 
-function isNextLocalDate(now: Date, nextDate: string): boolean {
-  const next = new Date(`${nextDate}T00:00:00`);
-  return now.getFullYear() === next.getFullYear() && now.getMonth() === next.getMonth() && now.getDate() === next.getDate();
+function isNextLocalDate(now: Date, nextDate: string, timeZone: string): boolean {
+  return formatDateInTimeZone(now, timeZone) === nextDate;
 }
 
 /** Chooses one positive countdown target for the current Ramadan moment. */
@@ -58,7 +58,7 @@ export function getRamadanContext({
   }
 
   if (nextDayTiming) {
-    const state = isNextLocalDate(now, nextDayTiming.date) ? 'NIGHT' : 'POST_MAGHRIB';
+    const state = isNextLocalDate(now, nextDayTiming.date, nextDayTiming.timezone) ? 'NIGHT' : 'POST_MAGHRIB';
     return createContext(state, 'next-imsak', nextDayTiming.imsakAt, 'Imsak berikutnya', now);
   }
 

@@ -15,10 +15,7 @@ import { getRelevantRamadanYear, getRamadanDateRange } from '@/lib/ramadan/calen
 import { buildRamadanImsakiyah, type RamadanImsakiyahRow } from '@/lib/ramadan/imsakiyah';
 import { getDefaultPrayerReminderSettings, getDefaultRamadanPreferences, getPrayerReminderSettings, getRamadanPreferences, getSavedSettings } from '@/lib/storage/preferences';
 import type { PrayerReminderSettings, RamadanPreferences, UserSettings } from '@/types';
-
-function formatTime(date: Date): string {
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-}
+import { formatTimeInTimeZone } from '@/lib/time/timezone';
 
 export default function RamadanPage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -154,9 +151,9 @@ export default function RamadanPage() {
                             {row.isToday && <span className="rounded-full bg-primary-600 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">Hari ini</span>}
                           </div>
                         </td>
-                        <td className="px-3 py-3 font-mono">{formatTime(row.timing.imsakAt)}</td>
-                        <td className="px-3 py-3 font-mono">{formatTime(row.timing.fajrAt)}</td>
-                        <td className="px-3 py-3 font-mono">{formatTime(row.timing.maghribAt)}</td>
+                        <td className="px-3 py-3 font-mono">{formatTimeInTimeZone(row.timing.imsakAt, row.timing.timezone)}</td>
+                        <td className="px-3 py-3 font-mono">{formatTimeInTimeZone(row.timing.fajrAt, row.timing.timezone)}</td>
+                        <td className="px-3 py-3 font-mono">{formatTimeInTimeZone(row.timing.maghribAt, row.timing.timezone)}</td>
                       </tr>
                     ))}
               </tbody>

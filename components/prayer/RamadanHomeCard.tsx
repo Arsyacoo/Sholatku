@@ -4,15 +4,12 @@ import React from 'react';
 import Link from 'next/link';
 import { ArrowRight, Clock3, MoonStar, Sunrise, Sunset } from 'lucide-react';
 import type { RamadanContext, RamadanStatus, RamadanTiming } from '@/types';
+import { formatTimeInTimeZone } from '@/lib/time/timezone';
 
 interface RamadanHomeCardProps {
   status: RamadanStatus;
   timing: RamadanTiming;
   context: RamadanContext;
-}
-
-function formatTime(date: Date): string {
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
 
 export const RamadanHomeCard: React.FC<RamadanHomeCardProps> = ({ status, timing, context }) => {
@@ -71,21 +68,21 @@ export const RamadanHomeCard: React.FC<RamadanHomeCardProps> = ({ status, timing
             <MoonStar className="h-4 w-4 text-teal-200" aria-hidden="true" />
             <div>
               <p className="text-[11px] text-teal-100/70">Imsak</p>
-              <p className="font-mono text-sm font-bold">{formatTime(timing.imsakAt)}</p>
+              <p className="font-mono text-sm font-bold">{formatTimeInTimeZone(timing.imsakAt, timing.timezone)}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Sunrise className="h-4 w-4 text-teal-200" aria-hidden="true" />
             <div>
               <p className="text-[11px] text-teal-100/70">Subuh</p>
-              <p className="font-mono text-sm font-bold">{formatTime(timing.fajrAt)}</p>
+              <p className="font-mono text-sm font-bold">{formatTimeInTimeZone(timing.fajrAt, timing.timezone)}</p>
             </div>
           </div>
           <div className="flex items-center justify-end gap-2">
             <Sunset className="h-4 w-4 text-gold-200" aria-hidden="true" />
             <div>
               <p className="text-[11px] text-teal-100/70">Maghrib</p>
-              <p className="font-mono text-sm font-bold">{formatTime(timing.maghribAt)}</p>
+              <p className="font-mono text-sm font-bold">{formatTimeInTimeZone(timing.maghribAt, timing.timezone)}</p>
             </div>
           </div>
         </div>

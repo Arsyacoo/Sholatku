@@ -43,6 +43,7 @@ const reminders: PrayerReminderSettings = {
 
 const item = (date: string, fajr: string, maghrib: string): MonthlyPrayerItem => ({
   date,
+  timezone: 'Asia/Jakarta',
   dayNumber: 1,
   dayName: 'Hari',
   hijriFormatted: '1 Ramadan 1448 H',

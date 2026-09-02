@@ -1,7 +1,7 @@
 import { DailyPrayerSchedule, MonthlyPrayerItem, UserLocation, UserSettings } from '@/types';
 import { normalizeAlAdhanDay, normalizeAlAdhanMonth } from './normalize';
 import { calculateOfflinePrayers } from './calculation';
-import { formatIndonesianDate, getApproximateHijriDate } from '../time/timezone';
+import { formatDateInTimeZone, formatIndonesianDateInTimeZone, getApproximateHijriDate, getTimeZoneOffsetMinutes, normalizeTimeZone, zonedTimeToUtc } from '../time/timezone';
 
 /**
  * Fetches daily prayer schedule from server API route or AlAdhan with fallback
@@ -11,7 +11,9 @@ export async function getDailyPrayerTimes(
   settings: UserSettings,
   date: Date = new Date()
 ): Promise<DailyPrayerSchedule> {
-  const timestamp = Math.floor(date.getTime() / 1000);
+  const timezone = normalizeTimeZone(location.timezone);
+  const scheduleDate = formatDateInTimeZone(date, timezone);
+  const timestamp = Math.floor(zonedTimeToUtc(scheduleDate, '12:00', timezone).getTime() / 1000);
   const method = settings.method || '20';
   const school = settings.madhab === 'hanafi' ? '1' : '0';
 
@@ -31,7 +33,7 @@ export async function getDailyPrayerTimes(
     if (res.ok) {
       const data = await res.json();
       if (data.code === 200 && data.data) {
-        return normalizeAlAdhanDay(data.data, settings.adjustments, 'api');
+        return normalizeAlAdhanDay(data.data, settings.adjustments, 'api', timezone);
       }
     }
   } catch (e) {
@@ -46,7 +48,7 @@ export async function getDailyPrayerTimes(
     if (directRes.ok) {
       const data = await directRes.json();
       if (data.code === 200 && data.data) {
-        return normalizeAlAdhanDay(data.data, settings.adjustments, 'api');
+        return normalizeAlAdhanDay(data.data, settings.adjustments, 'api', timezone);
       }
     }
   } catch (err) {
@@ -54,15 +56,16 @@ export async function getDailyPrayerTimes(
   }
 
   // Standalone offline calculation fallback
-  const timezoneOffset = -(date.getTimezoneOffset() / 60);
-  const calculated = calculateOfflinePrayers(date, location.latitude, location.longitude, timezoneOffset);
-  const hijri = getApproximateHijriDate(date);
+  const scheduleInstant = zonedTimeToUtc(scheduleDate, '12:00', timezone);
+  const timezoneOffset = getTimeZoneOffsetMinutes(scheduleInstant, timezone) / 60;
+  const calculated = calculateOfflinePrayers(scheduleInstant, location.latitude, location.longitude, timezoneOffset);
+  const hijri = getApproximateHijriDate(scheduleInstant);
 
   return {
-    date: date.toISOString().split('T')[0],
-    readableDate: formatIndonesianDate(date),
+    date: scheduleDate,
+    readableDate: formatIndonesianDateInTimeZone(scheduleInstant, timezone),
     hijriDate: hijri,
-    timezone: location.timezone || 'Asia/Jakarta',
+    timezone,
     offset: timezoneOffset,
     timings: {
       fajr: calculated.fajr,
@@ -91,6 +94,7 @@ export async function getMonthlyPrayerTimes(
   year: number,
   month: number // 1-12
 ): Promise<MonthlyPrayerItem[]> {
+  const timezone = normalizeTimeZone(location.timezone);
   const method = settings.method || '20';
   const school = settings.madhab === 'hanafi' ? '1' : '0';
 
@@ -108,7 +112,7 @@ export async function getMonthlyPrayerTimes(
     if (res.ok) {
       const data = await res.json();
       if (data.code === 200 && Array.isArray(data.data)) {
-        return normalizeAlAdhanMonth(data.data, settings.adjustments);
+        return normalizeAlAdhanMonth(data.data, settings.adjustments, timezone);
       }
     }
   } catch (e) {
@@ -123,7 +127,7 @@ export async function getMonthlyPrayerTimes(
     if (directRes.ok) {
       const data = await directRes.json();
       if (data.code === 200 && Array.isArray(data.data)) {
-        return normalizeAlAdhanMonth(data.data, settings.adjustments);
+        return normalizeAlAdhanMonth(data.data, settings.adjustments, timezone);
       }
     }
   } catch (err) {
@@ -133,19 +137,20 @@ export async function getMonthlyPrayerTimes(
   // Generate offline month calculation
   const daysInMonth = new Date(year, month, 0).getDate();
   const list: MonthlyPrayerItem[] = [];
-  const offset = -(new Date().getTimezoneOffset() / 60);
+  const offset = getTimeZoneOffsetMinutes(zonedTimeToUtc(`${year}-${String(month).padStart(2, '0')}-15`, '12:00', timezone), timezone) / 60;
 
   for (let d = 1; d <= daysInMonth; d++) {
-    const currentDate = new Date(year, month - 1, d);
+    const currentDate = new Date(Date.UTC(year, month - 1, d, 12));
     const timings = calculateOfflinePrayers(currentDate, location.latitude, location.longitude, offset);
     const hijri = getApproximateHijriDate(currentDate);
 
     list.push({
       date: `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
+      timezone,
       dayNumber: d,
-      dayName: formatIndonesianDate(currentDate).split(',')[0],
+      dayName: formatIndonesianDateInTimeZone(currentDate, timezone).split(',')[0],
       hijriFormatted: hijri.formatted,
-      isToday: formatIndonesianDate(currentDate) === formatIndonesianDate(new Date()),
+      isToday: formatDateInTimeZone(currentDate, timezone) === formatDateInTimeZone(new Date(), timezone),
       timings,
     });
   }
