@@ -2,6 +2,24 @@ import { DailyPrayerSchedule, MonthlyPrayerItem, UserLocation, UserSettings } fr
 import { normalizeAlAdhanDay, normalizeAlAdhanMonth } from './normalize';
 import { calculateOfflinePrayers } from './calculation';
 import { formatDateInTimeZone, formatIndonesianDateInTimeZone, getApproximateHijriDate, getTimeZoneOffsetMinutes, normalizeTimeZone, zonedTimeToUtc } from '../time/timezone';
+import {
+  fetchJsonWithTimeout,
+  isNetworkRequestError,
+  NETWORK_TIMEOUTS,
+  NetworkRequestError,
+} from '../network/fetch';
+
+interface PrayerRequestOptions {
+  signal?: AbortSignal;
+}
+
+function throwIfAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) {
+    throw new NetworkRequestError('aborted', 'Network request was cancelled.', {
+      cause: signal.reason,
+    });
+  }
+}
 
 /**
  * Fetches daily prayer schedule from server API route or AlAdhan with fallback
@@ -9,7 +27,8 @@ import { formatDateInTimeZone, formatIndonesianDateInTimeZone, getApproximateHij
 export async function getDailyPrayerTimes(
   location: UserLocation,
   settings: UserSettings,
-  date: Date = new Date()
+  date: Date = new Date(),
+  options: PrayerRequestOptions = {}
 ): Promise<DailyPrayerSchedule> {
   const timezone = normalizeTimeZone(location.timezone);
   const scheduleDate = formatDateInTimeZone(date, timezone);
@@ -27,35 +46,39 @@ export async function getDailyPrayerTimes(
 
   // Try fetching from local API route first
   try {
-    const res = await fetch(`/api/prayer-times?${params.toString()}`, {
-      next: { revalidate: 3600 },
+    const data = await fetchJsonWithTimeout<any>(`/api/prayer-times?${params.toString()}`, {
+      timeoutMs: NETWORK_TIMEOUTS.prayerRoute,
+      signal: options.signal,
+      headers: { Accept: 'application/json' },
     });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.code === 200 && data.data) {
-        return normalizeAlAdhanDay(data.data, settings.adjustments, 'api', timezone);
-      }
+    if (data.code === 200 && data.data) {
+      return normalizeAlAdhanDay(data.data, settings.adjustments, 'api', timezone);
     }
   } catch (e) {
+    if (isNetworkRequestError(e, 'aborted')) throw e;
     console.warn('Local API route error, trying direct provider or offline fallback:', e);
   }
 
   // Direct AlAdhan API fallback
   try {
-    const directRes = await fetch(
-      `https://api.aladhan.com/v1/timings/${timestamp}?latitude=${location.latitude}&longitude=${location.longitude}&method=${method}&school=${school}`
-    );
-    if (directRes.ok) {
-      const data = await directRes.json();
-      if (data.code === 200 && data.data) {
-        return normalizeAlAdhanDay(data.data, settings.adjustments, 'api', timezone);
+    const data = await fetchJsonWithTimeout<any>(
+      `https://api.aladhan.com/v1/timings/${timestamp}?latitude=${location.latitude}&longitude=${location.longitude}&method=${method}&school=${school}`,
+      {
+        timeoutMs: NETWORK_TIMEOUTS.prayerProvider,
+        signal: options.signal,
+        headers: { Accept: 'application/json' },
       }
+    );
+    if (data.code === 200 && data.data) {
+      return normalizeAlAdhanDay(data.data, settings.adjustments, 'api', timezone);
     }
   } catch (err) {
+    if (isNetworkRequestError(err, 'aborted')) throw err;
     console.warn('Direct AlAdhan API failed, using offline calculation:', err);
   }
 
   // Standalone offline calculation fallback
+  throwIfAborted(options.signal);
   const scheduleInstant = zonedTimeToUtc(scheduleDate, '12:00', timezone);
   const timezoneOffset = getTimeZoneOffsetMinutes(scheduleInstant, timezone) / 60;
   const calculated = calculateOfflinePrayers(scheduleInstant, location.latitude, location.longitude, timezoneOffset);
@@ -92,7 +115,8 @@ export async function getMonthlyPrayerTimes(
   location: UserLocation,
   settings: UserSettings,
   year: number,
-  month: number // 1-12
+  month: number, // 1-12
+  options: PrayerRequestOptions = {}
 ): Promise<MonthlyPrayerItem[]> {
   const timezone = normalizeTimeZone(location.timezone);
   const method = settings.method || '20';
@@ -108,33 +132,39 @@ export async function getMonthlyPrayerTimes(
   });
 
   try {
-    const res = await fetch(`/api/prayer-times/monthly?${params.toString()}`);
-    if (res.ok) {
-      const data = await res.json();
-      if (data.code === 200 && Array.isArray(data.data)) {
-        return normalizeAlAdhanMonth(data.data, settings.adjustments, timezone);
-      }
+    const data = await fetchJsonWithTimeout<any>(`/api/prayer-times/monthly?${params.toString()}`, {
+      timeoutMs: NETWORK_TIMEOUTS.prayerRoute,
+      signal: options.signal,
+      headers: { Accept: 'application/json' },
+    });
+    if (data.code === 200 && Array.isArray(data.data)) {
+      return normalizeAlAdhanMonth(data.data, settings.adjustments, timezone);
     }
   } catch (e) {
+    if (isNetworkRequestError(e, 'aborted')) throw e;
     console.warn('Monthly API route failed, trying direct provider:', e);
   }
 
   // Direct AlAdhan Calendar API
   try {
-    const directRes = await fetch(
-      `https://api.aladhan.com/v1/calendar/${year}/${month}?latitude=${location.latitude}&longitude=${location.longitude}&method=${method}&school=${school}`
-    );
-    if (directRes.ok) {
-      const data = await directRes.json();
-      if (data.code === 200 && Array.isArray(data.data)) {
-        return normalizeAlAdhanMonth(data.data, settings.adjustments, timezone);
+    const data = await fetchJsonWithTimeout<any>(
+      `https://api.aladhan.com/v1/calendar/${year}/${month}?latitude=${location.latitude}&longitude=${location.longitude}&method=${method}&school=${school}`,
+      {
+        timeoutMs: NETWORK_TIMEOUTS.prayerProvider,
+        signal: options.signal,
+        headers: { Accept: 'application/json' },
       }
+    );
+    if (data.code === 200 && Array.isArray(data.data)) {
+      return normalizeAlAdhanMonth(data.data, settings.adjustments, timezone);
     }
   } catch (err) {
+    if (isNetworkRequestError(err, 'aborted')) throw err;
     console.warn('Direct AlAdhan calendar failed, generating synthetic offline month:', err);
   }
 
   // Generate offline month calculation
+  throwIfAborted(options.signal);
   const daysInMonth = new Date(year, month, 0).getDate();
   const list: MonthlyPrayerItem[] = [];
   const offset = getTimeZoneOffsetMinutes(zonedTimeToUtc(`${year}-${String(month).padStart(2, '0')}-15`, '12:00', timezone), timezone) / 60;

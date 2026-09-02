@@ -4,6 +4,12 @@ import {
   isCompleteSurahData,
   saveCachedSurah,
 } from '@/lib/storage/quran-db';
+import {
+  fetchWithTimeout,
+  isNetworkRequestError,
+  NETWORK_TIMEOUTS,
+  readJsonResponse,
+} from '@/lib/network/fetch';
 
 export type QuranDownloadErrorCode = 'invalid-number' | 'network' | 'http' | 'invalid-data' | 'storage';
 
@@ -35,9 +41,13 @@ export async function downloadSurahText(
 
   let response: Response;
   try {
-    response = await fetch(`/api/quran/surah/${surahNumber}`, { signal: options.signal });
+    response = await fetchWithTimeout(`/api/quran/surah/${surahNumber}`, {
+      timeoutMs: NETWORK_TIMEOUTS.quranRoute,
+      rejectHttpErrors: false,
+      signal: options.signal,
+    });
   } catch (error) {
-    if (isAbortError(error)) throw error;
+    if (isAbortError(error) || isNetworkRequestError(error, 'aborted')) throw error;
     throw new QuranDownloadError('network', 'Koneksi internet tidak tersedia.');
   }
 
@@ -47,7 +57,7 @@ export async function downloadSurahText(
 
   let payload: unknown;
   try {
-    payload = await response.json();
+    payload = await readJsonResponse(response);
   } catch {
     throw new QuranDownloadError('invalid-data', 'Data Surah tidak dapat dibaca.');
   }

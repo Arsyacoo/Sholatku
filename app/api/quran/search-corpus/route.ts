@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { SURAH_LIST } from '@/lib/quran/surah-list';
 import { normalizeArabicText, normalizeSearchText } from '@/lib/quran/search/normalize';
 import type { QuranSearchRecord } from '@/lib/quran/search/types';
+import { fetchWithTimeout, NETWORK_TIMEOUTS, readJsonResponse } from '@/lib/network/fetch';
 
 const SOURCE_URL = 'https://equran.id/api/v2/surat/';
 const CONCURRENCY = 4;
@@ -17,13 +18,15 @@ function isObject(value: unknown): value is Record<string, unknown> {
 }
 
 async function fetchSurahRecords(surahNumber: number): Promise<QuranSearchRecord[]> {
-  const response = await fetch(`${SOURCE_URL}${surahNumber}`, {
+  const response = await fetchWithTimeout(`${SOURCE_URL}${surahNumber}`, {
+    timeoutMs: NETWORK_TIMEOUTS.quranCorpusProvider,
+    rejectHttpErrors: false,
     headers: { Accept: 'application/json' },
     next: { revalidate: 86400 },
   });
   if (!response.ok) throw new Error(`Surah ${surahNumber} gagal dimuat.`);
 
-  const payload: unknown = await response.json();
+  const payload: unknown = await readJsonResponse(response);
   if (!isObject(payload) || payload.code !== 200 || !isObject(payload.data)) {
     throw new Error(`Data Surah ${surahNumber} tidak valid.`);
   }

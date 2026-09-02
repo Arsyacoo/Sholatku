@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { fetchWithTimeout, NETWORK_TIMEOUTS, readJsonResponse } from '@/lib/network/fetch';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -13,7 +14,9 @@ export async function GET(request: NextRequest) {
   const targetUrl = `https://api.aladhan.com/v1/calendar/${year}/${month}?latitude=${lat}&longitude=${lon}&method=${method}&school=${school}`;
 
   try {
-    const response = await fetch(targetUrl, {
+    const response = await fetchWithTimeout(targetUrl, {
+      timeoutMs: NETWORK_TIMEOUTS.prayerProvider,
+      rejectHttpErrors: false,
       next: { revalidate: 86400 }, // Cache calendar for 24 hours
       headers: {
         'Accept': 'application/json',
@@ -27,7 +30,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const data = await response.json();
+    const data = await readJsonResponse(response);
     return NextResponse.json(data, {
       headers: {
         'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',

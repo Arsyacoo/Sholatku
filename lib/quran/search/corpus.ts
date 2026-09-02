@@ -7,6 +7,7 @@ import {
   type QuranSearchCorpusMetadata,
   type QuranSearchRecord,
 } from './types';
+import { fetchWithTimeout, NETWORK_TIMEOUTS, readJsonResponse } from '@/lib/network/fetch';
 
 export interface GlobalQuranSearchCorpusState {
   records: QuranSearchRecord[];
@@ -50,9 +51,13 @@ async function initialize(): Promise<GlobalQuranSearchCorpusState> {
   if (cached.metadata?.isComplete) return { ...cached, source: 'cache' };
 
   try {
-    const response = await fetch('/api/quran/search-corpus', { headers: { Accept: 'application/json' } });
+    const response = await fetchWithTimeout('/api/quran/search-corpus', {
+      timeoutMs: NETWORK_TIMEOUTS.quranCorpusRoute,
+      rejectHttpErrors: false,
+      headers: { Accept: 'application/json' },
+    });
     if (!response.ok) throw new Error('Pencarian seluruh ayat belum dapat dimuat.');
-    const payload: unknown = await response.json();
+    const payload: unknown = await readJsonResponse(response);
     if (
       typeof payload !== 'object' ||
       payload === null ||

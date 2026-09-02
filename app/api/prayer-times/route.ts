@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { fetchWithTimeout, NETWORK_TIMEOUTS, readJsonResponse } from '@/lib/network/fetch';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -11,7 +12,9 @@ export async function GET(request: NextRequest) {
   const targetUrl = `https://api.aladhan.com/v1/timings/${timestamp}?latitude=${lat}&longitude=${lon}&method=${method}&school=${school}`;
 
   try {
-    const response = await fetch(targetUrl, {
+    const response = await fetchWithTimeout(targetUrl, {
+      timeoutMs: NETWORK_TIMEOUTS.prayerProvider,
+      rejectHttpErrors: false,
       next: { revalidate: 3600 }, // Cache on edge for 1 hour
       headers: {
         'Accept': 'application/json',
@@ -25,7 +28,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const data = await response.json();
+    const data = await readJsonResponse(response);
     return NextResponse.json(data, {
       headers: {
         'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',

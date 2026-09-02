@@ -1,10 +1,19 @@
 import { UserLocation, CitySearchResult } from '@/types';
 import { POPULAR_CITIES, searchLocalCities } from './cities-id';
+import { fetchJsonWithTimeout, NETWORK_TIMEOUTS } from '../network/fetch';
+
+interface GeocodingRequestOptions {
+  signal?: AbortSignal;
+}
 
 /**
  * Reverse geocode latitude & longitude to human-readable city and province
  */
-export async function reverseGeocode(lat: number, lon: number): Promise<UserLocation> {
+export async function reverseGeocode(
+  lat: number,
+  lon: number,
+  options: GeocodingRequestOptions = {}
+): Promise<UserLocation> {
   // First check if within ~15km of any known popular city to avoid external API calls
   for (const city of POPULAR_CITIES) {
     const dLat = Math.abs(city.latitude - lat);
@@ -25,12 +34,15 @@ export async function reverseGeocode(lat: number, lon: number): Promise<UserLoca
 
   // Fallback to client/server reverse geocode API endpoint
   try {
-    const res = await fetch(
+    const data = await fetchJsonWithTimeout<any>(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`,
-      { headers: { 'User-Agent': 'Sholatku-PrayerTime-App/1.0' } }
+      {
+        timeoutMs: NETWORK_TIMEOUTS.geocoding,
+        signal: options.signal,
+        headers: { 'User-Agent': 'Sholatku-PrayerTime-App/1.0' },
+      }
     );
-    if (res.ok) {
-      const data = await res.json();
+    if (data) {
       const addr = data.address || {};
       const cityName =
         addr.city || addr.town || addr.municipality || addr.county || addr.suburb || addr.state_district || 'Lokasi Terpilih';
@@ -67,21 +79,27 @@ export async function reverseGeocode(lat: number, lon: number): Promise<UserLoca
 /**
  * Searches cities using local database first, then fallback to API if needed.
  */
-export async function searchCities(query: string): Promise<CitySearchResult[]> {
+export async function searchCities(
+  query: string,
+  options: GeocodingRequestOptions = {}
+): Promise<CitySearchResult[]> {
   const localResults = searchLocalCities(query, 8);
   if (localResults.length > 0 || !query || query.trim().length < 3) {
     return localResults;
   }
 
   try {
-    const res = await fetch(
+    const data = await fetchJsonWithTimeout<any[]>(
       `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
         query
       )}&limit=6&addressdetails=1`,
-      { headers: { 'User-Agent': 'Sholatku-PrayerTime-App/1.0' } }
+      {
+        timeoutMs: NETWORK_TIMEOUTS.geocoding,
+        signal: options.signal,
+        headers: { 'User-Agent': 'Sholatku-PrayerTime-App/1.0' },
+      }
     );
-    if (res.ok) {
-      const data = await res.json();
+    if (Array.isArray(data)) {
       return data.map((item: any) => {
         const addr = item.address || {};
         const cityName =

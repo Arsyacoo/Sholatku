@@ -33,6 +33,7 @@ import {
 import { SurahDetail, Ayah, QuranDisplaySettings, LastReadInfo } from '@/types';
 import { BookOpen, Check, WifiOff } from 'lucide-react';
 import { getAyahPage, parseAyahQuery } from '@/lib/quran/reader-deep-link';
+import { fetchWithTimeout, isNetworkRequestError, NETWORK_TIMEOUTS, readJsonResponse } from '@/lib/network/fetch';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -100,11 +101,13 @@ export default function SurahDetailPage({ params }: PageProps) {
       }
 
       try {
-        const res = await fetch(`/api/quran/surah/${surahId}`, {
+        const res = await fetchWithTimeout(`/api/quran/surah/${surahId}`, {
+          timeoutMs: NETWORK_TIMEOUTS.quranRoute,
+          rejectHttpErrors: false,
           signal: abortController.signal,
         });
         if (res.ok) {
-          const json = await res.json();
+          const json: any = await readJsonResponse(res);
           if (json.data && json.data.ayahs && json.data.ayahs.length > 0) {
             // Cache writes are non-blocking for rendering and are safe if the
             // browser denies IndexedDB access.
@@ -130,7 +133,10 @@ export default function SurahDetailPage({ params }: PageProps) {
           }
         }
       } catch (err: unknown) {
-        if (err && typeof err === 'object' && 'name' in err && err.name === 'AbortError') {
+        if (
+          (err && typeof err === 'object' && 'name' in err && err.name === 'AbortError') ||
+          isNetworkRequestError(err, 'aborted')
+        ) {
           return;
         }
         if (!cached && active) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SURAH_LIST } from '@/lib/quran/surah-list';
 import { SurahDetail, Ayah } from '@/types';
+import { fetchWithTimeout, NETWORK_TIMEOUTS, readJsonResponse } from '@/lib/network/fetch';
 
 export async function GET(
   request: NextRequest,
@@ -20,13 +21,15 @@ export async function GET(
 
   try {
     // Fetch from equran.id API (reliable Indonesian Kemenag source with full audio)
-    const response = await fetch(`https://equran.id/api/v2/surat/${surahNumber}`, {
+    const response = await fetchWithTimeout(`https://equran.id/api/v2/surat/${surahNumber}`, {
+      timeoutMs: NETWORK_TIMEOUTS.quranProvider,
+      rejectHttpErrors: false,
       next: { revalidate: 86400 },
       headers: { Accept: 'application/json' },
     });
 
     if (response.ok) {
-      const json = await response.json();
+      const json: any = await readJsonResponse(response);
       if (json.code === 200 && json.data) {
         const d = json.data;
 
