@@ -75,6 +75,10 @@ function SelectComponent<T extends string | number>({
   const menuId = useId();
   const selectedOption = options.find((option) => Object.is(option.value, value));
 
+  useEffect(() => {
+    if (!isOpen) setActiveIndex(getSelectableIndex(options, value));
+  }, [isOpen, options, value]);
+
   const updatePosition = () => {
     if (!triggerRef.current || typeof window === 'undefined') return;
     const rect = triggerRef.current.getBoundingClientRect();
@@ -176,11 +180,11 @@ function SelectComponent<T extends string | number>({
 
   const triggerStyles = tone === 'dark'
     ? 'border-white/10 bg-white/10 text-white hover:bg-white/15 focus-visible:ring-primary-300'
-    : 'border-surface-200 bg-surface-50 text-slate-700 hover:border-surface-300 hover:bg-white dark:border-surface-700 dark:bg-surface-800 dark:text-slate-200 dark:hover:border-surface-600 dark:hover:bg-surface-750 focus-visible:ring-primary-500';
+    : 'border-surface-200 bg-surface-50 text-slate-700 hover:border-surface-300 hover:bg-white dark:border-surface-700 dark:bg-surface-800 dark:text-slate-200 dark:hover:border-surface-600 focus-visible:ring-primary-500';
   const menuStyles = tone === 'dark'
     ? 'border-white/15 bg-slate-900 text-white shadow-2xl'
     : 'border-surface-200 bg-white text-slate-700 shadow-xl shadow-slate-950/10 dark:border-surface-700 dark:bg-surface-900 dark:text-slate-200';
-  const sizeStyles = size === 'sm' ? 'min-h-9 px-3 py-2 text-xs' : 'min-h-11 px-3.5 py-2.5 text-sm';
+  const sizeStyles = size === 'sm' ? 'min-h-11 px-3 py-2 text-xs sm:min-h-9' : 'min-h-11 px-3.5 py-2.5 text-sm';
 
   const menu = isOpen && typeof document !== 'undefined'
     ? createPortal(
