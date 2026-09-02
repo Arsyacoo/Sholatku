@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { RepeatMode } from '@/hooks/useQuranAudio';
 import { QuranPlaybackRate, QURAN_PLAYBACK_RATES } from '@/types';
+import { Select } from '../ui/Select';
 
 interface FloatingAudioPlayerProps {
   surahName: string;
@@ -39,6 +40,11 @@ interface FloatingAudioPlayerProps {
   onPlaybackRateChange: (rate: QuranPlaybackRate) => void;
   onClose: () => void;
 }
+
+const PLAYBACK_RATE_OPTIONS = QURAN_PLAYBACK_RATES.map((rate) => ({
+  value: rate,
+  label: `${String(rate).replace('.', ',')}×`,
+}));
 
 export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
   surahName,
@@ -238,22 +244,17 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
             <label htmlFor="quran-player-speed" className="sr-only">
               Kecepatan audio
             </label>
-            <select
+            <Select
               id="quran-player-speed"
               value={playbackRate}
-              onChange={(event) =>
-                onPlaybackRateChange(Number(event.target.value) as QuranPlaybackRate)
-              }
-              className="h-9 rounded-xl bg-white/10 border border-white/10 px-2 text-xs font-bold text-white cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
-              aria-label={`Kecepatan audio ${String(playbackRate).replace('.', ',')} kali`}
-              title="Kecepatan audio"
-            >
-              {QURAN_PLAYBACK_RATES.map((rate) => (
-                <option key={rate} value={rate} className="bg-slate-900 text-white">
-                  {String(rate).replace('.', ',')}×
-                </option>
-              ))}
-            </select>
+              options={PLAYBACK_RATE_OPTIONS}
+              onValueChange={onPlaybackRateChange}
+              ariaLabel={`Kecepatan audio ${String(playbackRate).replace('.', ',')} kali`}
+              tone="dark"
+              size="sm"
+              className="w-[76px]"
+              menuClassName="min-w-[160px]"
+            />
           </div>
         </div>
       </div>

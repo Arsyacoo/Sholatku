@@ -4,6 +4,7 @@ import React from 'react';
 import { MoonStar } from 'lucide-react';
 import type { RamadanMode, RamadanPreferences as RamadanPreferencesValue, RamadanReminderSettings } from '@/types';
 import { IMSAK_OFFSET_OPTIONS } from '@/lib/ramadan/timing';
+import { Select } from '../ui/Select';
 
 interface RamadanPreferencesProps {
   value: RamadanPreferencesValue;
@@ -22,7 +23,20 @@ const REMINDER_OPTIONS = [
   { value: '5', label: '5 menit sebelumnya' },
 ] as const;
 
-const selectClass = 'rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-xs font-medium text-slate-700 outline-none focus:ring-2 focus:ring-primary-500 dark:border-surface-700 dark:bg-surface-800 dark:text-slate-200';
+const MODE_SELECT_OPTIONS = MODE_OPTIONS.map((option) => ({
+  value: option.value,
+  label: option.label,
+}));
+
+const IMSAK_SELECT_OPTIONS = IMSAK_OFFSET_OPTIONS.map((offset) => ({
+  value: offset,
+  label: `${offset} menit sebelum Subuh`,
+}));
+
+const REMINDER_SELECT_OPTIONS = REMINDER_OPTIONS.map((option) => ({
+  value: option.value,
+  label: option.label,
+}));
 
 function updateReminder(
   value: RamadanPreferencesValue,
@@ -58,9 +72,15 @@ export const RamadanPreferences: React.FC<RamadanPreferencesProps> = ({ value, o
         <div className="min-w-0 flex-1 space-y-3">
           <div className="flex items-center justify-between gap-3">
             <label htmlFor="ramadan-mode" className="text-sm font-semibold text-slate-700 dark:text-slate-200">Mode Ramadan</label>
-            <select id="ramadan-mode" className={selectClass} value={value.mode} onChange={(event) => onChange({ ...value, mode: event.target.value as RamadanMode })}>
-              {MODE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </select>
+            <Select
+              id="ramadan-mode"
+              value={value.mode}
+              options={MODE_SELECT_OPTIONS}
+              onValueChange={(mode) => onChange({ ...value, mode: mode as RamadanMode })}
+              ariaLabel="Mode Ramadan"
+              size="sm"
+              className="w-[120px] shrink-0"
+            />
           </div>
           <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
             {value.mode === 'automatic' ? 'Mengikuti kalender Hijriah yang dihitung Sholatku.' : value.mode === 'enabled' ? 'Mode Ramadan dipaksa tampil.' : 'Mode Ramadan disembunyikan.'}
@@ -70,9 +90,15 @@ export const RamadanPreferences: React.FC<RamadanPreferencesProps> = ({ value, o
 
       <div className="flex items-center justify-between gap-3 border-t border-surface-100 pt-3 dark:border-surface-800">
         <label htmlFor="ramadan-imsak-offset" className="text-sm font-semibold text-slate-700 dark:text-slate-200">Imsak</label>
-        <select id="ramadan-imsak-offset" className={selectClass} value={value.imsakOffsetMinutes} onChange={(event) => onChange({ ...value, imsakOffsetMinutes: Number(event.target.value) as RamadanPreferencesValue['imsakOffsetMinutes'] })}>
-          {IMSAK_OFFSET_OPTIONS.map((offset) => <option key={offset} value={offset}>{offset} menit sebelum Subuh</option>)}
-        </select>
+        <Select
+          id="ramadan-imsak-offset"
+          value={value.imsakOffsetMinutes}
+          options={IMSAK_SELECT_OPTIONS}
+          onValueChange={(offset) => onChange({ ...value, imsakOffsetMinutes: offset })}
+          ariaLabel="Waktu Imsak"
+          size="sm"
+          className="w-[180px] shrink-0"
+        />
       </div>
 
       <label className="flex items-center justify-between gap-3 border-t border-surface-100 pt-3 text-sm font-semibold text-slate-700 dark:border-surface-800 dark:text-slate-200">
@@ -89,9 +115,15 @@ export const RamadanPreferences: React.FC<RamadanPreferencesProps> = ({ value, o
           return (
             <div key={key} className="flex items-center justify-between gap-3">
               <label htmlFor={`ramadan-reminder-${key}`} className="text-sm text-slate-700 dark:text-slate-200">{label}</label>
-              <select id={`ramadan-reminder-${key}`} aria-label={`Pengingat ${label}`} className={selectClass} value={selected} onChange={(event) => onChange(updateReminder(value, key, event.target.value))}>
-                {REMINDER_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-              </select>
+              <Select
+                id={`ramadan-reminder-${key}`}
+                value={selected}
+                options={REMINDER_SELECT_OPTIONS}
+                onValueChange={(nextValue) => onChange(updateReminder(value, key, nextValue))}
+                ariaLabel={`Pengingat ${label}`}
+                size="sm"
+                className="w-[180px] shrink-0"
+              />
             </div>
           );
         })}
