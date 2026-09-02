@@ -3,6 +3,7 @@ import { SURAH_LIST } from '@/lib/quran/surah-list';
 import { normalizeArabicText, normalizeSearchText } from '@/lib/quran/search/normalize';
 import type { QuranSearchRecord } from '@/lib/quran/search/types';
 import { fetchWithTimeout, NETWORK_TIMEOUTS, readJsonResponse } from '@/lib/network/fetch';
+import { apiError, logSafeApiError } from '@/lib/api/response';
 
 const SOURCE_URL = 'https://equran.id/api/v2/surat/';
 const CONCURRENCY = 4;
@@ -102,23 +103,33 @@ function getCorpusBuild(): Promise<CorpusBuildResult> {
 }
 
 export async function GET() {
-  const result = await getCorpusBuild();
-  return NextResponse.json(
-    {
-      code: result.failedSurahs.length === 0 ? 200 : 206,
-      message: result.failedSurahs.length === 0 ? 'OK' : 'Pencarian sebagian tersedia',
-      data: {
-        records: result.records,
-        indexedSurahs: result.indexedSurahs,
-        totalSurahs: SURAH_LIST.length,
-        isComplete: result.failedSurahs.length === 0 && result.indexedSurahs === SURAH_LIST.length,
-        failedSurahs: result.failedSurahs,
-      },
-    },
-    {
-      headers: {
-        'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',
-      },
+  try {
+    const result = await getCorpusBuild();
+    if (result.indexedSurahs === 0) {
+      return apiError('QURAN_CORPUS_UNAVAILABLE', 'Pencarian seluruh ayat belum dapat dimuat.', 502);
     }
-  );
+    const isComplete = result.failedSurahs.length === 0 && result.indexedSurahs === SURAH_LIST.length;
+    return NextResponse.json(
+      {
+        code: isComplete ? 200 : 206,
+        message: isComplete ? 'OK' : 'Pencarian sebagian tersedia',
+        data: {
+          records: result.records,
+          indexedSurahs: result.indexedSurahs,
+          totalSurahs: SURAH_LIST.length,
+          isComplete,
+          failedSurahs: result.failedSurahs,
+        },
+      },
+      {
+        status: isComplete ? 200 : 206,
+        headers: isComplete
+          ? { 'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800' }
+          : { 'Cache-Control': 'no-store' },
+      }
+    );
+  } catch (error) {
+    logSafeApiError('Quran corpus build failed', error);
+    return apiError('QURAN_CORPUS_UNAVAILABLE', 'Pencarian seluruh ayat belum dapat dimuat.', 500);
+  }
 }
