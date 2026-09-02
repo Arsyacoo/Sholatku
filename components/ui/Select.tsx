@@ -265,7 +265,7 @@ function SelectComponent<T extends string | number>({
         disabled={disabled}
         onClick={() => (isOpen ? close() : open())}
         onKeyDown={handleTriggerKeyDown}
-        className={`inline-flex w-full items-center justify-between gap-2 rounded-xl border font-medium outline-none transition-colors motion-reduce:transition-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${sizeStyles} ${triggerStyles} ${className}`}
+        className={`inline-flex max-w-full items-center justify-between gap-2 rounded-xl border font-medium outline-none transition-colors motion-reduce:transition-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${sizeStyles} ${triggerStyles} ${className}`}
       >
         <span className="min-w-0 truncate text-left">{selectedOption?.label ?? placeholder}</span>
         <ChevronDown className={`h-4 w-4 shrink-0 opacity-70 transition-transform duration-150 motion-reduce:transition-none ${isOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
