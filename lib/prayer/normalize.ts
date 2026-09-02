@@ -1,5 +1,6 @@
 import { DailyPrayerSchedule, MonthlyPrayerItem, PrayerAdjustment } from '@/types';
 import { formatIndonesianDate, getApproximateHijriDate } from '../time/timezone';
+import { canonicalDateToUtcDate, parseProviderGregorianDate } from './date';
 
 /**
  * Strips timezone annotations like "(WIB)" or "(EST)" from raw time strings like "04:45 (WIB)" -> "04:45"
@@ -64,17 +65,16 @@ export function normalizeAlAdhanDay(
   const gregorian = dateMeta.gregorian || {};
   const hijri = dateMeta.hijri || {};
 
-  const dateStr =
-    gregorian.date ||
-    (dateMeta.readable
-      ? new Date(dateMeta.readable).toISOString().split('T')[0]
-      : new Date().toISOString().split('T')[0]);
+  const rawProviderDate = gregorian.date ||
+    (gregorian.year && gregorian.month?.number && gregorian.day
+      ? `${String(gregorian.day).padStart(2, '0')}-${String(gregorian.month.number).padStart(2, '0')}-${gregorian.year}`
+      : null);
+  const dateStr = parseProviderGregorianDate(rawProviderDate);
+  if (!dateStr) {
+    throw new Error('Provider returned an invalid Gregorian prayer date');
+  }
 
-  const dateObj = new Date(
-    gregorian.year ? `${gregorian.year}-${gregorian.month?.number}-${gregorian.day}` : dateStr
-  );
-
-  const readableDate = formatIndonesianDate(isNaN(dateObj.getTime()) ? new Date() : dateObj);
+  const readableDate = formatIndonesianDate(canonicalDateToUtcDate(dateStr));
 
   const hijriMonthEn = hijri.month?.en || 'Safar';
   const hijriMonthAr = hijri.month?.ar || 'صفر';
@@ -111,7 +111,7 @@ export function normalizeAlAdhanMonth(rawArray: any[], adjustments?: PrayerAdjus
   return rawArray.map((dayData: any) => {
     const norm = normalizeAlAdhanDay(dayData, adjustments);
     const dateParts = norm.date.split('-');
-    const dayNum = parseInt(dateParts[0] || '1', 10);
+    const dayNum = parseInt(dateParts[2] || '1', 10);
     const dayName = norm.readableDate.split(',')[0];
 
     return {
