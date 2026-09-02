@@ -27,34 +27,59 @@ function isPlaybackRate(value: unknown): value is QuranPlaybackRate {
   return QURAN_PLAYBACK_RATES.includes(value as QuranPlaybackRate);
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isValidSurahNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 114;
+}
+
+function safeParse(raw: string | null): unknown {
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
 export function normalizeQuranSettings(value: unknown): QuranDisplaySettings {
-  const saved = value && typeof value === 'object'
-    ? (value as Partial<QuranDisplaySettings>)
-    : {};
-  const parsedVolume = Number(saved.audioVolume);
-  const audioVolume = Number.isFinite(parsedVolume)
-    ? Math.min(100, Math.max(0, Math.round(parsedVolume)))
+  const saved = isRecord(value) ? value : {};
+  const audioVolume = typeof saved.audioVolume === 'number' && Number.isFinite(saved.audioVolume)
+    ? Math.min(100, Math.max(0, Math.round(saved.audioVolume)))
     : DEFAULT_QURAN_SETTINGS.audioVolume;
+  const fontSize = typeof saved.arabicFontSize === 'number' && Number.isFinite(saved.arabicFontSize)
+    ? Math.min(44, Math.max(20, Math.round(saved.arabicFontSize)))
+    : DEFAULT_QURAN_SETTINGS.arabicFontSize;
 
   return {
-    ...DEFAULT_QURAN_SETTINGS,
-    ...saved,
+    arabicFontSize: fontSize,
+    showTranslation: typeof saved.showTranslation === 'boolean' ? saved.showTranslation : DEFAULT_QURAN_SETTINGS.showTranslation,
+    showLatin: typeof saved.showLatin === 'boolean' ? saved.showLatin : DEFAULT_QURAN_SETTINGS.showLatin,
+    selectedQari: typeof saved.selectedQari === 'string' && saved.selectedQari.trim().length > 0 ? saved.selectedQari.trim().slice(0, 64) : DEFAULT_QURAN_SETTINGS.selectedQari,
+    autoScrollAudio: typeof saved.autoScrollAudio === 'boolean' ? saved.autoScrollAudio : DEFAULT_QURAN_SETTINGS.autoScrollAudio,
     audioVolume,
-    audioMuted:
-      typeof saved.audioMuted === 'boolean'
-        ? saved.audioMuted
-        : DEFAULT_QURAN_SETTINGS.audioMuted,
+    audioMuted: typeof saved.audioMuted === 'boolean' ? saved.audioMuted : DEFAULT_QURAN_SETTINGS.audioMuted,
     playbackRate: isPlaybackRate(saved.playbackRate)
       ? saved.playbackRate
       : DEFAULT_QURAN_SETTINGS.playbackRate,
   };
 }
 
+function normalizeLastRead(value: unknown): LastReadInfo | null {
+  if (!isRecord(value)) return null;
+  const surahNumber = value.surahNumber;
+  const ayahNumber = value.ayahNumber;
+  if (!isValidSurahNumber(surahNumber) || typeof ayahNumber !== 'number' || !Number.isInteger(ayahNumber) || ayahNumber < 1) return null;
+  return {
+    surahNumber,
+    surahName: typeof value.surahName === 'string' ? value.surahName.slice(0, 160) : '',
+    ayahNumber,
+    timestamp: typeof value.timestamp === 'number' && Number.isFinite(value.timestamp) ? value.timestamp : Date.now(),
+  };
+}
+
 export function getLastRead(): LastReadInfo | null {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = localStorage.getItem(KEYS.LAST_READ);
-    if (raw) return JSON.parse(raw);
+    return normalizeLastRead(safeParse(localStorage.getItem(KEYS.LAST_READ)));
   } catch (e) {
     console.warn('Failed to read last read quran:', e);
   }
@@ -64,7 +89,8 @@ export function getLastRead(): LastReadInfo | null {
 export function saveLastRead(info: LastReadInfo): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(KEYS.LAST_READ, JSON.stringify(info));
+    const normalized = normalizeLastRead(info);
+    if (normalized) localStorage.setItem(KEYS.LAST_READ, JSON.stringify(normalized));
   } catch (e) {
     console.warn('Failed to save last read:', e);
   }
@@ -73,8 +99,8 @@ export function saveLastRead(info: LastReadInfo): void {
 export function getFavoriteSurahs(): number[] {
   if (typeof window === 'undefined') return [1, 18, 36, 55, 56, 67]; // Popular defaults: Al-Fatihah, Al-Kahf, Yasin, Ar-Rahman, Al-Waqi'ah, Al-Mulk
   try {
-    const raw = localStorage.getItem(KEYS.FAVORITES);
-    if (raw) return JSON.parse(raw);
+    const parsed = safeParse(localStorage.getItem(KEYS.FAVORITES));
+    if (Array.isArray(parsed)) return [...new Set(parsed.filter(isValidSurahNumber))];
   } catch (e) {
     console.warn('Failed to read favorite surahs:', e);
   }
@@ -85,6 +111,7 @@ export function toggleFavoriteSurah(surahNumber: number): number[] {
   if (typeof window === 'undefined') return [];
   try {
     const favorites = getFavoriteSurahs();
+    if (!isValidSurahNumber(surahNumber)) return favorites;
     let updated: number[];
     if (favorites.includes(surahNumber)) {
       updated = favorites.filter((n) => n !== surahNumber);
@@ -103,7 +130,7 @@ export function getQuranSettings(): QuranDisplaySettings {
   if (typeof window === 'undefined') return DEFAULT_QURAN_SETTINGS;
   try {
     const raw = localStorage.getItem(KEYS.SETTINGS);
-    if (raw) return normalizeQuranSettings(JSON.parse(raw));
+    if (raw) return normalizeQuranSettings(safeParse(raw));
   } catch (e) {
     console.warn('Failed to read quran settings:', e);
   }

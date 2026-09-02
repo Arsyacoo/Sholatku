@@ -11,7 +11,7 @@ import {
   RamadanMode,
   PrayerScheduleCacheContext,
 } from '@/types';
-import { DEFAULT_LOCATION, DEFAULT_SETTINGS } from '../prayer/constants';
+import { CALCULATION_METHODS, DEFAULT_LOCATION, DEFAULT_SETTINGS } from '../prayer/constants';
 import { DEFAULT_IMSAK_OFFSET_MINUTES, IMSAK_OFFSET_OPTIONS } from '../ramadan/timing';
 import { isValidTimeZone, normalizeTimeZone } from '../time/timezone';
 import { parseProviderGregorianDate } from '../prayer/date';
@@ -106,6 +106,70 @@ function matchesCacheContext(a: PrayerScheduleCacheContext, b: PrayerScheduleCac
 
 const REMINDER_OFFSETS: readonly PrayerReminderOffset[] = [0, 5, 10, 15, 30];
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function safeText(value: unknown, fallback: string, maxLength = 160): string {
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim().slice(0, maxLength) : fallback;
+}
+
+function normalizeUserLocation(value: unknown): UserLocation {
+  if (!isRecord(value)) return DEFAULT_LOCATION;
+  const latitude = value.latitude;
+  const longitude = value.longitude;
+  if (
+    typeof latitude !== 'number' || !Number.isFinite(latitude) || latitude < -90 || latitude > 90 ||
+    typeof longitude !== 'number' || !Number.isFinite(longitude) || longitude < -180 || longitude > 180
+  ) return DEFAULT_LOCATION;
+  return {
+    city: safeText(value.city, DEFAULT_LOCATION.city),
+    district: typeof value.district === 'string' ? value.district.trim().slice(0, 160) || undefined : undefined,
+    province: typeof value.province === 'string' ? value.province.trim().slice(0, 160) || undefined : undefined,
+    country: safeText(value.country, DEFAULT_LOCATION.country),
+    latitude,
+    longitude,
+    timezone: isValidTimeZone(value.timezone) ? value.timezone : DEFAULT_LOCATION.timezone,
+    isAutoDetected: typeof value.isAutoDetected === 'boolean' ? value.isAutoDetected : false,
+    displayName: safeText(value.displayName, DEFAULT_LOCATION.displayName),
+  };
+}
+
+function normalizeAdjustment(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.min(30, Math.max(-30, Math.round(value)))
+    : fallback;
+}
+
+function isCalculationMethod(value: unknown): value is UserSettings['method'] {
+  return CALCULATION_METHODS.some((method) => method.id === value);
+}
+
+function normalizeUserSettings(value: unknown): UserSettings {
+  const input = isRecord(value) ? value : {};
+  const rawAdjustments = isRecord(input.adjustments) ? input.adjustments : {};
+  const adjustments = DEFAULT_SETTINGS.adjustments;
+  return {
+    method: isCalculationMethod(input.method) ? input.method : DEFAULT_SETTINGS.method,
+    madhab: input.madhab === 'hanafi' || input.madhab === 'shafii' ? input.madhab : DEFAULT_SETTINGS.madhab,
+    adjustments: {
+      fajr: normalizeAdjustment(rawAdjustments.fajr, adjustments.fajr),
+      sunrise: normalizeAdjustment(rawAdjustments.sunrise, adjustments.sunrise),
+      dhuhr: normalizeAdjustment(rawAdjustments.dhuhr, adjustments.dhuhr),
+      asr: normalizeAdjustment(rawAdjustments.asr, adjustments.asr),
+      maghrib: normalizeAdjustment(rawAdjustments.maghrib, adjustments.maghrib),
+      isha: normalizeAdjustment(rawAdjustments.isha, adjustments.isha),
+    },
+    timeFormat24h: typeof input.timeFormat24h === 'boolean' ? input.timeFormat24h : DEFAULT_SETTINGS.timeFormat24h,
+    theme: input.theme === 'light' || input.theme === 'dark' || input.theme === 'system' ? input.theme : DEFAULT_SETTINGS.theme,
+    enableNotifications: typeof input.enableNotifications === 'boolean' ? input.enableNotifications : DEFAULT_SETTINGS.enableNotifications,
+    notifyBeforeMinutes: isReminderOffset(input.notifyBeforeMinutes) ? input.notifyBeforeMinutes : DEFAULT_SETTINGS.notifyBeforeMinutes,
+    adhanSound: input.adhanSound === 'none' || input.adhanSound === 'beep' || input.adhanSound === 'adhan_short'
+      ? input.adhanSound
+      : DEFAULT_SETTINGS.adhanSound,
+  };
+}
+
 export function getDefaultPrayerReminderSettings(): PrayerReminderSettings {
   return PRAYER_REMINDER_PRAYERS.reduce((settings, prayer) => {
     settings[prayer] = { enabled: false, offsetMinutes: 0 };
@@ -139,7 +203,7 @@ export function getSavedLocation(): UserLocation {
   try {
     const raw = localStorage.getItem(KEYS.LOCATION);
     if (raw) {
-      return JSON.parse(raw);
+      return normalizeUserLocation(JSON.parse(raw));
     }
   } catch (e) {
     console.warn('Failed to read location from localStorage:', e);
@@ -150,7 +214,7 @@ export function getSavedLocation(): UserLocation {
 export function saveLocation(loc: UserLocation): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(KEYS.LOCATION, JSON.stringify(loc));
+    localStorage.setItem(KEYS.LOCATION, JSON.stringify(normalizeUserLocation(loc)));
   } catch (e) {
     console.warn('Failed to save location:', e);
   }
@@ -161,7 +225,7 @@ export function getSavedSettings(): UserSettings {
   try {
     const raw = localStorage.getItem(KEYS.SETTINGS);
     if (raw) {
-      return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+      return normalizeUserSettings(JSON.parse(raw));
     }
   } catch (e) {
     console.warn('Failed to read settings from localStorage:', e);
@@ -172,7 +236,7 @@ export function getSavedSettings(): UserSettings {
 export function saveSettings(settings: UserSettings): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(KEYS.SETTINGS, JSON.stringify(settings));
+    localStorage.setItem(KEYS.SETTINGS, JSON.stringify(normalizeUserSettings(settings)));
   } catch (e) {
     console.warn('Failed to save settings:', e);
   }

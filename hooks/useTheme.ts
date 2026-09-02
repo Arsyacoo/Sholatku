@@ -4,6 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 
 export type Theme = 'light' | 'dark' | 'system';
 
+function normalizeTheme(value: unknown): Theme {
+  return value === 'light' || value === 'dark' || value === 'system' ? value : 'system';
+}
+
 const THEME_KEY = 'sholatku_theme_mode';
 const THEME_EVENT = 'sholatku-theme-change';
 
@@ -34,7 +38,7 @@ export function useTheme() {
   }, []);
 
   const syncStateFromStorage = useCallback(() => {
-    const saved = (localStorage.getItem(THEME_KEY) as Theme) || 'system';
+    const saved = normalizeTheme(localStorage.getItem(THEME_KEY));
     setThemeState(saved);
     applyTheme(saved);
   }, [applyTheme]);
@@ -50,7 +54,7 @@ export function useTheme() {
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleMediaChange = () => {
-      const current = localStorage.getItem(THEME_KEY) as Theme | null;
+      const current = normalizeTheme(localStorage.getItem(THEME_KEY));
       if (!current || current === 'system') {
         applyTheme('system');
       }
