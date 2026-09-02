@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { DailyPrayerSchedule, UserLocation, UserSettings } from '@/types';
 import { getDailyPrayerTimes } from '@/lib/prayer/api';
 import { buildPrayerScheduleCacheContext, getCachedSchedule, saveCachedSchedule } from '@/lib/storage/preferences';
@@ -12,9 +12,11 @@ export function usePrayerTimes(location: UserLocation, settings: UserSettings) {
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isStale, setIsStale] = useState<boolean>(false);
+  const requestIdRef = useRef(0);
 
   const fetchSchedule = useCallback(
     async (isBackgroundRefresh = false) => {
+      const requestId = ++requestIdRef.current;
       if (isBackgroundRefresh) {
         setIsRefreshing(true);
       } else {
@@ -25,10 +27,12 @@ export function usePrayerTimes(location: UserLocation, settings: UserSettings) {
       try {
         const today = new Date();
         const data = await getDailyPrayerTimes(location, settings, today);
+        if (requestId !== requestIdRef.current) return;
         setSchedule(data);
         saveCachedSchedule(data, buildPrayerScheduleCacheContext(data.date, location, settings));
         setIsStale(data.source === 'offline');
       } catch (err: any) {
+        if (requestId !== requestIdRef.current) return;
         console.error('Failed to fetch prayer schedule:', err);
         // Try fallback to cached schedule
         const cached = getCachedSchedule(
@@ -46,6 +50,7 @@ export function usePrayerTimes(location: UserLocation, settings: UserSettings) {
           setError('Gagal memuat jadwal sholat. Silakan periksa koneksi internet.');
         }
       } finally {
+        if (requestId !== requestIdRef.current) return;
         setIsLoading(false);
         setIsRefreshing(false);
       }
@@ -63,9 +68,8 @@ export function usePrayerTimes(location: UserLocation, settings: UserSettings) {
         settings
       )
     );
-    if (cached && !schedule) {
-      setSchedule(cached);
-    }
+    setSchedule(cached);
+    setError(null);
     fetchSchedule(Boolean(cached));
   }, [fetchSchedule]);
 

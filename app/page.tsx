@@ -119,6 +119,8 @@ export default function HomePage() {
             schedule={schedule}
             nextPrayerInfo={nextPrayerInfo}
             isLoading={isPrayerLoading && !schedule}
+            error={prayerError}
+            onRetry={refreshSchedule}
           />
         </div>
       </main>

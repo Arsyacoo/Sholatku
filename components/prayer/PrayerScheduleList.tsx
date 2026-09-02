@@ -12,6 +12,8 @@ interface PrayerScheduleListProps {
   schedule: DailyPrayerSchedule | null;
   nextPrayerInfo: NextPrayerInfo | null;
   isLoading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
 }
 
 const PRAYER_KEYS: PrayerKey[] = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
@@ -20,13 +22,35 @@ export const PrayerScheduleList: React.FC<PrayerScheduleListProps> = ({
   schedule,
   nextPrayerInfo,
   isLoading = false,
+  error = null,
+  onRetry,
 }) => {
-  if (isLoading || !schedule) {
+  if (isLoading && !schedule) {
     return (
       <div className="space-y-3">
         {[1, 2, 3, 4, 5, 6].map((i) => (
           <Skeleton key={i} className="w-full h-16 rounded-2xl" />
         ))}
+      </div>
+    );
+  }
+
+  if (!schedule) {
+    return (
+      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-rose-900 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-100" role="alert">
+        <h2 className="font-semibold">Jadwal sholat belum dapat dimuat.</h2>
+        <p className="mt-1 text-sm text-rose-800/80 dark:text-rose-200/80">
+          {error || 'Periksa koneksi internet atau coba kembali.'}
+        </p>
+        {onRetry && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="mt-4 rounded-xl bg-rose-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-rose-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+          >
+            Coba Lagi
+          </button>
+        )}
       </div>
     );
   }

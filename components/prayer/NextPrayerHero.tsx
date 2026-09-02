@@ -12,11 +12,13 @@ interface NextPrayerHeroProps {
 }
 
 export const NextPrayerHero: React.FC<NextPrayerHeroProps> = ({ prayerInfo, isLoading = false }) => {
-  if (isLoading || !prayerInfo) {
+  if (isLoading) {
     return (
       <div className="w-full h-56 rounded-3xl bg-surface-200 dark:bg-surface-800 animate-pulse" />
     );
   }
+
+  if (!prayerInfo) return null;
 
   const { currentPrayer, nextPrayer, formattedCountdown, remainingSeconds, isTomorrowFajr, progressPercent } =
     prayerInfo;
