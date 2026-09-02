@@ -33,6 +33,7 @@ export function usePrayerReminders({
     if (!scheduler || !schedule) return;
 
     let cancelled = false;
+    const controller = new AbortController();
     const now = new Date();
     const isAfterIsha = now.getTime() >= parsePrayerDateTime(schedule.date, schedule.timings.isha).getTime();
     const contextKey = [
@@ -54,7 +55,9 @@ export function usePrayerReminders({
           const tomorrow = new Date(now);
           tomorrow.setDate(tomorrow.getDate() + 1);
           try {
-            tomorrowSchedule = await getDailyPrayerTimes(location, settings, tomorrow);
+            tomorrowSchedule = await getDailyPrayerTimes(location, settings, tomorrow, {
+              signal: controller.signal,
+            });
           } catch {
             tomorrowSchedule = undefined;
           } finally {
@@ -86,6 +89,7 @@ export function usePrayerReminders({
 
     return () => {
       cancelled = true;
+      controller.abort();
       scheduler.stop();
       document.removeEventListener('visibilitychange', recalculate);
       window.removeEventListener('focus', recalculate);

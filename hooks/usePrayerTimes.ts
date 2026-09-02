@@ -5,6 +5,8 @@ import { DailyPrayerSchedule, UserLocation, UserSettings } from '@/types';
 import { getDailyPrayerTimes } from '@/lib/prayer/api';
 import { buildPrayerScheduleCacheContext, getCachedSchedule, saveCachedSchedule } from '@/lib/storage/preferences';
 import { formatDateInTimeZone, normalizeTimeZone } from '@/lib/time/timezone';
+import { isNetworkRequestError } from '@/lib/network/fetch';
+import { LatestRequestController } from '@/lib/network/latest-request';
 
 export function usePrayerTimes(location: UserLocation, settings: UserSettings) {
   const [schedule, setSchedule] = useState<DailyPrayerSchedule | null>(null);
@@ -12,11 +14,12 @@ export function usePrayerTimes(location: UserLocation, settings: UserSettings) {
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isStale, setIsStale] = useState<boolean>(false);
-  const requestIdRef = useRef(0);
+  const requestsRef = useRef<LatestRequestController | null>(null);
+  if (!requestsRef.current) requestsRef.current = new LatestRequestController();
 
   const fetchSchedule = useCallback(
     async (isBackgroundRefresh = false) => {
-      const requestId = ++requestIdRef.current;
+      const request = requestsRef.current!.begin();
       if (isBackgroundRefresh) {
         setIsRefreshing(true);
       } else {
@@ -26,13 +29,15 @@ export function usePrayerTimes(location: UserLocation, settings: UserSettings) {
 
       try {
         const today = new Date();
-        const data = await getDailyPrayerTimes(location, settings, today);
-        if (requestId !== requestIdRef.current) return;
+        const data = await getDailyPrayerTimes(location, settings, today, {
+          signal: request.signal,
+        });
+        if (!request.isCurrent()) return;
         setSchedule(data);
         saveCachedSchedule(data, buildPrayerScheduleCacheContext(data.date, location, settings));
         setIsStale(data.source === 'offline');
-      } catch (err: any) {
-        if (requestId !== requestIdRef.current) return;
+      } catch (err: unknown) {
+        if (!request.isCurrent() || isNetworkRequestError(err, 'aborted')) return;
         console.error('Failed to fetch prayer schedule:', err);
         // Try fallback to cached schedule
         const cached = getCachedSchedule(
@@ -50,9 +55,11 @@ export function usePrayerTimes(location: UserLocation, settings: UserSettings) {
           setError('Gagal memuat jadwal sholat. Silakan periksa koneksi internet.');
         }
       } finally {
-        if (requestId !== requestIdRef.current) return;
-        setIsLoading(false);
-        setIsRefreshing(false);
+        if (request.isCurrent()) {
+          setIsLoading(false);
+          setIsRefreshing(false);
+        }
+        requestsRef.current?.finish(request);
       }
     },
     [location.latitude, location.longitude, location.timezone, settings.method, settings.madhab, JSON.stringify(settings.adjustments)]
@@ -70,7 +77,8 @@ export function usePrayerTimes(location: UserLocation, settings: UserSettings) {
     );
     setSchedule(cached);
     setError(null);
-    fetchSchedule(Boolean(cached));
+    void fetchSchedule(Boolean(cached));
+    return () => requestsRef.current?.cancel();
   }, [fetchSchedule]);
 
   return {

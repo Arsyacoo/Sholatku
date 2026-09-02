@@ -68,8 +68,11 @@ export function useRamadan(
     }
 
     let active = true;
+    const controller = new AbortController();
     setIsLoadingNextDay(true);
-    getDailyPrayerTimes(location, settings, addDays(timing.date, 1, timing.timezone))
+    getDailyPrayerTimes(location, settings, addDays(timing.date, 1, timing.timezone), {
+      signal: controller.signal,
+    })
       .then((next) => {
         if (active) setNextDaySchedule(next);
       })
@@ -81,6 +84,7 @@ export function useRamadan(
       });
     return () => {
       active = false;
+      controller.abort();
     };
   }, [timing?.date, status.isRamadan, preferences.showHomeCard, location.latitude, location.longitude, location.timezone, settings.method, settings.madhab, JSON.stringify(settings.adjustments)]);
 

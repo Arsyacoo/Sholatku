@@ -6,6 +6,7 @@ import { getMonthlyPrayerTimes } from '@/lib/prayer/api';
 import { ChevronLeft, ChevronRight, Printer, Calendar as CalendarIcon, Download } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Skeleton } from '../ui/Skeleton';
+import { isNetworkRequestError } from '@/lib/network/fetch';
 
 interface MonthlyScheduleTableProps {
   location: UserLocation;
@@ -26,15 +27,18 @@ export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ loca
 
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
     const load = async () => {
       setIsLoading(true);
       try {
-        const data = await getMonthlyPrayerTimes(location, settings, currentYear, currentMonth);
+        const data = await getMonthlyPrayerTimes(location, settings, currentYear, currentMonth, {
+          signal: controller.signal,
+        });
         if (active) {
           setSchedule(data);
         }
       } catch (e) {
-        console.error(e);
+        if (!isNetworkRequestError(e, 'aborted')) console.error(e);
       } finally {
         if (active) setIsLoading(false);
       }
@@ -42,8 +46,9 @@ export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ loca
     load();
     return () => {
       active = false;
+      controller.abort();
     };
-  }, [location.latitude, location.longitude, currentYear, currentMonth, settings.method, settings.madhab]);
+  }, [location, settings, currentYear, currentMonth]);
 
   const handlePrevMonth = () => {
     if (currentMonth === 1) {
