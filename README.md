@@ -11,7 +11,7 @@ Aplikasi web modern, presisi, dan elegan untuk jadwal waktu sholat harian, hitun
 - **⏱️ Next Prayer & Live Countdown:** Menampilkan waktu sholat berikutnya secara akurat dengan hitung mundur detik *drift-free* dan *rollover* otomatis ke Subuh esok hari setelah Isya.
 - **🕌 6 Jadwal Lengkap:** Subuh, Syuruq (Terbit), Dzuhur, Ashar, Maghrib, dan Isya.
 - **🧭 Kompas Arah Kiblat:** Menghitung sudut derajat presisi dari Utara Sejati (*Great Circle distance & bearing*) ke Ka'bah di Makkah, mendukung sensor orientasi kompas perangkat.
-- **📅 Kalender Bulanan:** Jadwal sholat dan imsakiyah sebulan penuh dengan fitur *print schedule*.
+- **📅 Kalender Bulanan:** Jadwal sholat dan imsakiyah sebulan penuh dengan fitur *print schedule*, status loading/error yang jelas, dan rollover tahun yang aman.
 - **⚙️ Pengaturan Hisab Fleksibel:** Mendukung metode Kemenag RI, MWL, Umm Al-Qura, madhab Ashar (Syafi'i/Hanafi), dan koreksi menit manual (*ihtiyat*).
 
 ### 📖 Al-Qur'an Digital & Audio Murottal
@@ -23,6 +23,7 @@ Aplikasi web modern, presisi, dan elegan untuk jadwal waktu sholat harian, hitun
 - **🔖 Bookmark & Koleksi Ayat:** Tandai bacaan terakhir (*Last Read*) dan simpan ayat-ayat favorit ke tab koleksi pribadi.
 - **📦 Mode Offline (*Offline-First Cache*):** Surat yang pernah dibuka otomatis tersimpan di IndexedDB sehingga tetap bisa dibaca tanpa koneksi internet. Cache audio tidak diunduh otomatis.
 - **📱 PWA siap produksi:** Service worker hanya aktif pada build produksi, memiliki halaman fallback offline, dan menampilkan prompt pembaruan yang tidak mengganggu sesi membaca.
+- **🔔 Pengingat sholat:** Pengingat berbasis Notification API dan service worker tersedia bila didukung browser; ekspor kalender menjadi pilihan saat aplikasi tidak sedang dibuka.
 
 ## 🛠️ Teknologi
 
@@ -32,7 +33,7 @@ Aplikasi web modern, presisi, dan elegan untuk jadwal waktu sholat harian, hitun
 - **Icons:** Lucide Icons
 - **PWA & caching:** Serwist
 - **Client storage:** IndexedDB melalui `idb` (schema `sholatku` v1)
-- **Testing:** Vitest (30 Unit Tests)
+- **Testing:** Vitest untuk unit/integrasi dan Playwright untuk smoke test browser mobile serta desktop
 
 ## 🚀 Memulai (Development)
 
@@ -58,7 +59,18 @@ Buka [http://localhost:3000](http://localhost:3000) di browser Anda.
 npm test
 ```
 
-5. Membangun untuk produksi:
+5. Memeriksa lint dan tipe:
+```bash
+npm run lint
+npx tsc --noEmit
+```
+
+6. Menjalankan pengujian browser (membangun aplikasi terlebih dahulu):
+```bash
+npm run test:e2e
+```
+
+7. Membangun untuk produksi:
 ```bash
 npm run build
 ```
@@ -67,5 +79,7 @@ Service worker `public/sw.js` dibuat otomatis oleh build produksi dan sengaja ti
 
 Untuk prinsip produk dan batas pengalaman Sholatku, lihat [Product Documentation](docs/PRODUCT.md).
 
+Untuk URL canonical, Open Graph, dan sitemap produksi, set `NEXT_PUBLIC_SITE_URL` ke origin deployment (misalnya `https://contoh.id`). Tanpa variabel ini aplikasi tetap berjalan dengan URL relatif dan tidak mengarang domain publik.
+
 ## 📄 Lisensi
-MIT License &copy; 2026 Sholatku
+[MIT License](LICENSE) &copy; 2026 Arsyacoo

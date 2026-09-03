@@ -1,6 +1,8 @@
 # PWA dan Arsitektur Offline Sholatku
 
-Dokumen ini mencatat batas perilaku offline Sprint 01 tanpa mengubah alur bisnis yang sudah ada. API jadwal sholat tetap mencoba endpoint internal, lalu AlAdhan, kemudian fallback perhitungan solar lokal seperti sebelumnya.
+Dokumen ini mencatat perilaku offline Sholatku tanpa mengubah alur bisnis yang sudah ada. API jadwal sholat tetap mencoba endpoint internal, lalu AlAdhan, kemudian fallback perhitungan solar lokal seperti sebelumnya.
+
+Untuk lokasi lintang tinggi, kalkulasi lokal menggunakan kebijakan eksplisit *one-seventh* ketika waktu twilight tidak tersedia. Jika matahari tidak terbit/terbenam atau input tidak valid, kalkulator mengembalikan error terstruktur agar UI dapat menampilkan status tidak tersedia; aplikasi tidak mengarang waktu `00:00`.
 
 ## Service worker
 
@@ -38,16 +40,22 @@ Reader memanggil migrasi secara lazy dan idempotent untuk key lama `sholatku_cac
 
 `useOnlineStatus` mendengarkan event `online`/`offline` dan `ConnectionStatus` menampilkan banner non-blocking. Status online tidak memaksa reload. Ketika reader dibuka, cache dibaca async terlebih dahulu untuk render cepat; request jaringan berjalan sebagai pembaruan latar belakang. Guard unmount/race mencegah respons surat lama menimpa navigasi baru.
 
+Kalender bulanan memiliki state `hydrating`, `loading`, `success`, `empty`, dan `error`. Perubahan lokasi, metode hisab, madhab, atau koreksi menit memulai permintaan baru; respons yang sudah tidak relevan dibatalkan/diabaikan. Saat provider gagal, kalkulasi lokal dicoba bila kondisi matahari memungkinkan, dan jika tidak tersedia pengguna mendapat tombol **Coba Lagi**.
+
+Pengingat adzan bergantung pada dukungan Notification API dan service worker browser. Browser tidak menjamin notifikasi atau suara ketika tab/aplikasi benar-benar ditutup, sehingga ekspor kalender tetap disediakan sebagai jalur yang lebih konsisten.
+
 ## Verifikasi
 
 ```bash
 npm test
 npm run build
 npx tsc --noEmit
+npm run lint
+npm run test:e2e
 ```
 
 Setelah `npm run build && npm start`, buka DevTools Application untuk memastikan manifest, worker `/sw.js`, dan cache runtime muncul. Matikan jaringan, reload halaman yang pernah dibuka, lalu buka surat yang sudah tersimpan. Pastikan halaman baru yang belum pernah dikunjungi menampilkan `/~offline`, sedangkan audio tetap memerlukan jaringan dan tidak memenuhi cache secara otomatis.
 
-## Batas Sprint 01
+## Batas implementasi offline
 
-Sprint ini tidak menambahkan unduhan audio, push notification/background adhan, dashboard manajemen cache penuh, tracker/Ramadan, pencarian global/AI, autentikasi, sinkronisasi cloud, atau perubahan backend.
+Implementasi ini tidak mengunduh audio secara otomatis, tidak menjamin push notification/background adhan ketika aplikasi ditutup, dan tidak menyediakan dashboard manajemen cache penuh, tracker/analytics, pencarian AI, autentikasi, sinkronisasi cloud, atau perubahan backend.

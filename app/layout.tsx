@@ -17,10 +17,22 @@ const amiri = Amiri({
   weight: ['400', '700'],
 });
 
+const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+const metadataBase = configuredSiteUrl ? new URL(configuredSiteUrl) : undefined;
+
+const siteDescription =
+  'Aplikasi jadwal waktu sholat harian, hitung mundur adzan otomatis, arah kiblat presisi, kalender bulanan, dan Al-Qur’an digital untuk dibaca serta didengarkan online.';
+
 export const metadata: Metadata = {
-  title: 'Sholatku — Jadwal Waktu Sholat & Arah Kiblat Akurat',
-  description:
-    'Aplikasi jadwal waktu sholat harian, hitung mundur adzan otomatis, arah kiblat presisi, dan kalender hisab bulanan untuk wilayah Indonesia dan dunia.',
+  metadataBase,
+  title: {
+    default: 'Sholatku — Jadwal Sholat & Al-Qur’an Digital',
+    template: '%s | Sholatku',
+  },
+  description: siteDescription,
+  applicationName: 'Sholatku',
+  creator: 'Arsyacoo',
+  publisher: 'Arsyacoo',
   keywords: [
     'jadwal sholat',
     'waktu sholat hari ini',
@@ -29,6 +41,24 @@ export const metadata: Metadata = {
     'jadwal imsakiyah',
     'kemenag',
   ],
+  alternates: configuredSiteUrl ? { canonical: '/' } : undefined,
+  openGraph: {
+    type: 'website',
+    locale: 'id_ID',
+    siteName: 'Sholatku',
+    title: 'Sholatku — Jadwal Sholat & Al-Qur’an Digital',
+    description: siteDescription,
+    ...(configuredSiteUrl ? { url: configuredSiteUrl } : {}),
+    ...(configuredSiteUrl
+      ? { images: [{ url: '/icon-512.png', width: 512, height: 512, alt: 'Logo Sholatku' }] }
+      : {}),
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Sholatku — Jadwal Sholat & Al-Qur’an Digital',
+    description: siteDescription,
+    ...(configuredSiteUrl ? { images: ['/icon-512.png'] } : {}),
+  },
   authors: [{ name: 'Sholatku Team' }],
   manifest: '/manifest.webmanifest',
   icons: {
