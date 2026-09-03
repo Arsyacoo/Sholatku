@@ -99,8 +99,21 @@ export const CitySearchModal: React.FC<CitySearchModalProps> = ({
     onClose();
   };
 
+  const handleModalClose = () => {
+    onClose();
+    window.setTimeout(() => {
+      document.querySelector<HTMLElement>('[aria-label="Ubah lokasi saat ini"]')?.focus();
+    }, 0);
+  };
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Pilih Lokasi Wilayah" maxWidth="md">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleModalClose}
+      title="Pilih Lokasi Wilayah"
+      maxWidth="md"
+      returnFocusSelector='[aria-label="Ubah lokasi saat ini"]'
+    >
       <div className="space-y-4">
         {/* GPS Auto-detect Button */}
         <Button
