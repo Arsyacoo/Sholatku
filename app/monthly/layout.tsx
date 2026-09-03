@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Jadwal Sholat Bulanan',
+  title: { absolute: 'Jadwal Sholat Bulanan | Sholatku' },
   description: 'Lihat jadwal waktu sholat dan imsakiyah sebulan penuh berdasarkan lokasi dan metode hisab pilihan Anda.',
   alternates: { canonical: '/monthly' },
 };

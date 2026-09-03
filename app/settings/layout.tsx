@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Pengaturan',
+  title: { absolute: 'Pengaturan | Sholatku' },
   description: 'Atur tema, metode hisab, madhab, koreksi waktu, dan pengingat Sholatku.',
   robots: { index: false, follow: false },
 };

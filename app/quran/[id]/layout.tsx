@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: SurahLayoutProps): Promise<Me
 
   const title = `${surah.name} — ${surah.translation}`;
   return {
-    title,
+    title: { absolute: `${title} | Sholatku` },
     description: `Baca Surat ${surah.name} (${surah.translation}) lengkap dengan teks Arab, transliterasi, terjemahan, dan audio murottal.`,
     alternates: { canonical: `/quran/${surah.number}` },
     openGraph: {

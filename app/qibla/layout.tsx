@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Arah Kiblat',
+  title: { absolute: 'Arah Kiblat | Sholatku' },
   description: 'Kompas arah kiblat berdasarkan koordinat lokasi Anda dan arah utara sejati.',
   alternates: { canonical: '/qibla' },
 };

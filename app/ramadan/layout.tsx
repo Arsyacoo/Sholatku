@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Jadwal Ramadan & Imsakiyah',
+  title: { absolute: 'Jadwal Ramadan & Imsakiyah | Sholatku' },
   description: 'Jadwal imsakiyah Ramadan dengan pengingat imsak dan berbuka sesuai lokasi Anda.',
   alternates: { canonical: '/ramadan' },
 };
