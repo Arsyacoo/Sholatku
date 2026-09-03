@@ -77,9 +77,10 @@ export function OfflineManager() {
         <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">
           Kelola bacaan offline
         </h1>
-        <p className="max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-          Simpan teks Al-Qur&apos;an di perangkat agar tetap dapat dibaca meskipun tidak
-          terhubung ke internet. Audio tidak disimpan dalam pengelola offline ini.
+          <p className="max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+            Simpan teks Al-Qur&apos;an di perangkat agar tetap dapat dibaca meskipun tidak
+            terhubung ke internet. Indeks pencarian ayat offline dibentuk dari Surah yang
+            tersimpan. Audio tidak disimpan dalam pengelola offline ini.
         </p>
       </section>
 
@@ -356,8 +357,8 @@ export function OfflineManager() {
         maxWidth="sm"
       >
         <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-          Seluruh teks Surah yang tersimpan akan dihapus dari perangkat. Bookmark, favorit, terakhir dibaca,
-          dan pengaturan Quran tetap aman.
+          Seluruh teks Surah dan indeks pencarian ayat offline yang tersimpan akan dihapus dari perangkat.
+          Bookmark, favorit, terakhir dibaca, dan pengaturan Quran tetap aman.
         </p>
         <div className="mt-6 flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={() => setClearAllTarget(false)}>

@@ -132,7 +132,7 @@ function coverageMessage(
   if (isOnline) {
     if (searchStatus === 'loading') return 'Mencari ayat online...';
     if (searchStatus === 'error') return 'Pencarian ayat online belum tersedia.';
-    if (coverage.mode === 'online' && coverage.isComplete) return null;
+    if (coverage.mode === 'online' && coverage.isComplete) return 'Pencarian ayat online mencakup seluruh Al-Quran.';
     return null;
   }
   if (hasSurahs && !hasAyahs) return 'Pencarian surat mencakup seluruh 114 Surah.';
