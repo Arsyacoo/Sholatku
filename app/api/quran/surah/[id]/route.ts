@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SURAH_LIST } from '@/lib/quran/surah-list';
+import { getGlobalAyahNumber, SURAH_LIST } from '@/lib/quran/surah-list';
+import { getJuzForAyah } from '@/lib/quran/juz-list';
 import { SurahDetail, Ayah } from '@/types';
 import { fetchWithTimeout, NETWORK_TIMEOUTS, readJsonResponse } from '@/lib/network/fetch';
 import { ApiInputError, parseSurahNumber } from '@/lib/api/validation';
@@ -59,15 +60,23 @@ export async function GET(
       const arabText = text(value.teksArab);
       const latinText = text(value.teksLatin);
       const translation = text(value.teksIndonesia);
-      if (!Number.isInteger(number) || !arabText || !latinText || !translation) return [];
+      if (
+        !Number.isInteger(number) ||
+        (number as number) < 1 ||
+        (number as number) > surahMeta.numberOfAyahs ||
+        !arabText ||
+        !latinText ||
+        !translation
+      ) return [];
       const audio = audioSources(value.audio);
       return [{
         numberInSurah: number as number,
-        numberInQuran: number as number,
+        numberInQuran: getGlobalAyahNumber(surahNumber, number as number) ?? number as number,
         arabText,
         latinText,
         translation,
-        juz: 1,
+        juz: getJuzForAyah(surahNumber, number as number),
+        tafsir: null,
         audio: Object.keys(audio).length > 0 ? audio : {
           '01': `https://equran.nos.wjv-1.neo.id/audio-full/Abdullah-Al-Juhany/${String(surahNumber).padStart(3, '0')}.mp3`,
           '05': `https://equran.nos.wjv-1.neo.id/audio-full/Misyari-Rasyid-Al-Afasi/${String(surahNumber).padStart(3, '0')}.mp3`,

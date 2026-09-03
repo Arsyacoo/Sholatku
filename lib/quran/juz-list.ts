@@ -32,3 +32,25 @@ export const JUZ_LIST: JuzInfo[] = [
   { juzNumber: 29, name: 'Juz 29', startSurahNumber: 67, startSurahName: 'Al-Mulk', startAyah: 1, endSurahNumber: 77, endSurahName: 'Al-Mursalat', endAyah: 50 },
   { juzNumber: 30, name: 'Juz 30 (Juz \'Amma)', startSurahNumber: 78, startSurahName: 'An-Naba\'', startAyah: 1, endSurahNumber: 114, endSurahName: 'An-Nas', endAyah: 6 },
 ];
+
+function compareReference(
+  surahNumber: number,
+  ayahNumber: number,
+  targetSurahNumber: number,
+  targetAyahNumber: number
+): number {
+  return surahNumber - targetSurahNumber || ayahNumber - targetAyahNumber;
+}
+
+/** Returns the canonical Juz containing an Ayah, or null for invalid metadata. */
+export function getJuzForAyah(surahNumber: number, ayahNumber: number): number | null {
+  if (!Number.isInteger(surahNumber) || !Number.isInteger(ayahNumber) || surahNumber < 1 || ayahNumber < 1) {
+    return null;
+  }
+
+  const juz = JUZ_LIST.find((entry) =>
+    compareReference(surahNumber, ayahNumber, entry.startSurahNumber, entry.startAyah) >= 0 &&
+    compareReference(surahNumber, ayahNumber, entry.endSurahNumber, entry.endAyah) <= 0
+  );
+  return juz?.juzNumber ?? null;
+}

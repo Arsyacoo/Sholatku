@@ -103,9 +103,23 @@ export function isValidSurahData(value: unknown): value is SurahDetail {
     if (!isObject(ayah)) return false;
     return (
       Number.isInteger(ayah.numberInSurah) &&
+      Number.isInteger(ayah.numberInQuran) &&
+      (ayah.numberInQuran as number) >= 1 &&
       typeof ayah.arabText === 'string' &&
       typeof ayah.latinText === 'string' &&
       typeof ayah.translation === 'string' &&
+      (ayah.tafsir === null || ayah.tafsir === undefined || (
+        isObject(ayah.tafsir) &&
+        typeof ayah.tafsir.text === 'string' &&
+        typeof ayah.tafsir.source === 'string' &&
+        ayah.tafsir.text.trim().length > 0 &&
+        ayah.tafsir.source.trim().length > 0
+      )) &&
+      (ayah.juz === null || (
+        Number.isInteger(ayah.juz) &&
+        (ayah.juz as number) >= 1 &&
+        (ayah.juz as number) <= 30
+      )) &&
       isObject(ayah.audio)
     );
   });

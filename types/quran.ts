@@ -15,12 +15,17 @@ export interface Ayah {
   arabText: string;
   latinText: string;
   translation: string; // Indonesian Kemenag
-  tafsir?: string;
-  juz: number;
+  tafsir?: QuranTafsir | null;
+  juz: number | null;
   page?: number;
   audio: {
     [qariId: string]: string;
   };
+}
+
+export interface QuranTafsir {
+  text: string;
+  source: string;
 }
 
 export interface SurahDetail extends SurahInfo {

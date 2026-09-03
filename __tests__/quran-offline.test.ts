@@ -36,6 +36,7 @@ import {
 } from '@/lib/storage/quran-preferences';
 import { SurahDetail } from '@/types';
 import { createQuranSearchRecords } from '@/lib/quran/search/index-record';
+import { getJuzForAyah } from '@/lib/quran/juz-list';
 
 // Mock localStorage in Node environment
 const mockStorage: Record<string, string> = {};
@@ -74,7 +75,7 @@ const mockSurah: SurahDetail = {
       arabText: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
       latinText: 'Bismillāhir-raḥmānir-raḥīm',
       translation: 'Dengan nama Allah Yang Maha Pengasih, Maha Penyayang.',
-      juz: 1,
+      juz: getJuzForAyah(1, 1),
       audio: {},
     },
   ],

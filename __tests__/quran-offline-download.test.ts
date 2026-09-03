@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getCachedSurah, clearCachedSurahs } from '@/lib/storage/quran-db';
 import type { SurahDetail } from '@/types';
 import { downloadSurahText } from '@/lib/quran/offline-download';
+import { getJuzForAyah } from '@/lib/quran/juz-list';
 
 const surah: SurahDetail = {
   number: 1,
@@ -18,7 +19,7 @@ const surah: SurahDetail = {
       arabText: 'بِسْمِ اللَّهِ',
       latinText: 'Bismillah',
       translation: 'Dengan nama Allah',
-      juz: 1,
+      juz: getJuzForAyah(1, 1),
       audio: {},
     },
   ],

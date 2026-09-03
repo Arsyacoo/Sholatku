@@ -126,8 +126,8 @@ export const AyahCard: React.FC<AyahCardProps> = ({
             type="button"
             onClick={onOpenTafsir}
             className="p-2 rounded-xl text-slate-500 hover:text-primary-600 dark:text-slate-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
-            title="Buka Tafsir Kemenag"
-            aria-label="Buka Tafsir Kemenag"
+            title="Buka Tafsir"
+            aria-label="Buka Tafsir"
           >
             <BookOpen className="w-4 h-4" />
           </button>

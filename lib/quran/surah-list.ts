@@ -117,6 +117,17 @@ export const SURAH_LIST: SurahInfo[] = [
   { number: 114, name: 'An-Nas', arabicName: 'الناس', translation: 'Manusia', numberOfAyahs: 6, revelation: 'Makkiyah' },
 ];
 
+/** Returns the canonical 1-based Quran Ayah number for a Surah/Ayah reference. */
+export function getGlobalAyahNumber(surahNumber: number, ayahNumber: number): number | null {
+  if (!Number.isInteger(surahNumber) || !Number.isInteger(ayahNumber)) return null;
+  const surah = SURAH_LIST.find((item) => item.number === surahNumber);
+  if (!surah || ayahNumber < 1 || ayahNumber > surah.numberOfAyahs) return null;
+  const previousAyahs = SURAH_LIST
+    .filter((item) => item.number < surahNumber)
+    .reduce((total, item) => total + item.numberOfAyahs, 0);
+  return previousAyahs + ayahNumber;
+}
+
 /**
  * Fast search helper for surahs
  */

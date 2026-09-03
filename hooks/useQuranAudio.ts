@@ -133,7 +133,7 @@ export function useQuranAudio(surah: SurahDetail | null, options: QuranAudioOpti
             navigator.mediaSession.metadata = new MediaMetadata({
               title: `Surat ${surah.name} : Ayat ${ayah.numberInSurah}`,
               artist: QARI_OPTIONS.find((q) => q.id === selectedQari)?.name || 'Murottal Al-Qur\'an',
-              album: `Juz ${ayah.juz || 1} • Sholatku`,
+              album: `Juz ${ayah.juz ?? '—'} • Sholatku`,
             });
           }
 

@@ -49,13 +49,12 @@ export const TafsirModal: React.FC<TafsirModalProps> = ({
         <div className="space-y-2 pt-3 border-t border-surface-200 dark:border-surface-800">
           <div className="flex items-center gap-1.5 text-xs font-bold text-primary-700 dark:text-primary-300">
             <BookOpen className="w-4 h-4" />
-            <span>Keterangan &amp; Tafsir Ringkas Kemenag RI:</span>
+            <span>{ayah.tafsir ? `Tafsir ${ayah.tafsir.source}:` : 'Tafsir:'}</span>
           </div>
 
           <div className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed space-y-2">
             <p>
-              {ayah.tafsir ||
-                `Ayat ini mengandung petunjuk mulia dari Allah SWT dalam surat ${surahName}, menegaskan keimanan, hikmah, serta ketetapan hukum bagi umat manusia untuk senantiasa bertakwa dan bersyukur.`}
+              {ayah.tafsir?.text || 'Tafsir belum tersedia untuk ayat ini.'}
             </p>
           </div>
         </div>
