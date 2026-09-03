@@ -71,7 +71,7 @@ export default function SettingsPage() {
               <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
                 Pengaturan
               </h1>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 Sesuaikan preferensi tema, metode hisab, madhab, dan pengingat adzan
               </p>
             </div>

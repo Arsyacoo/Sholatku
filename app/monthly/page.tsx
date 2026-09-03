@@ -47,7 +47,7 @@ export default function MonthlyPage() {
               <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
                 Jadwal Sholat Bulanan
               </h1>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 Kalender jadwal waktu sholat dan imsakiyah sebulan penuh
               </p>
             </div>

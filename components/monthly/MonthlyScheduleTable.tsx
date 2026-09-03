@@ -166,7 +166,7 @@ export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ loca
                 ? `${MONTH_NAMES[currentMonth - 1]} ${currentYear}`
                 : 'Memuat kalender…'}
             </h2>
-            <span className="text-xs text-slate-500">{location.displayName}</span>
+            <span className="text-xs text-slate-600 dark:text-slate-400">{location.displayName}</span>
           </div>
           <Button variant="secondary" size="icon" onClick={handleNextMonth} aria-label="Bulan berikutnya">
             <ChevronRight className="w-5 h-5" />
@@ -246,7 +246,7 @@ export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ loca
                       </div>
                     </td>
                     <td className="py-3 px-3 font-mono">{item.timings.fajr}</td>
-                    <td className="py-3 px-3 font-mono text-slate-400">{item.timings.sunrise}</td>
+                    <td className="py-3 px-3 font-mono text-slate-600 dark:text-slate-400">{item.timings.sunrise}</td>
                     <td className="py-3 px-3 font-mono">{item.timings.dhuhr}</td>
                     <td className="py-3 px-3 font-mono">{item.timings.asr}</td>
                     <td className="py-3 px-3 font-mono">{item.timings.maghrib}</td>

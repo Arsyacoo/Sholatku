@@ -1,6 +1,21 @@
 import type { Metadata, Viewport } from 'next';
+import { Amiri, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { PwaProvider } from '@/components/layout/PwaProvider';
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-jakarta',
+  weight: ['400', '500', '600', '700', '800'],
+});
+
+const amiri = Amiri({
+  subsets: ['arabic'],
+  display: 'swap',
+  variable: '--font-amiri',
+  weight: ['400', '700'],
+});
 
 export const metadata: Metadata = {
   title: 'Sholatku — Jadwal Waktu Sholat & Arah Kiblat Akurat',
@@ -60,15 +75,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className="scroll-smooth" suppressHydrationWarning>
+    <html lang="id" className={`scroll-smooth ${jakarta.variable} ${amiri.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap"
-          rel="stylesheet"
-        />
       </head>
       <body className="min-h-screen flex flex-col font-sans bg-surface-50 dark:bg-surface-950 text-slate-900 dark:text-slate-100 antialiased selection:bg-primary-500 selection:text-white pb-20 md:pb-0">
         <PwaProvider>{children}</PwaProvider>

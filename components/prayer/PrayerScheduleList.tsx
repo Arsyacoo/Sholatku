@@ -63,7 +63,7 @@ export const PrayerScheduleList: React.FC<PrayerScheduleListProps> = ({
         <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
           Jadwal Sholat Hari Ini
         </h2>
-        <span className="text-xs text-slate-400">Zona {getTimeZoneLabel(schedule.timezone)}</span>
+        <span className="text-xs text-slate-600 dark:text-slate-400">Zona {getTimeZoneLabel(schedule.timezone)}</span>
       </div>
 
       <div className="grid grid-cols-1 gap-2.5 sm:gap-3">

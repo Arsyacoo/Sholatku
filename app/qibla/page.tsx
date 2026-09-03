@@ -33,7 +33,7 @@ export default function QiblaPage() {
               <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
                 Kompas Arah Kiblat
               </h1>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 Petunjuk arah Ka&apos;bah presisi berdasarkan koordinat lokasi Anda
               </p>
             </div>

@@ -4,12 +4,11 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Sholatku',
     short_name: 'Sholatku',
-    description: 'Jadwal waktu sholat harian, hitung mundur adzan, dan kompas kiblat akurat.',
+    description: 'Jadwal waktu sholat, Al-Qur’an offline, hitung mundur adzan, dan kompas kiblat akurat.',
     id: '/',
     start_url: '/',
     scope: '/',
     display: 'standalone',
-    orientation: 'portrait',
     lang: 'id',
     categories: ['lifestyle', 'productivity'],
     background_color: '#F8FAFC',
