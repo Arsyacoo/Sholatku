@@ -19,13 +19,19 @@ const MONTH_NAMES = [
 ];
 
 export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ location, settings }) => {
-  const today = new Date();
-  const [currentYear, setCurrentYear] = useState<number>(today.getFullYear());
-  const [currentMonth, setCurrentMonth] = useState<number>(today.getMonth() + 1); // 1-12
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
+  const [currentMonth, setCurrentMonth] = useState<number | null>(null); // 1-12
   const [schedule, setSchedule] = useState<MonthlyPrayerItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    const today = new Date();
+    setCurrentYear(today.getFullYear());
+    setCurrentMonth(today.getMonth() + 1);
+  }, []);
+
+  useEffect(() => {
+    if (currentYear === null || currentMonth === null) return undefined;
     let active = true;
     const controller = new AbortController();
     const load = async () => {
@@ -51,20 +57,22 @@ export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ loca
   }, [location, settings, currentYear, currentMonth]);
 
   const handlePrevMonth = () => {
+    if (currentMonth === null || currentYear === null) return;
     if (currentMonth === 1) {
       setCurrentMonth(12);
-      setCurrentYear((y) => y - 1);
+      setCurrentYear((y) => y === null ? y : y - 1);
     } else {
-      setCurrentMonth((m) => m - 1);
+      setCurrentMonth((m) => m === null ? m : m - 1);
     }
   };
 
   const handleNextMonth = () => {
+    if (currentMonth === null || currentYear === null) return;
     if (currentMonth === 12) {
       setCurrentMonth(1);
-      setCurrentYear((y) => y + 1);
+      setCurrentYear((y) => y === null ? y : y + 1);
     } else {
-      setCurrentMonth((m) => m + 1);
+      setCurrentMonth((m) => m === null ? m : m + 1);
     }
   };
 
@@ -84,7 +92,9 @@ export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ loca
           </Button>
           <div className="text-center min-w-[160px]">
             <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
-              {MONTH_NAMES[currentMonth - 1]} {currentYear}
+              {currentMonth !== null && currentYear !== null
+                ? `${MONTH_NAMES[currentMonth - 1]} ${currentYear}`
+                : 'Memuat kalender…'}
             </h2>
             <span className="text-xs text-slate-500">{location.displayName}</span>
           </div>

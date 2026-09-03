@@ -32,7 +32,7 @@ export function useRamadan(
   settings: UserSettings,
   preferences: RamadanPreferences
 ): RamadanExperience {
-  const [now, setNow] = useState(() => new Date());
+  const [now, setNow] = useState<Date | null>(null);
   const [nextDaySchedule, setNextDaySchedule] = useState<DailyPrayerSchedule | null>(null);
   const [isLoadingNextDay, setIsLoadingNextDay] = useState(false);
 
@@ -51,7 +51,9 @@ export function useRamadan(
   }, []);
 
   const status = useMemo(
-    () => getRamadanStatus(now, preferences, location.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone),
+    () => now
+      ? getRamadanStatus(now, preferences, location.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone)
+      : null,
     [now, location.timezone, preferenceKey(preferences)]
   );
 
@@ -61,7 +63,7 @@ export function useRamadan(
   );
 
   useEffect(() => {
-    if (!timing || !status.isRamadan || !preferences.showHomeCard) {
+    if (!timing || !status?.isRamadan || !preferences.showHomeCard) {
       setNextDaySchedule(null);
       setIsLoadingNextDay(false);
       return;
@@ -86,7 +88,7 @@ export function useRamadan(
       active = false;
       controller.abort();
     };
-  }, [timing?.date, status.isRamadan, preferences.showHomeCard, location.latitude, location.longitude, location.timezone, settings.method, settings.madhab, JSON.stringify(settings.adjustments)]);
+  }, [timing?.date, status?.isRamadan, preferences.showHomeCard, location.latitude, location.longitude, location.timezone, settings.method, settings.madhab, JSON.stringify(settings.adjustments)]);
 
   const nextDayTiming = useMemo(
     () => (nextDaySchedule ? buildRamadanTiming(nextDaySchedule, preferences.imsakOffsetMinutes) : null),
@@ -94,14 +96,14 @@ export function useRamadan(
   );
 
   const context = useMemo(
-    () => (timing && status.isRamadan ? getRamadanContext({ now, timing, nextDayTiming }) : null),
-    [now, timing, nextDayTiming, status.isRamadan]
+    () => (now && timing && status?.isRamadan ? getRamadanContext({ now, timing, nextDayTiming }) : null),
+    [now, timing, nextDayTiming, status?.isRamadan]
   );
 
   return {
-    status: status.isRamadan && preferences.showHomeCard ? status : null,
-    timing: status.isRamadan && preferences.showHomeCard ? timing : null,
-    nextDayTiming: status.isRamadan && preferences.showHomeCard ? nextDayTiming : null,
+    status: status?.isRamadan && preferences.showHomeCard ? status : null,
+    timing: status?.isRamadan && preferences.showHomeCard ? timing : null,
+    nextDayTiming: status?.isRamadan && preferences.showHomeCard ? nextDayTiming : null,
     context,
     isLoadingNextDay,
   };

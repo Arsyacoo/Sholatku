@@ -25,21 +25,29 @@ export default function RamadanPage() {
   const [rows, setRows] = useState<RamadanImsakiyahRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [now, setNow] = useState<Date | null>(null);
   const { location, selectCity, detectLocation, status } = useLocation();
 
   useEffect(() => {
+    setNow(new Date());
     setSettings(getSavedSettings());
     setPreferences(getRamadanPreferences());
     setPrayerReminders(getPrayerReminderSettings());
   }, []);
 
   const hijriYear = useMemo(
-    () => getRelevantRamadanYear(new Date(), location.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone),
-    [location.timezone]
+    () => now
+      ? getRelevantRamadanYear(now, location.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone)
+      : null,
+    [now, location.timezone]
   );
-  const range = useMemo(() => getRamadanDateRange(hijriYear, location.timezone), [hijriYear, location.timezone]);
+  const range = useMemo(
+    () => hijriYear === null ? null : getRamadanDateRange(hijriYear, location.timezone),
+    [hijriYear, location.timezone]
+  );
 
   useEffect(() => {
+    if (!range) return undefined;
     let active = true;
     setIsLoading(true);
     setError(null);
@@ -91,7 +99,7 @@ export default function RamadanPage() {
             <div>
               <div className="mb-1 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-primary-700 dark:text-primary-300">
                 <MoonStar className="h-3.5 w-3.5" aria-hidden="true" />
-                Ramadan {hijriYear} H
+                Ramadan {hijriYear ?? '—'} H
               </div>
               <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl">
                 Imsakiyah
@@ -169,13 +177,15 @@ export default function RamadanPage() {
         <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
           Jadwal menggunakan lokasi, metode hisab, madhab, dan koreksi menit yang sama dengan halaman jadwal sholat. Perubahan pengaturan akan memuat ulang tabel ini.
         </p>
-        <RamadanCalendarExport
-          rows={rows}
-          hijriYear={hijriYear}
-          location={location}
-          prayerReminderSettings={prayerReminders}
-          ramadanReminderSettings={preferences.reminders}
-        />
+        {hijriYear !== null && (
+          <RamadanCalendarExport
+            rows={rows}
+            hijriYear={hijriYear}
+            location={location}
+            prayerReminderSettings={prayerReminders}
+            ramadanReminderSettings={preferences.reminders}
+          />
+        )}
       </main>
       <Footer />
       <BottomNav />
