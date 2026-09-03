@@ -11,6 +11,7 @@ export const REMINDER_LEDGER_RETENTION_MS = 3 * 24 * 60 * 60 * 1000;
 
 const MAX_TIMER_DELAY_MS = 60 * 1000;
 const LEGACY_FIRED_REMINDERS_KEY = 'sholatku_fired_prayer_reminders_v1';
+const memoryLedger = new Map<string, ReminderLedgerRecord>();
 
 export type ReminderDeliveryStatus = 'DUE' | 'CLAIMED-ATTEMPT' | 'DELIVERED' | 'FAILED-RELEASED';
 
@@ -37,7 +38,9 @@ function getStorage(): Storage | null {
 
 function readLedger(now = Date.now()): ReminderLedgerRecord[] {
   const storage = getStorage();
-  if (!storage) return [];
+  if (!storage) {
+    return [...memoryLedger.values()].filter((record) => now - record.updatedAt <= REMINDER_LEDGER_RETENTION_MS);
+  }
   try {
     const raw = storage.getItem(REMINDER_LEDGER_KEY);
     const parsed = raw ? (JSON.parse(raw) as unknown) : [];
@@ -59,7 +62,11 @@ function readLedger(now = Date.now()): ReminderLedgerRecord[] {
 
 function writeLedger(records: ReminderLedgerRecord[]): void {
   const storage = getStorage();
-  if (!storage) return;
+  if (!storage) {
+    memoryLedger.clear();
+    for (const record of records) memoryLedger.set(record.id, record);
+    return;
+  }
   try {
     storage.setItem(REMINDER_LEDGER_KEY, JSON.stringify(records));
   } catch {
@@ -115,6 +122,10 @@ export class PrayerReminderDeliveryCoordinator {
 
     const claimed: ReminderLedgerRecord = { id, status: 'CLAIMED-ATTEMPT', ownerId: this.ownerId, updatedAt: now };
     writeLedger([...records.filter((record) => record.id !== id), claimed]);
+    // A read-after-write check makes simultaneous localStorage writers converge
+    // on the tab whose claim is visible in the shared ledger.
+    const persisted = readLedger(now).find((record) => record.id === id);
+    if (persisted?.ownerId !== this.ownerId || persisted.status !== 'CLAIMED-ATTEMPT') return false;
     postDeliveryEvent(this.channel, claimed);
     return true;
   }
@@ -167,6 +178,7 @@ export function markReminderFired(id: string, firedAt = Date.now()): void {
 }
 
 export function clearFiredReminderEvents(): void {
+  memoryLedger.clear();
   const storage = getStorage();
   if (!storage) return;
   try {

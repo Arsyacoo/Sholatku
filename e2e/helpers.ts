@@ -56,6 +56,29 @@ function quranDetailResponse() {
   };
 }
 
+function quranDetailResponseFor(surahNumber: number) {
+  const response = quranDetailResponse();
+  if (surahNumber === 2) return response;
+  return {
+    ...response,
+    data: {
+      ...response.data,
+      number: surahNumber,
+      name: 'Al-Fatihah',
+      arabicName: 'Al-Fatihah',
+      translation: 'Pembukaan',
+      numberOfAyahs: 7,
+      revelation: 'Makkiyah',
+      ayahs: response.data.ayahs.slice(0, 7).map((ayah, index) => ({
+        ...ayah,
+        numberInSurah: index + 1,
+        numberInQuran: index + 1,
+        translation: `Terjemahan Al-Fatihah ayat ${index + 1}`,
+      })),
+    },
+  };
+}
+
 function quranSearchResponse() {
   return {
     code: 200,
@@ -91,18 +114,32 @@ async function fulfillJson(route: Parameters<Parameters<Page['route']>[1]>[0], p
 }
 
 export async function mockApplicationApis(page: Page): Promise<void> {
+  // Keep browser runs deterministic when the test environment cannot reach
+  // external font CDNs. The application UI itself remains production code.
+  await page.route('https://fonts.googleapis.com/**', (route) => route.fulfill({
+    status: 200,
+    contentType: 'text/css',
+    body: '',
+  }));
   await page.route('**/api/prayer-times/monthly**', (route) => fulfillJson(route, monthlyPrayerResponse()));
   await page.route('**/api/prayer-times**', (route) => fulfillJson(route, dailyPrayerResponse));
-  await page.route('**/api/quran/surah/**', (route) => fulfillJson(route, quranDetailResponse()));
+  await page.route('**/api/quran/surah/**', (route) => {
+    const match = route.request().url().match(/\/api\/quran\/surah\/(\d+)/);
+    return fulfillJson(route, quranDetailResponseFor(match ? Number(match[1]) : 2));
+  });
   await page.route('**/api/quran/search**', (route) => fulfillJson(route, quranSearchResponse()));
 }
 
-export function installConsoleGuards(page: Page): () => Promise<void> {
+export function installConsoleGuards(page: Page, ignoredPatterns: readonly RegExp[] = []): () => Promise<void> {
   const errors: string[] = [];
   page.on('console', (message) => {
-    if (message.type() === 'error') errors.push(`console.error: ${message.text()}`);
+    if (message.type() === 'error' && !ignoredPatterns.some((pattern) => pattern.test(message.text()))) {
+      errors.push(`console.error: ${message.text()}`);
+    }
   });
-  page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
+  page.on('pageerror', (error) => {
+    if (!ignoredPatterns.some((pattern) => pattern.test(error.message))) errors.push(`pageerror: ${error.message}`);
+  });
   return async () => {
     expect(errors, errors.join('\n')).toEqual([]);
   };
