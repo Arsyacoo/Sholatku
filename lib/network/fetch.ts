@@ -22,6 +22,7 @@ export const NETWORK_TIMEOUTS = {
   geocoding: 7_000,
   quranProvider: 12_000,
   quranRoute: 15_000,
+  quranSearchProvider: 10_000,
   quranCorpusProvider: 20_000,
   quranCorpusRoute: 120_000,
 } as const;

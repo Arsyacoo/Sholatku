@@ -121,9 +121,9 @@ export default function QuranPage() {
             response={quranSearch}
             isSearching={quranSearch.isSearching}
             onLoadMore={quranSearch.loadMore}
-            corpusStatus={quranSearch.corpusStatus}
-            corpusError={quranSearch.corpusError}
-            onRetryCorpus={quranSearch.retryCorpus}
+            searchStatus={quranSearch.searchStatus}
+            searchError={quranSearch.searchError}
+            onRetrySearch={quranSearch.retrySearch}
           />
         ) : activeTab === 'juz' ? (
           <JuzList />

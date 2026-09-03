@@ -123,7 +123,13 @@ describe('Quran search engine', () => {
   it('searches a complete global corpus independently from Reader cache coverage', () => {
     const result = searchQuran(records, 'sabar', {
       surahs: SURAH_LIST,
-      coverage: { indexedSurahs: 114, totalSurahs: 114, isComplete: true },
+      coverage: {
+        mode: 'online',
+        completeness: 'complete',
+        indexedSurahs: 114,
+        totalSurahs: 114,
+        isComplete: true,
+      },
     });
     expect(result.ayahs).toEqual(
       expect.arrayContaining([expect.objectContaining({ id: '2:153', matchType: 'translation' })])

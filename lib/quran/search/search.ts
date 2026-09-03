@@ -25,7 +25,14 @@ const MAX_LIMIT = 100;
 function getCoverage(records: QuranSearchRecord[], coverage?: QuranSearchCoverage): QuranSearchCoverage {
   if (coverage) return coverage;
   const indexedSurahs = new Set(records.map((record) => record.surahNumber)).size;
-  return { indexedSurahs, totalSurahs: 114, isComplete: indexedSurahs === 114 };
+  const isComplete = indexedSurahs === 114;
+  return {
+    mode: indexedSurahs === 0 ? 'metadata-only' : 'offline',
+    completeness: isComplete ? 'complete' : indexedSurahs > 0 ? 'partial' : 'surah-only',
+    indexedSurahs,
+    totalSurahs: 114,
+    isComplete,
+  };
 }
 
 function createAyahResult(record: QuranSearchRecord, matchType: AyahSearchResult['matchType'], score: number): AyahSearchResult {

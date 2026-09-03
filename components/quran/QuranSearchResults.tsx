@@ -11,6 +11,9 @@ interface QuranSearchResultsProps {
   response: QuranSearchResponse;
   isSearching: boolean;
   onLoadMore: () => void;
+  searchStatus?: 'idle' | 'loading' | 'ready' | 'error';
+  searchError?: string | null;
+  onRetrySearch?: () => void;
   corpusStatus?: 'idle' | 'loading' | 'ready' | 'error';
   corpusError?: string | null;
   onRetryCorpus?: () => void;
@@ -122,23 +125,19 @@ function SearchResultItem({
 function coverageMessage(
   isOnline: boolean,
   coverage: QuranSearchResponse['coverage'],
-  corpusStatus: QuranSearchResultsProps['corpusStatus'],
+  searchStatus: QuranSearchResultsProps['searchStatus'],
   hasSurahs: boolean,
   hasAyahs: boolean
 ): string | null {
   if (isOnline) {
-    if (corpusStatus === 'loading') return 'Menyiapkan pencarian Al-Quran...';
-    if (corpusStatus === 'error') return 'Pencarian seluruh ayat belum dapat dimuat.';
-    if (corpusStatus === 'idle' && !hasSurahs && !hasAyahs && coverage.indexedSurahs === 0) {
-      return 'Menyiapkan pencarian Al-Quran...';
-    }
-    if (coverage.isComplete) return null;
-    if (coverage.indexedSurahs > 0) return `Pencarian ayat saat ini mencakup ${coverage.indexedSurahs} Surah.`;
+    if (searchStatus === 'loading') return 'Mencari ayat online...';
+    if (searchStatus === 'error') return 'Pencarian ayat online belum tersedia.';
+    if (coverage.mode === 'online' && coverage.isComplete) return null;
     return null;
   }
   if (hasSurahs && !hasAyahs) return 'Pencarian surat mencakup seluruh 114 Surah.';
-  if (coverage.isComplete) return 'Seluruh Al-Quran tersedia untuk pencarian offline.';
-  if (coverage.indexedSurahs > 0) return `Offline — pencarian ayat mencakup ${coverage.indexedSurahs} Surah tersimpan.`;
+  if (coverage.completeness === 'complete') return 'Seluruh Al-Quran tersedia untuk pencarian offline.';
+  if (coverage.completeness === 'partial') return `Offline — pencarian ayat mencakup ${coverage.indexedSurahs} dari ${coverage.totalSurahs} Surah.`;
   return 'Pencarian ayat offline belum tersedia.';
 }
 
@@ -147,6 +146,9 @@ export function QuranSearchResults({
   response,
   isSearching,
   onLoadMore,
+  searchStatus,
+  searchError,
+  onRetrySearch,
   corpusStatus = 'idle',
   corpusError,
   onRetryCorpus,
@@ -157,10 +159,13 @@ export function QuranSearchResults({
 
   const hasSurahs = response.surahs.length > 0;
   const hasAyahs = response.ayahs.length > 0;
-  const message = coverageMessage(isOnline, coverage, corpusStatus, hasSurahs, hasAyahs);
-  const showCorpusError = corpusStatus === 'error' && !hasAyahs && !hasSurahs;
-  const showOfflineUnavailable = !isOnline && !hasAyahs && !hasSurahs && coverage.indexedSurahs === 0;
-  const showCorpusPreparing = isOnline && !hasAyahs && !hasSurahs && coverage.indexedSurahs === 0 && corpusStatus !== 'error';
+  const effectiveSearchStatus = searchStatus ?? corpusStatus;
+  const effectiveSearchError = searchError ?? corpusError;
+  const retry = onRetrySearch ?? onRetryCorpus;
+  const message = coverageMessage(isOnline, coverage, effectiveSearchStatus, hasSurahs, hasAyahs);
+  const showSearchError = isOnline && effectiveSearchStatus === 'error' && !hasSurahs && !hasAyahs;
+  const showOfflineUnavailable = !isOnline && !hasAyahs && !hasSurahs && coverage.completeness === 'surah-only';
+  const showSearchPreparing = isOnline && !hasAyahs && !hasSurahs && effectiveSearchStatus === 'loading';
 
   return (
     <section className="space-y-3" aria-live="polite" aria-labelledby="quran-search-results-heading">
@@ -182,11 +187,11 @@ export function QuranSearchResults({
         <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
           Referensi ayat tidak valid. Gunakan format seperti 2:255.
         </div>
-      ) : showCorpusError ? (
+      ) : showSearchError ? (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center dark:border-amber-900/60 dark:bg-amber-950/30">
-          <p className="text-sm text-amber-800 dark:text-amber-200">{corpusError || 'Pencarian seluruh ayat belum dapat dimuat.'}</p>
-          {onRetryCorpus && (
-            <button type="button" onClick={onRetryCorpus} className="mt-3 rounded-xl border border-amber-300 px-3 py-2 text-xs font-bold text-amber-800 dark:border-amber-700 dark:text-amber-200">
+          <p className="text-sm text-amber-800 dark:text-amber-200">{effectiveSearchError || 'Pencarian ayat online belum tersedia.'}</p>
+          {retry && (
+            <button type="button" onClick={retry} className="mt-3 rounded-xl border border-amber-300 px-3 py-2 text-xs font-bold text-amber-800 dark:border-amber-700 dark:text-amber-200">
               Coba lagi
             </button>
           )}
@@ -196,7 +201,7 @@ export function QuranSearchResults({
           <XCircle className="mx-auto h-7 w-7 text-slate-400" aria-hidden="true" />
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Pencarian ayat offline belum tersedia.</p>
         </div>
-      ) : showCorpusPreparing ? (
+      ) : showSearchPreparing ? (
         <div className="rounded-2xl border border-primary-200 bg-primary-50/60 p-6 text-center text-sm text-primary-800 dark:border-primary-900 dark:bg-primary-950/30 dark:text-primary-200">
           Menyiapkan pencarian Al-Quran...
         </div>
@@ -204,7 +209,7 @@ export function QuranSearchResults({
         <div className="rounded-2xl border border-surface-200 bg-white p-6 text-center dark:border-surface-800 dark:bg-surface-900">
           <XCircle className="mx-auto h-7 w-7 text-slate-400" aria-hidden="true" />
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            {coverage.isComplete
+            {coverage.completeness === 'complete'
               ? `Tidak ditemukan hasil untuk “${query}”.`
               : `Tidak ditemukan dalam ${coverage.indexedSurahs} Surah yang tersedia.`}
           </p>

@@ -153,6 +153,8 @@ describe('Quran Offline Storage & Bookmark Manager', () => {
       await saveGlobalQuranSearchCorpus(records, {
         schemaVersion: 1,
         cachedAt: 1,
+        mode: 'offline',
+        completeness: 'partial',
         indexedSurahs: 1,
         totalSurahs: 114,
         isComplete: false,

@@ -627,7 +627,13 @@ export async function ensureQuranSearchIndex(): Promise<boolean> {
 
 export async function getQuranSearchCoverage(): Promise<QuranSearchCoverage> {
   const db = await getDatabase();
-  if (!db) return { indexedSurahs: 0, totalSurahs: 114, isComplete: false };
+  if (!db) return {
+    mode: 'metadata-only',
+    completeness: 'surah-only',
+    indexedSurahs: 0,
+    totalSurahs: 114,
+    isComplete: false,
+  };
   try {
     const keys = await db.getAllKeys(QURAN_SEARCH_STORE_NAME);
     const indexedSurahs = new Set<number>();
@@ -637,13 +643,22 @@ export async function getQuranSearchCoverage(): Promise<QuranSearchCoverage> {
       const parsed = Number(surahNumber);
       if (Number.isInteger(parsed) && parsed >= 1 && parsed <= 114) indexedSurahs.add(parsed);
     }
+    const isComplete = indexedSurahs.size === 114;
     return {
+      mode: indexedSurahs.size === 0 ? 'metadata-only' : 'offline',
+      completeness: isComplete ? 'complete' : indexedSurahs.size > 0 ? 'partial' : 'surah-only',
       indexedSurahs: indexedSurahs.size,
       totalSurahs: 114,
-      isComplete: indexedSurahs.size === 114,
+      isComplete,
     };
   } catch {
-    return { indexedSurahs: 0, totalSurahs: 114, isComplete: false };
+    return {
+      mode: 'metadata-only',
+      completeness: 'surah-only',
+      indexedSurahs: 0,
+      totalSurahs: 114,
+      isComplete: false,
+    };
   }
 }
 

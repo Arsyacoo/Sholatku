@@ -17,7 +17,12 @@ export interface QuranSearchRecord {
   schemaVersion: number;
 }
 
+export type QuranSearchMode = 'online' | 'offline' | 'metadata-only';
+export type QuranSearchCompleteness = 'complete' | 'partial' | 'surah-only';
+
 export interface QuranSearchCoverage {
+  mode: QuranSearchMode;
+  completeness: QuranSearchCompleteness;
   indexedSurahs: number;
   totalSurahs: number;
   isComplete: boolean;
