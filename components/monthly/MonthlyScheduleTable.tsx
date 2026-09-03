@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Printer, Calendar as CalendarIcon, Download 
 import { Button } from '../ui/Button';
 import { Skeleton } from '../ui/Skeleton';
 import { isNetworkRequestError } from '@/lib/network/fetch';
+import { LatestRequestController } from '@/lib/network/latest-request';
 
 interface MonthlyScheduleTableProps {
   location: UserLocation;
@@ -18,11 +19,70 @@ const MONTH_NAMES = [
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
 ];
 
+type MonthlyLoadState = 'hydrating' | 'loading' | 'success' | 'empty' | 'error';
+
 export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ location, settings }) => {
   const [currentYear, setCurrentYear] = useState<number | null>(null);
   const [currentMonth, setCurrentMonth] = useState<number | null>(null); // 1-12
   const [schedule, setSchedule] = useState<MonthlyPrayerItem[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [loadState, setLoadState] = useState<MonthlyLoadState>('hydrating');
+  const [error, setError] = useState<string | null>(null);
+  const [retryToken, setRetryToken] = useState(0);
+  const requestsRef = React.useRef<LatestRequestController | null>(null);
+  if (!requestsRef.current) requestsRef.current = new LatestRequestController();
+
+  const requestLocation = React.useMemo<UserLocation>(() => ({
+    city: location.city,
+    district: location.district,
+    province: location.province,
+    country: location.country,
+    latitude: location.latitude,
+    longitude: location.longitude,
+    timezone: location.timezone,
+    isAutoDetected: location.isAutoDetected,
+    displayName: location.displayName,
+  }), [
+    location.city,
+    location.district,
+    location.province,
+    location.country,
+    location.latitude,
+    location.longitude,
+    location.timezone,
+    location.isAutoDetected,
+    location.displayName,
+  ]);
+  const requestSettings = React.useMemo<UserSettings>(() => ({
+    method: settings.method,
+    madhab: settings.madhab,
+    adjustments: {
+      fajr: settings.adjustments.fajr,
+      sunrise: settings.adjustments.sunrise,
+      dhuhr: settings.adjustments.dhuhr,
+      asr: settings.adjustments.asr,
+      maghrib: settings.adjustments.maghrib,
+      isha: settings.adjustments.isha,
+    },
+    timeFormat24h: settings.timeFormat24h,
+    theme: settings.theme,
+    enableNotifications: settings.enableNotifications,
+    notifyBeforeMinutes: settings.notifyBeforeMinutes,
+    adhanSound: settings.adhanSound,
+  }), [
+    settings.method,
+    settings.madhab,
+    settings.adjustments.fajr,
+    settings.adjustments.sunrise,
+    settings.adjustments.dhuhr,
+    settings.adjustments.asr,
+    settings.adjustments.maghrib,
+    settings.adjustments.isha,
+    settings.timeFormat24h,
+    settings.theme,
+    settings.enableNotifications,
+    settings.notifyBeforeMinutes,
+    settings.adhanSound,
+  ]);
 
   useEffect(() => {
     const today = new Date();
@@ -32,29 +92,39 @@ export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ loca
 
   useEffect(() => {
     if (currentYear === null || currentMonth === null) return undefined;
-    let active = true;
-    const controller = new AbortController();
+    const request = requestsRef.current!.begin();
+    setLoadState('loading');
+    setSchedule([]);
+    setError(null);
     const load = async () => {
-      setIsLoading(true);
       try {
-        const data = await getMonthlyPrayerTimes(location, settings, currentYear, currentMonth, {
-          signal: controller.signal,
+        const data = await getMonthlyPrayerTimes(requestLocation, requestSettings, currentYear, currentMonth, {
+          signal: request.signal,
         });
-        if (active) {
-          setSchedule(data);
-        }
-      } catch (e) {
-        if (!isNetworkRequestError(e, 'aborted')) console.error(e);
+        if (!request.isCurrent()) return;
+        setSchedule(data);
+        setLoadState(data.length > 0 ? 'success' : 'empty');
+      } catch (e: unknown) {
+        if (!request.isCurrent() || isNetworkRequestError(e, 'aborted')) return;
+        console.error('Failed to fetch monthly prayer schedule:', e);
+        setSchedule([]);
+        setError('Jadwal bulanan belum dapat dimuat. Silakan coba lagi.');
+        setLoadState('error');
       } finally {
-        if (active) setIsLoading(false);
+        if (request.isCurrent()) requestsRef.current?.finish(request);
       }
     };
     load();
     return () => {
-      active = false;
-      controller.abort();
+      if (request.isCurrent()) requestsRef.current?.cancel();
     };
-  }, [location, settings, currentYear, currentMonth]);
+  }, [
+    currentYear,
+    currentMonth,
+    retryToken,
+    requestLocation,
+    requestSettings,
+  ]);
 
   const handlePrevMonth = () => {
     if (currentMonth === null || currentYear === null) return;
@@ -112,6 +182,25 @@ export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ loca
       </div>
 
       {/* Schedule Table Container */}
+      {loadState === 'error' ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-rose-900 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-100" role="alert">
+          <h2 className="font-semibold">Jadwal bulanan belum dapat dimuat.</h2>
+          <p className="mt-1 text-sm text-rose-800/80 dark:text-rose-200/80">
+            {error || 'Periksa koneksi internet atau coba kembali.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => setRetryToken((value) => value + 1)}
+            className="mt-4 rounded-xl bg-rose-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-rose-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+          >
+            Coba Lagi
+          </button>
+        </div>
+      ) : loadState === 'empty' ? (
+        <div className="rounded-2xl border border-surface-200 bg-white p-6 text-center text-sm text-slate-600 dark:border-surface-800 dark:bg-surface-900 dark:text-slate-300">
+          Jadwal untuk bulan ini belum tersedia.
+        </div>
+      ) : (
       <div className="bg-white dark:bg-surface-900 rounded-2xl border border-surface-200 dark:border-surface-800 overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm border-collapse">
@@ -127,7 +216,7 @@ export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ loca
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-100 dark:divide-surface-800">
-              {isLoading ? (
+              {loadState === 'hydrating' || loadState === 'loading' ? (
                 Array.from({ length: 15 }).map((_, i) => (
                   <tr key={i}>
                     <td colSpan={7} className="py-2.5 px-4">
@@ -169,6 +258,7 @@ export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ loca
           </table>
         </div>
       </div>
+      )}
     </div>
   );
 };

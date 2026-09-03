@@ -45,6 +45,7 @@ export default function SettingsPage() {
     setSettings((prev) => {
       const next = updater(prev);
       saveSettings(next);
+      window.dispatchEvent(new CustomEvent('sholatku:settings-changed', { detail: next }));
       setSavedToast(true);
       setTimeout(() => setSavedToast(false), 2000);
       return next;

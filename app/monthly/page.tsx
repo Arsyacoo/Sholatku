@@ -8,13 +8,25 @@ import { MonthlyScheduleTable } from '@/components/monthly/MonthlyScheduleTable'
 import { CitySearchModal } from '@/components/location/CitySearchModal';
 import { useLocation } from '@/hooks/useLocation';
 import { getSavedSettings } from '@/lib/storage/preferences';
+import { DEFAULT_SETTINGS } from '@/lib/prayer/constants';
+import type { UserSettings } from '@/types';
 import { MapPin, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 export default function MonthlyPage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [settings] = useState(() => getSavedSettings());
+  const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const { location, selectCity, detectLocation, status } = useLocation();
+
+  React.useEffect(() => {
+    setSettings(getSavedSettings());
+    const handleSettingsChange = (event: Event) => {
+      const detail = (event as CustomEvent<UserSettings>).detail;
+      setSettings(detail || getSavedSettings());
+    };
+    window.addEventListener('sholatku:settings-changed', handleSettingsChange);
+    return () => window.removeEventListener('sholatku:settings-changed', handleSettingsChange);
+  }, []);
 
   return (
     <div className="flex-1 flex flex-col">
