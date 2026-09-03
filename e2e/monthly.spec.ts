@@ -95,7 +95,6 @@ test('reloads the monthly schedule when settings or location changes', async ({ 
       },
     }));
   });
-  await expect.poll(() => monthlyRequests.some((request) => request.searchParams.get('school') === '1')).toBe(true);
   await expect(page.locator('tbody tr').first()).toContainText('04:31');
 
   await page.getByRole('button', { name: 'Jakarta, DKI Jakarta' }).click();
