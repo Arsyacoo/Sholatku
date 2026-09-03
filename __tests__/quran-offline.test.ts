@@ -147,7 +147,7 @@ describe('Quran Offline Storage & Bookmark Manager', () => {
     expect(updatedRecords[0].translation).toBe('Terjemahan diperbarui.');
   });
 
-  it('keeps the independent global corpus when Reader downloads are cleared', async () => {
+  it('clears global search content together with Reader downloads', async () => {
     const records = createQuranSearchRecords(mockSurah, 1);
     expect(
       await saveGlobalQuranSearchCorpus(records, {
@@ -164,8 +164,8 @@ describe('Quran Offline Storage & Bookmark Manager', () => {
 
     expect(await clearCachedSurahs()).toBe(true);
     const corpus = await getGlobalQuranSearchCorpus();
-    expect(corpus.records).toHaveLength(records.length);
-    expect(corpus.metadata?.indexedSurahs).toBe(1);
+    expect(corpus.records).toEqual([]);
+    expect(corpus.metadata).toBeNull();
   });
 
   it('removes search records with a Surah and clears the derived index with Quran data', async () => {
@@ -321,5 +321,13 @@ describe('Quran Offline Storage & Bookmark Manager', () => {
     expect(getQuranSettings().audioVolume).toBe(42);
     expect(getQuranSettings().audioMuted).toBe(true);
     expect(getQuranSettings().playbackRate).toBe(0.5);
+  });
+
+  it('makes broad offline clearing idempotent', async () => {
+    expect(await clearCachedSurahs()).toBe(true);
+    expect(await clearCachedSurahs()).toBe(true);
+    expect(await getCachedSurahNumbers()).toEqual([]);
+    expect(await getAllQuranSearchRecords()).toEqual([]);
+    expect(await getGlobalQuranSearchCorpus()).toEqual({ records: [], metadata: null });
   });
 });

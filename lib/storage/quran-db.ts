@@ -314,19 +314,6 @@ async function removeSearchRecordsForSurah(surahNumber: number): Promise<boolean
   }
 }
 
-async function clearSearchIndex(): Promise<boolean> {
-  const db = await getDatabase();
-  if (!db) return false;
-  try {
-    const transaction = db.transaction(QURAN_SEARCH_STORE_NAME, 'readwrite');
-    await transaction.objectStore(QURAN_SEARCH_STORE_NAME).clear();
-    await transaction.done;
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 function readLegacySurah(surahNumber: number): SurahDetail | null {
   const storage = getBrowserStorage();
   if (!storage || !Number.isInteger(surahNumber)) return null;
@@ -507,13 +494,28 @@ export async function clearCachedSurahs(): Promise<boolean> {
   if (!db) return false;
   try {
     const transaction = db.transaction(
-      [QURAN_STORE_NAME, QURAN_METADATA_STORE_NAME],
+      [
+        QURAN_STORE_NAME,
+        QURAN_METADATA_STORE_NAME,
+        QURAN_SEARCH_STORE_NAME,
+        QURAN_GLOBAL_CORPUS_STORE_NAME,
+        QURAN_GLOBAL_CORPUS_METADATA_STORE_NAME,
+      ],
       'readwrite'
     );
     await transaction.objectStore(QURAN_STORE_NAME).clear();
     await transaction.objectStore(QURAN_METADATA_STORE_NAME).clear();
+    await transaction.objectStore(QURAN_SEARCH_STORE_NAME).clear();
+    await transaction.objectStore(QURAN_GLOBAL_CORPUS_STORE_NAME).clear();
+    await transaction.objectStore(QURAN_GLOBAL_CORPUS_METADATA_STORE_NAME).clear();
     await transaction.done;
-    await clearSearchIndex();
+
+    // Remove legacy localStorage Surahs only after the IndexedDB transaction
+    // commits, so a failed database operation cannot destroy the fallback.
+    const storage = getBrowserStorage();
+    if (storage) {
+      for (const entry of getLegacyEntries()) storage.removeItem(entry.key);
+    }
     return true;
   } catch {
     return false;
