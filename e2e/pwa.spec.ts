@@ -55,6 +55,49 @@ test('downloads a Surah into IndexedDB for the offline reader', async ({ page })
   await assertNoErrors();
 });
 
+test('opens a cached Surah reader after an offline reload', async ({ page, context }) => {
+  const assertNoErrors = installConsoleGuards(page, [/ERR_INTERNET_DISCONNECTED/i, /ERR_FAILED/i, /Failed to fetch RSC payload/i]);
+  await page.goto('/quran/offline');
+  await page.getByRole('button', { name: 'Download Al-Fatihah untuk offline' }).click();
+  await expect(page.getByText('Tersedia Offline').first()).toBeVisible({ timeout: 15_000 });
+
+  await page.goto('/quran/1');
+  await expect(page.getByRole('heading', { name: 'Al-Fatihah' })).toBeVisible();
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.reload();
+  // Make the reader prove it can render from IndexedDB rather than from the
+  // deterministic online API fixture when the browser is taken offline.
+  await page.route('**/api/quran/surah/**', (route) => route.abort());
+  await page.evaluate(async () => {
+    for (const key of await caches.keys()) {
+      if (key.includes('sholatku-api-')) await caches.delete(key);
+    }
+  });
+  await context.setOffline(true);
+  await page.reload();
+
+  await expect(page.getByRole('heading', { name: 'Al-Fatihah' })).toBeVisible();
+  const firstAyah = page.locator('#ayah-1');
+  await firstAyah.scrollIntoViewIfNeeded();
+  await expect(firstAyah).toBeVisible();
+  expect((await firstAyah.innerText()).trim().length).toBeGreaterThan(20);
+  expect(page.url()).toContain('/quran/1');
+  await assertNoErrors();
+});
+
+test('shows the intentional offline state for an uncached Surah route', async ({ page, context }) => {
+  const assertNoErrors = installConsoleGuards(page, [/ERR_INTERNET_DISCONNECTED/i, /Failed to fetch RSC payload/i]);
+  await page.goto('/quran');
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.reload();
+  await context.setOffline(true);
+  await page.goto('/quran/114');
+
+  await expect(page.getByRole('heading', { name: 'Koneksi internet sedang tidak tersedia' })).toBeVisible();
+  await expect(page.getByText('Mencoba memuat', { exact: false })).toHaveCount(0);
+  await assertNoErrors();
+});
+
 test('clears cached Quran data through the offline manager UI', async ({ page }) => {
   const assertNoErrors = installConsoleGuards(page);
   await page.goto('/quran/offline');

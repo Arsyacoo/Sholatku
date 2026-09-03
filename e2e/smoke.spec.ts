@@ -48,3 +48,22 @@ test('Settings shared Select is keyboard reachable and selectable', async ({ pag
   await expect(page.getByRole('listbox', { name: 'Pengingat Subuh' })).toBeHidden();
   await assertNoErrors();
 });
+
+test('opens a direct Quran ayah reference from global search', async ({ page }) => {
+  const assertNoErrors = installConsoleGuards(page);
+  await page.goto('/quran');
+
+  const search = page.getByRole('textbox', { name: 'Cari ayat, surat, atau terjemahan Al-Qur\'an' });
+  await search.fill('2:255');
+
+  const result = page.getByRole('link', { name: 'Buka Al-Baqarah ayat 255' });
+  await expect(result).toBeVisible();
+  await result.click();
+
+  await expect(page).toHaveURL(/\/quran\/2\?ayah=255$/);
+  await expect(page.getByRole('heading', { name: 'Al-Baqarah' })).toBeVisible();
+  const targetAyah = page.locator('#ayah-255');
+  await expect(targetAyah).toBeVisible();
+  await expect(targetAyah).toHaveClass(/border-primary-500/);
+  await assertNoErrors();
+});
