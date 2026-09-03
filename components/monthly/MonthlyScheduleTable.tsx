@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { MonthlyPrayerItem, UserLocation, UserSettings } from '@/types';
 import { getMonthlyPrayerTimes } from '@/lib/prayer/api';
-import { ChevronLeft, ChevronRight, Printer, Calendar as CalendarIcon, Download } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Printer } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Skeleton } from '../ui/Skeleton';
 import { isNetworkRequestError } from '@/lib/network/fetch';
