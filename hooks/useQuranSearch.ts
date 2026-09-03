@@ -12,6 +12,7 @@ import type { QuranSearchCoverage, QuranSearchResponse, QuranSearchRecord } from
 import { SURAH_LIST } from '@/lib/quran/surah-list';
 import { searchSurahMetadata } from '@/lib/quran/search/surah-search';
 import { looksLikeAyahReference } from '@/lib/quran/search/parser';
+import { fetchWithTimeout, NETWORK_TIMEOUTS, readJsonResponse } from '@/lib/network/fetch';
 import { useOnlineStatus } from './useOnlineStatus';
 
 const PAGE_SIZE = 20;
@@ -137,12 +138,14 @@ export function useQuranSearch(query: string) {
     const search = async () => {
       try {
         const params = new URLSearchParams({ q: debouncedQuery, limit: String(resultLimit) });
-        const response = await fetch(`/api/quran/search?${params.toString()}`, {
+        const response = await fetchWithTimeout(`/api/quran/search?${params.toString()}`, {
+          timeoutMs: NETWORK_TIMEOUTS.quranRoute,
+          rejectHttpErrors: false,
           signal: controller.signal,
           headers: { Accept: 'application/json' },
         });
         if (!response.ok) throw new Error('Pencarian ayat online belum tersedia.');
-        const payload: unknown = await response.json();
+        const payload: unknown = await readJsonResponse(response);
         const result = readOnlineRecords(payload);
         if (currentId !== requestId.current || controller.signal.aborted) return;
         setOnlineRecords(result.records);

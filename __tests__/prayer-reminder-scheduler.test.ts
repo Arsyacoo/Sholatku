@@ -92,6 +92,9 @@ describe('active prayer reminder schedule', () => {
 
 describe('prayer reminder scheduler lifecycle', () => {
   it('fires a stable event once even when recalculated repeatedly', () => {
+    // Keep the fixed fixture date inside the scheduler's retention window so
+    // this regression remains deterministic as the wall clock advances.
+    vi.useFakeTimers({ now: new Date(2026, 8, 1, 4, 25) });
     const notify = vi.fn();
     const scheduler = new PrayerReminderScheduler(notify);
     const event = buildPrayerReminderEvents(schedule, allEnabled, new Date(2026, 8, 1, 4, 25)).find(
@@ -102,6 +105,7 @@ describe('prayer reminder scheduler lifecycle', () => {
     scheduler.recalculate([event], new Date(2026, 8, 1, 4, 25, 1));
     expect(notify).toHaveBeenCalledTimes(1);
     scheduler.stop();
+    vi.useRealTimers();
   });
 
   it('replaces stale events when prayer settings are recalculated', () => {

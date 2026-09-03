@@ -324,10 +324,12 @@ describe('Quran Offline Storage & Bookmark Manager', () => {
   });
 
   it('makes broad offline clearing idempotent', async () => {
+    localStorage.setItem('sholatku_cached_surah_1', JSON.stringify(mockSurah));
     expect(await clearCachedSurahs()).toBe(true);
     expect(await clearCachedSurahs()).toBe(true);
     expect(await getCachedSurahNumbers()).toEqual([]);
     expect(await getAllQuranSearchRecords()).toEqual([]);
     expect(await getGlobalQuranSearchCorpus()).toEqual({ records: [], metadata: null });
+    expect(localStorage.getItem('sholatku_cached_surah_1')).toBeNull();
   });
 });
