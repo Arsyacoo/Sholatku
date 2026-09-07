@@ -34,6 +34,7 @@ import { SurahDetail, Ayah, QuranDisplaySettings, LastReadInfo } from '@/types';
 import { BookOpen, Check, WifiOff } from 'lucide-react';
 import { getAyahPage, parseAyahQuery } from '@/lib/quran/reader-deep-link';
 import { fetchWithTimeout, isNetworkRequestError, NETWORK_TIMEOUTS, readJsonResponse } from '@/lib/network/fetch';
+import { resolveApiUrl } from '@/lib/platform/api';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -101,7 +102,7 @@ export default function SurahDetailPage({ params }: PageProps) {
       }
 
       try {
-        const res = await fetchWithTimeout(`/api/quran/surah/${surahId}`, {
+        const res = await fetchWithTimeout(resolveApiUrl(`/api/quran/surah/${surahId}`), {
           timeoutMs: NETWORK_TIMEOUTS.quranRoute,
           rejectHttpErrors: false,
           signal: abortController.signal,

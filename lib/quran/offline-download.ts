@@ -10,6 +10,7 @@ import {
   NETWORK_TIMEOUTS,
   readJsonResponse,
 } from '@/lib/network/fetch';
+import { resolveApiUrl } from '@/lib/platform/api';
 
 export type QuranDownloadErrorCode = 'invalid-number' | 'network' | 'http' | 'invalid-data' | 'storage';
 
@@ -41,7 +42,7 @@ export async function downloadSurahText(
 
   let response: Response;
   try {
-    response = await fetchWithTimeout(`/api/quran/surah/${surahNumber}`, {
+    response = await fetchWithTimeout(resolveApiUrl(`/api/quran/surah/${surahNumber}`), {
       timeoutMs: NETWORK_TIMEOUTS.quranRoute,
       rejectHttpErrors: false,
       signal: options.signal,

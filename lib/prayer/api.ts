@@ -8,6 +8,7 @@ import {
   NETWORK_TIMEOUTS,
   NetworkRequestError,
 } from '../network/fetch';
+import { resolveApiUrl } from '../platform/api';
 
 interface PrayerRequestOptions {
   signal?: AbortSignal;
@@ -46,7 +47,7 @@ export async function getDailyPrayerTimes(
 
   // Try fetching from local API route first
   try {
-    const data = await fetchJsonWithTimeout<any>(`/api/prayer-times?${params.toString()}`, {
+    const data = await fetchJsonWithTimeout<any>(resolveApiUrl(`/api/prayer-times?${params.toString()}`), {
       timeoutMs: NETWORK_TIMEOUTS.prayerRoute,
       signal: options.signal,
       headers: { Accept: 'application/json' },
@@ -132,7 +133,7 @@ export async function getMonthlyPrayerTimes(
   });
 
   try {
-    const data = await fetchJsonWithTimeout<any>(`/api/prayer-times/monthly?${params.toString()}`, {
+    const data = await fetchJsonWithTimeout<any>(resolveApiUrl(`/api/prayer-times/monthly?${params.toString()}`), {
       timeoutMs: NETWORK_TIMEOUTS.prayerRoute,
       signal: options.signal,
       headers: { Accept: 'application/json' },
