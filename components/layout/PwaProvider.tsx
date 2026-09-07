@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { RefreshCw, X } from 'lucide-react';
 import { SerwistProvider, useSerwist } from '@serwist/next/react';
+import { isPwaRuntimeEnabled } from '@/lib/platform/runtime';
 import { ConnectionStatus } from './ConnectionStatus';
 
 function PwaUpdatePrompt() {
@@ -107,7 +108,7 @@ function PwaUpdatePrompt() {
   );
 }
 
-export function PwaProvider({ children }: { children: React.ReactNode }) {
+function WebPwaProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (
       process.env.NODE_ENV !== 'development' ||
@@ -155,4 +156,18 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
       <PwaUpdatePrompt />
     </SerwistProvider>
   );
+}
+
+export function PwaProvider({ children }: { children: React.ReactNode }) {
+  const [pwaEnabled, setPwaEnabled] = useState(false);
+
+  useEffect(() => {
+    setPwaEnabled(isPwaRuntimeEnabled());
+  }, []);
+
+  // The first server and browser render intentionally match. This also keeps
+  // a Capacitor Android WebView out of the PWA/service-worker lifecycle.
+  if (!pwaEnabled) return <>{children}</>;
+
+  return <WebPwaProvider>{children}</WebPwaProvider>;
 }

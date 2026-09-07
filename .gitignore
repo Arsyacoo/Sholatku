@@ -17,6 +17,9 @@ public/sw*
 # production
 /build
 
+# local mobile shell output
+/dist-mobile/
+
 # misc
 .DS_Store
 *.pem
@@ -60,3 +63,11 @@ next-env.d.ts
 .codex/
 .gemini/
 .impeccable/
+
+# Android machine-local build and signing material
+/android/.gradle/
+/android/build/
+/android/app/build/
+/android/local.properties
+*.jks
+*.keystore

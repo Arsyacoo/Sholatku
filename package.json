@@ -9,7 +9,10 @@
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "npm run build && playwright test"
+    "test:e2e": "npm run build && playwright test",
+    "build:mobile": "vite build --config vite.mobile.config.ts --mode mobile",
+    "dev:mobile": "vite --config vite.mobile.config.ts --mode mobile",
+    "preview:mobile": "vite preview --config vite.mobile.config.ts --host 127.0.0.1"
   },
   "dependencies": {
     "idb": "^8.0.3",
@@ -33,6 +36,7 @@
     "serwist": "^9.5.12",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3",
+    "vite": "^6.4.3",
     "vitest": "^3.0.5"
   },
   "overrides": {
