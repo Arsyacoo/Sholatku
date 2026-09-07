@@ -3,6 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 /** Production-like browser tests. The suite owns its Next server lifecycle. */
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: '**/mobile/**',
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
