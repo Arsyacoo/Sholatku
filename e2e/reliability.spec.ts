@@ -32,7 +32,7 @@ test('renders the locally calculated schedule when both prayer providers fail', 
 
   await page.goto('/');
   await expect(page.getByText('Jadwal Sholat Hari Ini', { exact: true })).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByText('Subuh', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('prayer-schedule-list').getByText('Subuh', { exact: true })).toBeVisible();
   await expect(page.getByText('Jadwal sholat belum dapat dimuat.', { exact: true })).toHaveCount(0);
   expect(localProviderCalls).toBeGreaterThan(0);
   expect(directProviderCalls).toBeGreaterThan(0);

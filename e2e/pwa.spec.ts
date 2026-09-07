@@ -94,6 +94,7 @@ test('shows the intentional offline state for an uncached Surah route', async ({
   await page.goto('/quran/114');
 
   await expect(page.getByRole('heading', { name: 'Koneksi internet sedang tidak tersedia' })).toBeVisible();
+  await expect(page.getByText('Mode offline', { exact: false })).toBeVisible();
   await expect(page.getByText('Mencoba memuat', { exact: false })).toHaveCount(0);
   await assertNoErrors();
 });
