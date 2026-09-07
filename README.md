@@ -79,6 +79,8 @@ Service worker `public/sw.js` dibuat otomatis oleh build produksi dan sengaja ti
 
 Untuk prinsip produk dan batas pengalaman Sholatku, lihat [Product Documentation](docs/PRODUCT.md).
 
+Untuk shell Capacitor Android dan alur pengembangan lokal, lihat [Android Development](docs/ANDROID_DEVELOPMENT.md).
+
 Untuk URL canonical, Open Graph, dan sitemap produksi, set `NEXT_PUBLIC_SITE_URL` ke origin deployment (misalnya `https://contoh.id`). Tanpa variabel ini aplikasi tetap berjalan dengan URL relatif dan tidak mengarang domain publik.
 
 ## 📄 Lisensi
