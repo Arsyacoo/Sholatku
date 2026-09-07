@@ -3,7 +3,7 @@ import { BookOpen, Database, Search, ShieldCheck, Wifi } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { resolveApiUrl } from '@/lib/platform/api';
 import { getAppRuntime } from '@/lib/platform/runtime';
-import { searchSurahs } from '@/lib/quran/surah-list';
+import { searchSurahs, SURAH_LIST } from '@/lib/quran/surah-list';
 
 const MOBILE_STORAGE_KEY = 'sholatku-mobile-shell-ready';
 const MOBILE_DATABASE = 'sholatku-mobile-shell';
@@ -38,7 +38,10 @@ export function MobileShell() {
   const [isLocalReady, setIsLocalReady] = useState(false);
   const [onlineResults, setOnlineResults] = useState<QuranSearchRecord[]>([]);
   const [searchStatus, setSearchStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const offlineMatches = useMemo(() => searchSurahs(query).slice(0, 4), [query]);
+  const offlineMatches = useMemo(() => {
+    const matches = searchSurahs(query);
+    return (matches.length ? matches : SURAH_LIST).slice(0, 4);
+  }, [query]);
   const runtime = getAppRuntime();
 
   useEffect(() => {

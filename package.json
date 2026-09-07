@@ -12,7 +12,9 @@
     "test:e2e": "npm run build && playwright test",
     "build:mobile": "vite build --config vite.mobile.config.ts --mode mobile",
     "dev:mobile": "vite --config vite.mobile.config.ts --mode mobile",
-    "preview:mobile": "vite preview --config vite.mobile.config.ts --host 127.0.0.1"
+    "preview:mobile": "vite preview --config vite.mobile.config.ts --host 127.0.0.1",
+    "verify:mobile-build": "node scripts/verify-mobile-build.mjs",
+    "test:e2e:mobile": "npm run build:mobile && npm run verify:mobile-build && playwright test --config playwright.mobile.config.ts"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.1",

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { resolveApiUrl } from '@/lib/platform/api';
 import { getAppRuntime, isNativeRuntime, isPwaRuntimeEnabled } from '@/lib/platform/runtime';
+import capacitorConfig from '../capacitor.config';
 
 type GlobalWithCapacitor = typeof globalThis & {
   Capacitor?: {
@@ -67,5 +68,12 @@ describe('platform runtime and hosted API resolver', () => {
     expect(() => resolveApiUrl('/api/quran/search?q=sabar')).toThrow(
       'NEXT_PUBLIC_MOBILE_API_BASE_URL wajib dikonfigurasi untuk runtime Android.'
     );
+  });
+
+  it('keeps Capacitor on the local static shell rather than a hosted wrapper', () => {
+    expect(capacitorConfig.appId).toBe('io.github.arsyacoo.sholatku');
+    expect(capacitorConfig.appName).toBe('Sholatku');
+    expect(capacitorConfig.webDir).toBe('dist-mobile');
+    expect(capacitorConfig.server?.url).toBeUndefined();
   });
 });
