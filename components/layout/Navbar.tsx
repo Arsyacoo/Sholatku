@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Compass, Calendar, Settings, Sparkles, BookOpen } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { UserLocation } from '@/types';
+import { isRouteActive } from '@/lib/platform/navigation';
 
 interface NavbarProps {
   location?: UserLocation;
@@ -43,12 +44,13 @@ export const Navbar: React.FC<NavbarProps> = ({ location, onOpenLocationModal })
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1 bg-surface-100/70 dark:bg-surface-900/70 p-1 rounded-xl border border-surface-200/60 dark:border-surface-800/60">
-          {navLinks.map(({ href, label, icon: Icon }) => {
-            const isActive = pathname === href;
+        {navLinks.map(({ href, label, icon: Icon }) => {
+            const isActive = isRouteActive(pathname, href);
             return (
               <Link
                 key={href}
                 href={href}
+                aria-current={isActive ? 'page' : undefined}
                 className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
                   isActive
                     ? 'bg-white dark:bg-surface-800 text-primary-700 dark:text-primary-300 shadow-sm'

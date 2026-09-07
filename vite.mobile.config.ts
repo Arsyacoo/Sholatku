@@ -15,9 +15,24 @@ export default defineConfig(({ mode }) => {
       'process.env.NEXT_PUBLIC_MOBILE_API_BASE_URL': JSON.stringify(apiBaseUrl),
     },
     resolve: {
-      alias: {
-        '@': repositoryRoot,
-      },
+      alias: [
+        {
+          find: '@/components/layout/Footer',
+          replacement: `${repositoryRoot}mobile/src/adapters/noop-footer.tsx`,
+        },
+        {
+          find: 'next/link',
+          replacement: `${repositoryRoot}mobile/src/adapters/next-link.tsx`,
+        },
+        {
+          find: 'next/navigation',
+          replacement: `${repositoryRoot}mobile/src/adapters/next-navigation.ts`,
+        },
+        {
+          find: '@',
+          replacement: repositoryRoot,
+        },
+      ],
     },
     build: {
       outDir: `${repositoryRoot}dist-mobile`,

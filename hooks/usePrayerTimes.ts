@@ -67,6 +67,15 @@ export function usePrayerTimes(location: UserLocation, settings: UserSettings) {
 
   // Initial load or when location/settings change
   useEffect(() => {
+    const handleFocus = () => {
+      if (document.visibilityState === 'visible') {
+        void fetchSchedule(true);
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleFocus);
+
     // Immediate optimistic load from cache if exists
     const cached = getCachedSchedule(
       buildPrayerScheduleCacheContext(
@@ -78,7 +87,11 @@ export function usePrayerTimes(location: UserLocation, settings: UserSettings) {
     setSchedule(cached);
     setError(null);
     void fetchSchedule(Boolean(cached));
-    return () => requestsRef.current?.cancel();
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleFocus);
+      requestsRef.current?.cancel();
+    };
   }, [fetchSchedule]);
 
   return {

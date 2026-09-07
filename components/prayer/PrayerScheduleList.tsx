@@ -58,7 +58,7 @@ export const PrayerScheduleList: React.FC<PrayerScheduleListProps> = ({
   const now = Date.now();
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" data-testid="prayer-schedule-list">
       <div className="flex items-center justify-between px-1">
         <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
           Jadwal Sholat Hari Ini

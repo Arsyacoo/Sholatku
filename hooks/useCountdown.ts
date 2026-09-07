@@ -36,12 +36,17 @@ export function useCountdown(targetTimestamp: number | null) {
         calculate();
       }
     };
+    const handleFocus = () => {
+      calculate();
+    };
 
     document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', handleFocus);
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleFocus);
     };
   }, [targetTimestamp]);
 

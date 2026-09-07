@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, ChevronDown } from 'lucide-react';
+import { useBackAction } from '@/lib/platform/back';
 
 export interface SelectOption<T extends string | number> {
   value: T;
@@ -74,6 +75,11 @@ function SelectComponent<T extends string | number>({
   const optionRefs = useRef<Array<HTMLDivElement | null>>([]);
   const menuId = useId();
   const selectedOption = options.find((option) => Object.is(option.value, value));
+
+  useBackAction(isOpen, () => {
+    close();
+    return true;
+  }, 100);
 
   useEffect(() => {
     if (!isOpen) setActiveIndex(getSelectableIndex(options, value));

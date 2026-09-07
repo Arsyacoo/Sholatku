@@ -2,6 +2,7 @@
 
 import React, { useEffect, useId, useRef } from 'react';
 import { X } from 'lucide-react';
+import { useBackAction } from '@/lib/platform/back';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -49,6 +50,11 @@ export const Modal: React.FC<ModalProps> = ({
   const lastOutsideFocusRef = useRef<HTMLElement | null>(null);
   const onCloseRef = useRef(onClose);
   const titleId = useId();
+
+  useBackAction(isOpen, () => {
+    onCloseRef.current();
+    return true;
+  }, 50);
 
   useEffect(() => {
     onCloseRef.current = onClose;

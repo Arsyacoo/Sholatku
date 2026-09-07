@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Sparkles, Calendar, Compass, Settings, BookOpen } from 'lucide-react';
+import { isRouteActive } from '@/lib/platform/navigation';
 
 export const BottomNav: React.FC = () => {
   const pathname = usePathname();
@@ -20,11 +21,12 @@ export const BottomNav: React.FC = () => {
     <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-surface-950/90 backdrop-blur-lg border-t border-surface-200 dark:border-surface-800 pb-safe">
       <nav className="flex items-center justify-around h-16 px-2">
         {navItems.map(({ href, label, icon: Icon }) => {
-          const isActive = pathname === href;
+          const isActive = isRouteActive(pathname, href);
           return (
             <Link
               key={href}
               href={href}
+              aria-current={isActive ? 'page' : undefined}
               className={`flex flex-col items-center justify-center flex-1 h-full py-1 gap-1 transition-all ${
                 isActive
                   ? 'text-primary-600 dark:text-primary-400 font-semibold'
