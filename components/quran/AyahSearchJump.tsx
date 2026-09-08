@@ -43,7 +43,7 @@ export const AyahSearchJump: React.FC<AyahSearchJumpProps> = ({
             type="text"
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
-            placeholder="Cari kata di terjemahan surat ini (misal: langit, surga, sabar)..."
+            placeholder="Cari terjemahan surat ini..."
             className="w-full pl-10 pr-9 py-2 bg-surface-50 dark:bg-surface-800/80 border border-surface-200 dark:border-surface-700 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
           />
           {query && (

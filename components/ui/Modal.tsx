@@ -180,7 +180,7 @@ export const Modal: React.FC<ModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 sm:p-6">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity animate-fade-in"
@@ -192,7 +192,7 @@ export const Modal: React.FC<ModalProps> = ({
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className={`relative w-full ${widthStyles[maxWidth]} bg-white dark:bg-surface-900 rounded-2xl shadow-2xl border border-surface-200 dark:border-surface-800 overflow-hidden z-10 animate-slide-up`}
+        className={`relative flex max-h-[calc(100dvh-2rem)] w-full ${widthStyles[maxWidth]} flex-col overflow-hidden rounded-2xl border border-surface-200 bg-white shadow-2xl dark:border-surface-800 dark:bg-surface-900 z-10 animate-slide-up`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -204,7 +204,7 @@ export const Modal: React.FC<ModalProps> = ({
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-surface-100 hover:text-slate-600 dark:hover:bg-surface-800 dark:hover:text-slate-200"
             aria-label="Tutup"
           >
             <X className="w-5 h-5" />
@@ -212,7 +212,7 @@ export const Modal: React.FC<ModalProps> = ({
         </div>
 
         {/* Body */}
-        <div className="p-6">{children}</div>
+        <div className="min-h-0 overflow-y-auto p-6">{children}</div>
       </div>
     </div>
   );

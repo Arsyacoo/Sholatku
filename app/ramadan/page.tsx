@@ -91,7 +91,7 @@ export default function RamadanPage() {
           <div className="flex items-start gap-3">
             <Link
               href="/"
-              className="rounded-xl bg-surface-100 p-2 text-slate-600 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-slate-300"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl bg-surface-100 text-slate-600 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-slate-300"
               aria-label="Kembali ke Beranda"
             >
               <ArrowLeft className="h-5 w-5" />

@@ -127,7 +127,7 @@ export const RamadanPreferences: React.FC<RamadanPreferencesProps> = ({ value, o
             </div>
           );
         })}
-        <p className="pt-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">Notifikasi mengikuti dukungan browser yang sama dengan pengingat sholat. Ekspor kalender tetap tersedia saat notifikasi tidak didukung.</p>
+        <p className="pt-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">Notifikasi mengikuti izin yang tersedia di perangkat ini. Ekspor kalender tetap tersedia jika notifikasi tidak didukung.</p>
       </div>
     </div>
   </div>

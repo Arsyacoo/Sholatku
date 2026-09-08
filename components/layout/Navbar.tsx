@@ -28,15 +28,15 @@ export const Navbar: React.FC<NavbarProps> = ({ location, onOpenLocationModal })
     <header className="sticky top-0 z-40 w-full bg-white/80 dark:bg-surface-950/80 backdrop-blur-md border-b border-surface-200/80 dark:border-surface-800/80 transition-colors">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
         {/* Brand identity */}
-        <Link href="/" className="flex items-center gap-2.5 group">
+        <Link href="/" className="flex min-w-0 items-center gap-2.5 group">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary-700 to-primary-500 flex items-center justify-center text-white shadow-sm shadow-primary-500/20 group-hover:scale-105 transition-transform">
             <span className="font-bold text-lg font-arabic leading-none mt-0.5">صل</span>
           </div>
-          <div className="flex flex-col">
+          <div className="flex min-w-0 flex-col">
             <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-slate-50 leading-tight">
               Sholat<span className="text-primary-600 dark:text-primary-400">ku</span>
             </span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wider uppercase">
+            <span className="text-[10px] leading-tight text-slate-500 dark:text-slate-400 font-medium tracking-wider uppercase">
               Waktu Sholat &amp; Kiblat
             </span>
           </div>

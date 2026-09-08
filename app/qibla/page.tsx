@@ -24,7 +24,7 @@ export default function QiblaPage() {
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="p-2 rounded-xl bg-surface-100 dark:bg-surface-800 text-slate-600 dark:text-slate-300 hover:bg-surface-200 transition-colors"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl bg-surface-100 text-slate-600 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-slate-300"
               aria-label="Kembali ke Beranda"
             >
               <ArrowLeft className="w-5 h-5" />

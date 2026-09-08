@@ -13,7 +13,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ className = '' }) => {
 
   if (!mounted) {
     return (
-      <div className={`w-9 h-9 rounded-xl bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 animate-pulse ${className}`} />
+      <div className={`h-11 w-11 rounded-xl bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 animate-pulse ${className}`} />
     );
   }
 
@@ -23,7 +23,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ className = '' }) => {
     <button
       type="button"
       onClick={toggleTheme}
-      className={`relative p-2 rounded-xl bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-slate-700 dark:text-slate-200 border border-surface-200 dark:border-surface-700 transition-all duration-200 active:scale-95 shadow-2xs ${className}`}
+      className={`relative flex h-11 w-11 items-center justify-center rounded-xl bg-surface-100 text-slate-700 shadow-2xs transition-all duration-200 hover:bg-surface-200 active:scale-95 dark:bg-surface-800 dark:text-slate-200 dark:hover:bg-surface-700 border border-surface-200 dark:border-surface-700 ${className}`}
       aria-label={isDark ? 'Beralih ke mode terang' : 'Beralih ke mode gelap'}
       title={isDark ? 'Mode Terang' : 'Mode Gelap'}
     >

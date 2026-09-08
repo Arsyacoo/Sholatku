@@ -26,7 +26,7 @@ export const SurahHeader: React.FC<SurahHeaderProps> = ({
       <div className="flex items-center justify-between gap-2">
         <Link
           href="/quran"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-surface-50 transition-colors shadow-2xs"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-white px-3 text-xs font-semibold text-slate-700 shadow-2xs transition-colors hover:bg-surface-50 dark:bg-surface-900 dark:text-slate-200 border border-surface-200 dark:border-surface-800"
         >
           <ChevronLeft className="w-4 h-4" />
           <span>Daftar Surat</span>

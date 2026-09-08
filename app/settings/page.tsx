@@ -56,13 +56,13 @@ export default function SettingsPage() {
     <div className="flex-1 flex flex-col">
       <Navbar />
 
-      <main className="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 py-6 space-y-8">
+      <main className="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-surface-200 dark:border-surface-800">
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="p-2 rounded-xl bg-surface-100 dark:bg-surface-800 text-slate-600 dark:text-slate-300 hover:bg-surface-200 transition-colors"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl bg-surface-100 text-slate-600 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-slate-300"
               aria-label="Kembali ke Beranda"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -72,7 +72,7 @@ export default function SettingsPage() {
                 Pengaturan
               </h1>
               <p className="text-xs text-slate-600 dark:text-slate-400">
-                Sesuaikan preferensi tema, metode hisab, madhab, dan pengingat adzan
+                Sesuaikan tema, metode hisab, madhab, dan notifikasi pengingat waktu sholat
               </p>
             </div>
           </div>
@@ -124,6 +124,7 @@ export default function SettingsPage() {
         <section className="pt-4 border-t border-surface-200 dark:border-surface-800">
           <NotificationPreferences
             value={reminderSettings}
+            enabled={settings.enableNotifications}
             onChange={(next: PrayerReminderSettings) => {
               setReminderSettings(next);
               savePrayerReminderSettings(next);
@@ -131,6 +132,9 @@ export default function SettingsPage() {
               setSavedToast(true);
               setTimeout(() => setSavedToast(false), 2000);
             }}
+            onEnabledChange={(enabled) =>
+              updateSetting((current) => ({ ...current, enableNotifications: enabled }))
+            }
           />
         </section>
 

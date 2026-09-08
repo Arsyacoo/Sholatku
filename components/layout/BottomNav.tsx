@@ -27,7 +27,7 @@ export const BottomNav: React.FC = () => {
               key={href}
               href={href}
               aria-current={isActive ? 'page' : undefined}
-              className={`flex flex-col items-center justify-center flex-1 h-full py-1 gap-1 transition-all ${
+              className={`flex min-w-0 flex-1 flex-col items-center justify-center h-full gap-1 py-1 leading-tight transition-all ${
                 isActive
                   ? 'text-primary-600 dark:text-primary-400 font-semibold'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -40,7 +40,7 @@ export const BottomNav: React.FC = () => {
               >
                 <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.25]' : 'stroke-2'}`} />
               </div>
-              <span className="text-[11px] tracking-tight">{label}</span>
+              <span className="max-w-full truncate text-[11px] tracking-tight">{label}</span>
             </Link>
           );
         })}
