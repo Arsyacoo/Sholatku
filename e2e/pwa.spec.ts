@@ -134,9 +134,20 @@ test('keeps metadata search available offline and uses the online ayah boundary'
 
 test('keeps critical mobile routes within the viewport', async ({ page }) => {
   test.skip((page.viewportSize()?.width ?? 0) > 500, 'mobile-only assertion');
-  for (const path of ['/', '/quran', '/monthly', '/ramadan', '/settings']) {
-    await page.goto(path);
-    const fits = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
-    expect(fits, `${path} overflows horizontally`).toBe(true);
+  const viewports = [
+    { width: 360, height: 800 },
+    { width: 390, height: 844 },
+    { width: 412, height: 915 },
+  ];
+  const routes = ['/', '/settings', '/quran', '/quran/2', '/monthly', '/qibla', '/ramadan'];
+
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport);
+    for (const path of routes) {
+      await page.goto(path);
+      await expect(page.locator('main')).toBeVisible();
+      const fits = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
+      expect(fits, `${path} overflows horizontally at ${viewport.width}px`).toBe(true);
+    }
   }
 });

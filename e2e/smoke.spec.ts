@@ -49,6 +49,21 @@ test('Settings shared Select is keyboard reachable and selectable', async ({ pag
   await assertNoErrors();
 });
 
+test('keeps notification settings honest and touch-friendly', async ({ page }) => {
+  const assertNoErrors = installConsoleGuards(page);
+  await page.goto('/settings');
+
+  await expect(page.getByRole('heading', { name: 'Pengingat Waktu Sholat', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Status notifikasi', exact: true })).toBeVisible();
+  const toggle = page.getByRole('switch', { name: 'Aktifkan pengingat waktu sholat' });
+  await expect(toggle).toHaveAttribute('aria-checked', 'false');
+  await expect(toggle).toHaveCSS('min-height', '44px');
+  await expect(page.getByText('Pengingat belum diaktifkan.')).toBeVisible();
+  await expect(page.getByText('exact alarm', { exact: false })).toHaveCount(0);
+
+  await assertNoErrors();
+});
+
 test('opens a direct Quran ayah reference from global search', async ({ page }) => {
   const assertNoErrors = installConsoleGuards(page);
   await page.goto('/quran');
