@@ -21,12 +21,15 @@ function createStorage() {
 }
 
 const event: ReminderEvent = {
+  kind: 'prayer',
+  route: '/',
   id: '2026-09-03-fajr-0',
   date: '2026-09-03',
   prayer: 'fajr',
   prayerAt: new Date('2026-09-03T04:35:00+07:00'),
   reminderAt: new Date('2026-09-03T04:35:00+07:00'),
   offsetMinutes: 0,
+  timezone: 'Asia/Jakarta',
 };
 
 beforeEach(() => {

@@ -24,12 +24,15 @@ function createEvent(
   const prayerAt = parsePrayerDateTime(date, time, timeZone);
   const reminderAt = new Date(prayerAt.getTime() - offsetMinutes * 60 * 1000);
   return {
+    kind: 'prayer',
+    route: '/',
     id: `${date}-${prayer}-${offsetMinutes}`,
     date,
     prayer,
     prayerAt,
     reminderAt,
     offsetMinutes,
+    timezone: timeZone,
   };
 }
 
@@ -98,19 +101,38 @@ export function getDueReminderEvents(
     .sort((a, b) => a.reminderAt.getTime() - b.reminderAt.getTime());
 }
 
+export function filterFutureReminderEvents(
+  events: readonly ReminderEvent[],
+  now: Date = new Date(),
+  horizonMs = 48 * 60 * 60 * 1000
+): ReminderEvent[] {
+  const nowMs = now.getTime();
+  const horizonEnd = nowMs + horizonMs;
+  return events
+    .filter((event) => {
+      const reminderAt = event.reminderAt.getTime();
+      return reminderAt > nowMs && reminderAt <= horizonEnd;
+    })
+    .sort((a, b) => a.reminderAt.getTime() - b.reminderAt.getTime());
+}
+
 function createRamadanEvent(
   date: string,
   prayer: RamadanReminderEvent['prayer'],
   prayerAt: Date,
-  offsetMinutes: 0 | 5 | 10 | 15 | 30
+  offsetMinutes: 0 | 5 | 10 | 15 | 30,
+  timeZone: string
 ): RamadanReminderEvent {
   return {
+    kind: 'ramadan',
+    route: '/ramadan',
     id: `${date}-ramadan-${prayer}-${offsetMinutes}`,
     date,
     prayer,
     prayerAt,
     reminderAt: new Date(prayerAt.getTime() - offsetMinutes * 60 * 1000),
     offsetMinutes,
+    timezone: timeZone,
   };
 }
 
@@ -119,7 +141,7 @@ export function buildRamadanReminderEvents(
   settings: RamadanReminderSettings
 ): RamadanReminderEvent[] {
   const events: RamadanReminderEvent[] = [];
-  if (settings.imsak.enabled) events.push(createRamadanEvent(timing.date, 'imsak', timing.imsakAt, settings.imsak.offsetMinutes));
-  if (settings.maghrib.enabled) events.push(createRamadanEvent(timing.date, 'maghrib', timing.maghribAt, settings.maghrib.offsetMinutes));
+  if (settings.imsak.enabled) events.push(createRamadanEvent(timing.date, 'imsak', timing.imsakAt, settings.imsak.offsetMinutes, timing.timezone));
+  if (settings.maghrib.enabled) events.push(createRamadanEvent(timing.date, 'maghrib', timing.maghribAt, settings.maghrib.offsetMinutes, timing.timezone));
   return events.sort((a, b) => a.reminderAt.getTime() - b.reminderAt.getTime());
 }

@@ -8,6 +8,7 @@ import { PrayerReminderScheduler } from '@/lib/prayer/reminders/scheduler';
 import { getRamadanStatus } from '@/lib/ramadan/calendar';
 import { buildRamadanTiming } from '@/lib/ramadan/timing';
 import type { ReminderEvent } from '@/lib/prayer/reminders/types';
+import { isNativeRuntime } from '@/lib/platform/runtime';
 
 interface UsePrayerRemindersOptions {
   schedule: DailyPrayerSchedule | null;
@@ -30,7 +31,7 @@ export function usePrayerReminders({
 
   useEffect(() => {
     const scheduler = schedulerRef.current;
-    if (!scheduler || !schedule) return;
+    if (!scheduler || !schedule || !settings.enableNotifications || isNativeRuntime()) return;
 
     let cancelled = false;
     const controller = new AbortController();
@@ -101,6 +102,7 @@ export function usePrayerReminders({
     location.timezone,
     settings.method,
     settings.madhab,
+    settings.enableNotifications,
     JSON.stringify(settings.adjustments),
     JSON.stringify(reminderSettings),
     JSON.stringify(ramadanPreferences),

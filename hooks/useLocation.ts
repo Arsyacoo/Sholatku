@@ -31,6 +31,9 @@ export function useLocation() {
   const updateLocation = useCallback((newLoc: UserLocation) => {
     setLocationState(newLoc);
     saveLocation(newLoc);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('sholatku:location-changed', { detail: newLoc }));
+    }
     setErrorMessage(null);
   }, []);
 

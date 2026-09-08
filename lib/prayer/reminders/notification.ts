@@ -1,4 +1,5 @@
 import type { ReminderEvent } from './types';
+import { buildReminderNotificationCopy } from './copy';
 
 export const TEST_NOTIFICATION_TAG = 'sholatku-notification-test';
 
@@ -73,23 +74,6 @@ export function sendTestNotification(): Promise<boolean> {
 }
 
 export function sendPrayerReminderNotification(event: ReminderEvent): Promise<boolean> {
-  const prayerName = {
-    fajr: 'Subuh',
-    dhuhr: 'Dzuhur',
-    asr: 'Ashar',
-    maghrib: 'Maghrib',
-    isha: 'Isya',
-    imsak: 'Imsak',
-  }[event.prayer];
-  const time = event.prayerAt.toLocaleTimeString('id-ID', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-  const title = event.offsetMinutes > 0 ? `${prayerName} sebentar lagi` : `Waktu ${prayerName}`;
-  const body =
-    event.offsetMinutes > 0
-      ? `${event.offsetMinutes} menit menuju waktu ${prayerName} · ${time}`
-      : `Telah masuk waktu ${prayerName} · ${time}`;
-  return displayNotification(title, body, `sholatku-${event.id}`);
+  const copy = buildReminderNotificationCopy(event);
+  return displayNotification(copy.title, copy.body, `sholatku-${event.id}`);
 }

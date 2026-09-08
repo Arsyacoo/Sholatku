@@ -5,6 +5,7 @@ import { dispatchBackAction } from '@/lib/platform/back';
 import { installNativeLifecycle } from '@/lib/platform/lifecycle';
 import { getAppRuntime } from '@/lib/platform/runtime';
 
+import { NativeReminderBridge } from '@/components/platform/NativeReminderBridge';
 import { MobileRouterProvider } from './router';
 import { MobileRoutes } from './MobileRoutes';
 
@@ -54,10 +55,13 @@ export function MobileShell() {
   useNativeShellLifecycle();
 
   return (
-    <MobileRouterProvider>
-      <div className="min-h-screen flex flex-col">
-        <MobileRoutes />
-      </div>
-    </MobileRouterProvider>
+    <>
+      <NativeReminderBridge />
+      <MobileRouterProvider>
+        <div className="min-h-screen flex flex-col">
+          <MobileRoutes />
+        </div>
+      </MobileRouterProvider>
+    </>
   );
 }
