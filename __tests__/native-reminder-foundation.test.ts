@@ -37,7 +37,7 @@ vi.mock('@/lib/platform/notifications', () => platformNotificationsMock);
 vi.mock('@/lib/prayer/api', () => prayerApiMock);
 vi.mock('@/lib/ramadan/calendar', () => ramadanCalendarMock);
 
-import { reconcileNativeReminderSchedule } from '@/lib/prayer/reminders/native';
+import { getNativeReminderDiagnostics, reconcileNativeReminderSchedule } from '@/lib/prayer/reminders/native';
 
 function setNativeRuntime(): void {
   (globalThis as typeof globalThis & {
@@ -136,6 +136,9 @@ const ownedPending = {
   id: 101,
   title: 'Old Sholatku reminder',
   body: 'Stale',
+  schedule: {
+    at: new Date('2026-09-08T04:00:00+07:00'),
+  },
   extra: {
     source: REMINDER_NOTIFICATION_SOURCE,
     route: '/',
@@ -253,6 +256,28 @@ describe('native reminder ids and copy', () => {
 });
 
 describe('native reminder reconciliation', () => {
+  it('exposes only future reminders inside the bounded diagnostics horizon', async () => {
+    vi.useFakeTimers({ now: new Date('2026-09-08T03:00:00+07:00') });
+    platformNotificationsMock.getNativePendingNotifications.mockResolvedValue([
+      ownedPending,
+      {
+        ...ownedPending,
+        id: 303,
+        schedule: { at: new Date('2026-09-08T02:00:00+07:00') },
+      },
+      {
+        ...ownedPending,
+        id: 304,
+        schedule: { at: new Date('2026-09-10T04:00:00+07:00') },
+      },
+    ]);
+
+    const diagnostics = await getNativeReminderDiagnostics(createSnapshot(true));
+
+    expect(diagnostics.pendingCount).toBe(1);
+    expect(diagnostics.nextPending?.id).toBe(101);
+  });
+
   it('schedules bounded future reminders when enabled and permission is granted', async () => {
     vi.useFakeTimers({ now: new Date('2026-09-08T03:00:00+07:00') });
     prayerApiMock.getDailyPrayerTimes

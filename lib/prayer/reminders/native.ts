@@ -153,7 +153,12 @@ export async function getNativeReminderDiagnostics(
 ): Promise<NativeReminderDiagnostics> {
   const permission = await getNotificationPermissionState();
   const pending = await getNativePendingNotifications();
-  const ours = pending.filter(isNativeReminderNotification);
+  const now = Date.now();
+  const horizonEnd = now + NATIVE_REMINDER_HORIZON_MS;
+  const ours = pending.filter(isNativeReminderNotification).filter((notification) => {
+    const scheduleAt = notification.schedule?.at?.getTime();
+    return scheduleAt !== undefined && scheduleAt > now && scheduleAt <= horizonEnd;
+  });
   const summaries = ours.map(mapPendingSummary).sort((a, b) => {
     const aTime = a.scheduleAt?.getTime() ?? Number.MAX_SAFE_INTEGER;
     const bTime = b.scheduleAt?.getTime() ?? Number.MAX_SAFE_INTEGER;
