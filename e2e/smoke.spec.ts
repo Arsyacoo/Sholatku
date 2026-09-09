@@ -10,7 +10,7 @@ test('critical routes render meaningful application states', async ({ page }) =>
   const assertNoErrors = installConsoleGuards(page);
   const routes: Array<{ path: string; text: string }> = [
     { path: '/', text: 'Jadwal Sholat Hari Ini' },
-    { path: '/quran', text: 'Semua Surat' },
+    { path: '/quran', text: 'Semua' },
     { path: '/quran/2', text: 'Al-Baqarah' },
     { path: '/monthly', text: 'Jadwal Sholat Bulanan' },
     { path: '/qibla', text: 'Kompas Arah Kiblat' },

@@ -19,11 +19,11 @@ export const LocationHeader: React.FC<LocationHeaderProps> = ({
   isRefreshing = false,
 }) => {
   return (
-    <div className="flex flex-col gap-2 py-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+    <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
       {/* Location selector button */}
       <button
         onClick={onOpenSearch}
-        className="group flex min-h-11 min-w-0 flex-1 items-center gap-2.5 rounded-2xl p-1.5 -ml-1.5 text-left transition-all hover:bg-surface-100 dark:hover:bg-surface-800/80 cursor-pointer"
+        className="group flex min-h-11 min-w-0 flex-1 items-center gap-2.5 rounded-2xl p-0 -ml-1.5 text-left transition-all hover:bg-surface-100 dark:hover:bg-surface-800/80 cursor-pointer"
         aria-label="Ubah lokasi saat ini"
       >
         <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-950/80 text-primary-700 dark:text-primary-300 flex items-center justify-center shrink-0 border border-primary-200/60 dark:border-primary-800/60 group-hover:scale-105 transition-transform">

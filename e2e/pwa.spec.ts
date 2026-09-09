@@ -27,7 +27,7 @@ test('keeps the app shell navigable after going offline', async ({ page, context
   // so the subsequent offline fetch is served by the active worker.
   await page.reload();
   await page.goto('/quran');
-  await expect(page.getByText('Semua Surat', { exact: false }).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /Semua Surat/ }).first()).toBeVisible();
 
   await context.setOffline(true);
   const offlineShell = await page.evaluate(async () => {
@@ -36,7 +36,7 @@ test('keeps the app shell navigable after going offline', async ({ page, context
   });
   expect(offlineShell.ok).toBe(true);
   expect(offlineShell.body).toContain('Koneksi internet sedang tidak tersedia');
-  await expect(page.getByText('Semua Surat', { exact: false }).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /Semua Surat/ }).first()).toBeVisible();
   await assertNoErrors();
 });
 

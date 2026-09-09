@@ -21,6 +21,34 @@ const MONTH_NAMES = [
 
 type MonthlyLoadState = 'hydrating' | 'loading' | 'success' | 'empty' | 'error';
 
+export const MonthlyScheduleRow: React.FC<{ item: MonthlyPrayerItem }> = ({ item }) => (
+  <tr
+    className={`transition-colors ${
+      item.isToday
+        ? 'bg-primary-50/90 dark:bg-primary-950/60 font-semibold text-primary-900 dark:text-primary-100'
+        : 'hover:bg-surface-50 dark:hover:bg-surface-800/50 text-slate-800 dark:text-slate-200'
+    }`}
+  >
+    <td className="py-3 px-4">
+      <div className="flex min-w-max items-center gap-2">
+        <span className="font-mono font-bold w-6">{item.dayNumber}</span>
+        <span className="whitespace-nowrap text-xs text-slate-500 dark:text-slate-400">{item.dayName}</span>
+        {item.isToday && (
+          <span className="inline-flex items-center whitespace-nowrap rounded-full bg-primary-600 px-2 py-0.5 text-[10px] font-bold leading-4 text-white">
+            Hari ini
+          </span>
+        )}
+      </div>
+    </td>
+    <td className="py-3 px-3 font-mono">{item.timings.fajr}</td>
+    <td className="py-3 px-3 font-mono text-slate-600 dark:text-slate-400">{item.timings.sunrise}</td>
+    <td className="py-3 px-3 font-mono">{item.timings.dhuhr}</td>
+    <td className="py-3 px-3 font-mono">{item.timings.asr}</td>
+    <td className="py-3 px-3 font-mono">{item.timings.maghrib}</td>
+    <td className="py-3 px-3 font-mono">{item.timings.isha}</td>
+  </tr>
+);
+
 export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ location, settings }) => {
   const [currentYear, setCurrentYear] = useState<number | null>(null);
   const [currentMonth, setCurrentMonth] = useState<number | null>(null); // 1-12
@@ -225,34 +253,7 @@ export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ loca
                   </tr>
                 ))
               ) : (
-                schedule.map((item) => (
-                  <tr
-                    key={item.date}
-                    className={`transition-colors ${
-                      item.isToday
-                        ? 'bg-primary-50/90 dark:bg-primary-950/60 font-semibold text-primary-900 dark:text-primary-100'
-                        : 'hover:bg-surface-50 dark:hover:bg-surface-800/50 text-slate-800 dark:text-slate-200'
-                    }`}
-                  >
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold w-6">{item.dayNumber}</span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">{item.dayName}</span>
-                        {item.isToday && (
-                          <span className="bg-primary-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase">
-                            Hari Ini
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-3 px-3 font-mono">{item.timings.fajr}</td>
-                    <td className="py-3 px-3 font-mono text-slate-600 dark:text-slate-400">{item.timings.sunrise}</td>
-                    <td className="py-3 px-3 font-mono">{item.timings.dhuhr}</td>
-                    <td className="py-3 px-3 font-mono">{item.timings.asr}</td>
-                    <td className="py-3 px-3 font-mono">{item.timings.maghrib}</td>
-                    <td className="py-3 px-3 font-mono">{item.timings.isha}</td>
-                  </tr>
-                ))
+                schedule.map((item) => <MonthlyScheduleRow key={item.date} item={item} />)
               )}
             </tbody>
           </table>

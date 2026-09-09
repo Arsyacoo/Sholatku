@@ -103,10 +103,12 @@ test('reloads the monthly schedule when settings or location changes', async ({ 
   await expect(dialog.getByRole('button', { name: /Denpasar/ }).first()).toBeVisible({ timeout: 10_000 });
   await dialog.getByRole('button', { name: /Denpasar/ }).first().click();
   await expect(page.getByRole('button', { name: 'Denpasar, Bali' })).toBeVisible();
-  // The service worker may own later API requests, so verify the observable
-  // result as well as the location control itself rather than relying only on
-  // page-level network interception.
-  await expect(page.locator('tbody tr').first()).not.toContainText('04:31');
+  // The fixture intentionally returns the same prayer values for every city,
+  // so verify the persisted location rather than assuming the row timing changes.
+  await expect.poll(() => page.evaluate(() => {
+    const saved = window.localStorage.getItem('sholatku_user_location_v1');
+    return saved ? (JSON.parse(saved) as { latitude?: number }).latitude : null;
+  })).toBe(-8.6705);
 
   await assertNoErrors();
 });

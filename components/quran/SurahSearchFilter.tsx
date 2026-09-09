@@ -50,57 +50,73 @@ export const SurahSearchFilter: React.FC<SurahSearchFilterProps> = ({
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1.5 p-1 bg-surface-100 dark:bg-surface-800/80 rounded-xl border border-surface-200/60 dark:border-surface-700/60 text-xs font-semibold">
+      <div className="grid grid-cols-4 items-stretch gap-1.5 p-1 bg-surface-100 dark:bg-surface-800/80 rounded-xl border border-surface-200/60 dark:border-surface-700/60 text-xs font-semibold">
         <button
           type="button"
           onClick={() => onTabChange('surah')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-all ${
+          aria-label={`Semua Surat (${surahCount})`}
+          className={`flex min-h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1.5 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 ${
             activeTab === 'surah'
               ? 'bg-white dark:bg-surface-900 text-primary-700 dark:text-primary-300 shadow-2xs font-bold'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
-          <BookOpen className="w-3.5 h-3.5" />
-          <span>Semua Surat ({surahCount})</span>
+          <span className="flex items-center justify-center gap-1 whitespace-nowrap text-[11px] leading-4">
+            <BookOpen className="h-3.5 w-3.5 shrink-0" />
+            <span>Semua</span>
+          </span>
+          <span className="text-[10px] font-medium leading-3 text-slate-500 dark:text-slate-400">{surahCount}</span>
         </button>
 
         <button
           type="button"
           onClick={() => onTabChange('juz')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-all ${
+          aria-label="30 Juz"
+          className={`flex min-h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1.5 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 ${
             activeTab === 'juz'
               ? 'bg-white dark:bg-surface-900 text-primary-700 dark:text-primary-300 shadow-2xs font-bold'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
-          <Layers className="w-3.5 h-3.5" />
-          <span>30 Juz</span>
+          <span className="flex items-center justify-center gap-1 whitespace-nowrap text-[11px] leading-4">
+            <Layers className="h-3.5 w-3.5 shrink-0" />
+            <span>Juz</span>
+          </span>
+          <span className="text-[10px] font-medium leading-3 text-slate-500 dark:text-slate-400">30</span>
         </button>
 
         <button
           type="button"
           onClick={() => onTabChange('favorites')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg transition-all ${
+          aria-label={`Surat Favorit (${favoriteCount})`}
+          className={`flex min-h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1.5 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 ${
             activeTab === 'favorites'
               ? 'bg-white dark:bg-surface-900 text-primary-700 dark:text-primary-300 shadow-2xs font-bold'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
-          <Star className="w-3.5 h-3.5" />
-          <span>Surat Favorit ({favoriteCount})</span>
+          <span className="flex items-center justify-center gap-1 whitespace-nowrap text-[11px] leading-4">
+            <Star className="h-3.5 w-3.5 shrink-0" />
+            <span>Favorit</span>
+          </span>
+          <span className="text-[10px] font-medium leading-3 text-slate-500 dark:text-slate-400">{favoriteCount}</span>
         </button>
 
         <button
           type="button"
           onClick={() => onTabChange('bookmarks')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg transition-all ${
+          aria-label={`Ayat Disimpan (${bookmarkCount})`}
+          className={`flex min-h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1.5 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 ${
             activeTab === 'bookmarks'
               ? 'bg-white dark:bg-surface-900 text-primary-700 dark:text-primary-300 shadow-2xs font-bold'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
-          <Bookmark className="w-3.5 h-3.5" />
-          <span>Ayat Disimpan ({bookmarkCount})</span>
+          <span className="flex items-center justify-center gap-1 whitespace-nowrap text-[11px] leading-4">
+            <Bookmark className="h-3.5 w-3.5 shrink-0" />
+            <span>Simpan</span>
+          </span>
+          <span className="text-[10px] font-medium leading-3 text-slate-500 dark:text-slate-400">{bookmarkCount}</span>
         </button>
       </div>
     </div>
