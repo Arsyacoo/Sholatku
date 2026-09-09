@@ -81,7 +81,7 @@ export default function HomePage() {
     <div className="flex-1 flex flex-col">
       <Navbar location={location} onOpenLocationModal={() => setIsSearchOpen(true)} />
 
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-6">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-4 sm:py-6">
         {/* Location selector header */}
         <LocationHeader
           location={location}
@@ -92,29 +92,37 @@ export default function HomePage() {
 
         {/* Location Permission / Error Alert (if any) */}
         {!dismissNotice && (
-          <LocationPermissionNotice
-            status={geoStatus}
-            errorMessage={geoError}
-            onOpenSearch={() => setIsSearchOpen(true)}
-            onDismiss={() => setDismissNotice(true)}
-          />
+          <div className="mt-4 sm:mt-6">
+            <LocationPermissionNotice
+              status={geoStatus}
+              errorMessage={geoError}
+              onOpenSearch={() => setIsSearchOpen(true)}
+              onDismiss={() => setDismissNotice(true)}
+            />
+          </div>
         )}
 
         {/* Date Display */}
-        <DateHeader schedule={schedule} />
+        <div className="mt-4 sm:mt-6">
+          <DateHeader schedule={schedule} />
+        </div>
 
         {/* Next Prayer Hero Card */}
-        <NextPrayerHero
-          prayerInfo={nextPrayerInfo}
-          isLoading={isPrayerLoading && !schedule}
-        />
+        <div className="mt-5 sm:mt-6">
+          <NextPrayerHero
+            prayerInfo={nextPrayerInfo}
+            isLoading={isPrayerLoading && !schedule}
+          />
+        </div>
 
         {ramadan.status && ramadan.timing && ramadan.context && (
-          <RamadanHomeCard status={ramadan.status} timing={ramadan.timing} context={ramadan.context} />
+          <div className="mt-6">
+            <RamadanHomeCard status={ramadan.status} timing={ramadan.timing} context={ramadan.context} />
+          </div>
         )}
 
         {/* Today's 6 Prayer Schedules */}
-        <div className="pt-2">
+        <div className="mt-6 pt-2">
           <PrayerScheduleList
             schedule={schedule}
             nextPrayerInfo={nextPrayerInfo}

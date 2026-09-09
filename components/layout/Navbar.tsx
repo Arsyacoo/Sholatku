@@ -26,9 +26,9 @@ export const Navbar: React.FC<NavbarProps> = ({ location, onOpenLocationModal })
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white/80 dark:bg-surface-950/80 backdrop-blur-md border-b border-surface-200/80 dark:border-surface-800/80 transition-colors">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 md:h-16 flex items-center justify-between gap-3 sm:gap-4">
         {/* Brand identity */}
-        <Link href="/" className="flex min-w-0 items-center gap-2.5 group">
+        <Link href="/" className="flex min-w-0 items-center gap-2 group">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary-700 to-primary-500 flex items-center justify-center text-white shadow-sm shadow-primary-500/20 group-hover:scale-105 transition-transform">
             <span className="font-bold text-lg font-arabic leading-none mt-0.5">صل</span>
           </div>
@@ -36,7 +36,7 @@ export const Navbar: React.FC<NavbarProps> = ({ location, onOpenLocationModal })
             <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-slate-50 leading-tight">
               Sholat<span className="text-primary-600 dark:text-primary-400">ku</span>
             </span>
-            <span className="text-[10px] leading-tight text-slate-500 dark:text-slate-400 font-medium tracking-wider uppercase">
+            <span className="hidden md:block text-[10px] leading-tight text-slate-500 dark:text-slate-400 font-medium tracking-wider uppercase">
               Waktu Sholat &amp; Kiblat
             </span>
           </div>
@@ -66,7 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({ location, onOpenLocationModal })
 
         {/* Quick actions: Location pill + Theme toggle */}
         <div className="flex items-center gap-2">
-          {location && onOpenLocationModal && (
+          {location && onOpenLocationModal && pathname !== '/' && (
             <button
               onClick={onOpenLocationModal}
               className="md:hidden flex items-center gap-1.5 text-xs font-medium bg-surface-100 dark:bg-surface-800 px-3 py-1.5 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-surface-200 transition-colors border border-surface-200 dark:border-surface-700 max-w-[140px] truncate"
