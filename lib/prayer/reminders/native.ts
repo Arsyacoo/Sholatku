@@ -5,6 +5,7 @@ import { getRamadanStatus } from '@/lib/ramadan/calendar';
 import { getPrayerReminderSettings, getRamadanPreferences, getSavedLocation, getSavedSettings } from '@/lib/storage/preferences';
 import { formatDateInTimeZone } from '@/lib/time/timezone';
 import { isNativeRuntime } from '@/lib/platform/runtime';
+import { markNativeReminderScheduleReconciled } from '@/lib/platform/reminder-recovery';
 import {
   addNativeNotificationActionListener,
   cancelNativeNotifications,
@@ -19,8 +20,16 @@ import {
   type NormalizedNotificationPermissionState,
 } from '@/lib/platform/notifications';
 
-import { buildReminderNotificationCopy, buildReminderNotificationExtra, isApprovedReminderRoute, REMINDER_NOTIFICATION_SOURCE } from './copy';
+import {
+  buildReminderNotificationCopy,
+  buildReminderNotificationExtra,
+  isApprovedReminderRoute,
+  NATIVE_REMINDER_OWNER,
+  NATIVE_REMINDER_SCHEMA_VERSION,
+  REMINDER_NOTIFICATION_SOURCE,
+} from './copy';
 import { filterFutureReminderEvents, buildPrayerReminderEvents, buildRamadanReminderEvents, parsePrayerDateTime } from './schedule';
+import { buildNativeReminderScheduleFingerprint } from './recovery';
 import type { ReminderEvent, ReminderRoute } from './types';
 import { toAndroidNotificationId } from './id';
 
@@ -77,6 +86,15 @@ function isReminderRouteValue(value: unknown): value is ReminderRoute {
   return typeof value === 'string' && isApprovedReminderRoute(value);
 }
 
+function getPendingScheduleAt(notification: NativeNotificationPending): Date | null {
+  const rawValue = notification.schedule?.at;
+  if (rawValue instanceof Date) return Number.isNaN(rawValue.getTime()) ? null : rawValue;
+  if (typeof rawValue !== 'string' && typeof rawValue !== 'number') return null;
+
+  const parsed = new Date(rawValue);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 function mapPendingSummary(notification: NativeNotificationPending): NativeReminderPendingSummary {
   const extra = notification.extra as Record<string, unknown> | undefined;
   const route = isReminderRouteValue(extra?.route) ? extra.route : '/';
@@ -87,7 +105,7 @@ function mapPendingSummary(notification: NativeNotificationPending): NativeRemin
     body: notification.body,
     route,
     logicalId,
-    scheduleAt: notification.schedule?.at ? new Date(notification.schedule.at) : null,
+    scheduleAt: getPendingScheduleAt(notification),
   };
 }
 
@@ -98,6 +116,7 @@ function buildNativeNotificationRequest(event: ReminderEvent): NativeNotificatio
     title: copy.title,
     body: copy.body,
     at: event.reminderAt,
+    allowWhileIdle: true,
     extra: buildReminderNotificationExtra(event),
   };
 }
@@ -148,6 +167,12 @@ export function loadNativeReminderSyncSnapshot(): NativeReminderSyncSnapshot {
   };
 }
 
+async function markScheduleReconciled(snapshot: NativeReminderSyncSnapshot): Promise<void> {
+  await markNativeReminderScheduleReconciled(
+    buildNativeReminderScheduleFingerprint(snapshot.location.timezone)
+  );
+}
+
 export async function getNativeReminderDiagnostics(
   snapshot: NativeReminderSyncSnapshot = loadNativeReminderSyncSnapshot()
 ): Promise<NativeReminderDiagnostics> {
@@ -156,7 +181,7 @@ export async function getNativeReminderDiagnostics(
   const now = Date.now();
   const horizonEnd = now + NATIVE_REMINDER_HORIZON_MS;
   const ours = pending.filter(isNativeReminderNotification).filter((notification) => {
-    const scheduleAt = notification.schedule?.at?.getTime();
+    const scheduleAt = getPendingScheduleAt(notification)?.getTime();
     return scheduleAt !== undefined && scheduleAt > now && scheduleAt <= horizonEnd;
   });
   const summaries = ours.map(mapPendingSummary).sort((a, b) => {
@@ -190,6 +215,9 @@ export async function reconcileNativeReminderSchedule(
   if (!snapshot.settings.enableNotifications || diagnostics.permission !== 'granted') {
     await cancelNativeNotifications(pendingIds);
     const refreshed = await getNativeReminderDiagnostics(snapshot);
+    if (!snapshot.settings.enableNotifications) {
+      await markScheduleReconciled(snapshot);
+    }
     return {
       ...refreshed,
       scheduledCount: 0,
@@ -202,6 +230,7 @@ export async function reconcileNativeReminderSchedule(
 
   await cancelNativeNotifications(pendingIds);
   await scheduleNativeNotifications(requests);
+  await markScheduleReconciled(snapshot);
 
   const refreshed = await getNativeReminderDiagnostics(snapshot);
   return {
@@ -224,15 +253,20 @@ export async function scheduleNativeReminderTestNotification(): Promise<boolean>
       title: 'Sholatku',
       body: 'Tes pengingat native berhasil dijadwalkan.',
       at: scheduledAt,
+      allowWhileIdle: true,
       extra: {
         source: REMINDER_NOTIFICATION_SOURCE,
+        owner: NATIVE_REMINDER_OWNER,
+        schemaVersion: NATIVE_REMINDER_SCHEMA_VERSION,
         kind: 'dev-test',
+        eventType: 'dev-test',
         logicalId: `dev-test:${scheduledAt.toISOString()}`,
         date: formatDateInTimeZone(scheduledAt, 'UTC'),
         prayer: 'fajr',
         route: '/',
         timezone: 'UTC',
         offsetMinutes: 0,
+        scheduledAt: scheduledAt.toISOString(),
       },
     },
   ]);

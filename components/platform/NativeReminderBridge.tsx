@@ -4,6 +4,8 @@ import { useEffect, useRef } from 'react';
 
 import { addDaysToCanonicalDate } from '@/lib/prayer/date';
 import { loadNativeReminderSyncSnapshot, reconcileNativeReminderSchedule, addNativeReminderActionListener } from '@/lib/prayer/reminders/native';
+import { getNativeReminderRecoveryState } from '@/lib/platform/reminder-recovery';
+import { buildNativeReminderScheduleFingerprint, needsNativeReminderReconciliation } from '@/lib/prayer/reminders/recovery';
 import { formatDateInTimeZone, normalizeTimeZone, zonedTimeToUtc } from '@/lib/time/timezone';
 import { isNativeRuntime } from '@/lib/platform/runtime';
 
@@ -56,9 +58,15 @@ export function NativeReminderBridge() {
       inFlightRef.current = true;
       const snapshot = loadNativeReminderSyncSnapshot();
       try {
+        const recoveryState = await getNativeReminderRecoveryState();
+        const fingerprint = buildNativeReminderScheduleFingerprint(snapshot.location.timezone);
+        const recoveryRequired = needsNativeReminderReconciliation(recoveryState, fingerprint);
         const result = await reconcileNativeReminderSchedule(snapshot);
         if (cancelled) return;
         dispatchSyncResult(result);
+        if (recoveryRequired) {
+          console.info(`Native reminder recovery reconciled (${recoveryState.recoveryReason ?? reason}).`);
+        }
       } catch (error) {
         if (!cancelled) {
           console.warn(`Failed to reconcile native reminders (${reason}):`, error);

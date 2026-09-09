@@ -10,6 +10,8 @@ import {
   buildReminderNotificationCopy,
   buildReminderNotificationExtra,
   isApprovedReminderRoute,
+  NATIVE_REMINDER_OWNER,
+  NATIVE_REMINDER_SCHEMA_VERSION,
   REMINDER_NOTIFICATION_SOURCE,
 } from '@/lib/prayer/reminders/copy';
 import { toAndroidNotificationId } from '@/lib/prayer/reminders/id';
@@ -33,7 +35,12 @@ const ramadanCalendarMock = vi.hoisted(() => ({
   getRamadanStatus: vi.fn(),
 }));
 
+const recoveryMock = vi.hoisted(() => ({
+  markNativeReminderScheduleReconciled: vi.fn(),
+}));
+
 vi.mock('@/lib/platform/notifications', () => platformNotificationsMock);
+vi.mock('@/lib/platform/reminder-recovery', () => recoveryMock);
 vi.mock('@/lib/prayer/api', () => prayerApiMock);
 vi.mock('@/lib/ramadan/calendar', () => ramadanCalendarMock);
 
@@ -168,6 +175,7 @@ beforeEach(() => {
     (notification: { extra?: { source?: unknown } }) => notification.extra?.source === REMINDER_NOTIFICATION_SOURCE
   );
   platformNotificationsMock.scheduleNativeNotifications.mockResolvedValue({ notifications: [] });
+  recoveryMock.markNativeReminderScheduleReconciled.mockResolvedValue(undefined);
   prayerApiMock.getDailyPrayerTimes.mockResolvedValue(createSchedule('2026-09-08'));
   ramadanCalendarMock.getRamadanStatus.mockReturnValue({ isRamadan: false, ramadanDay: null } as any);
 });
@@ -242,11 +250,15 @@ describe('native reminder ids and copy', () => {
     expect(buildReminderNotificationExtra(ramadanEvent)).toEqual(
       expect.objectContaining({
         source: REMINDER_NOTIFICATION_SOURCE,
+        owner: NATIVE_REMINDER_OWNER,
+        schemaVersion: NATIVE_REMINDER_SCHEMA_VERSION,
         kind: 'ramadan',
+        eventType: 'ramadan',
         logicalId: '2026-09-08-ramadan-maghrib-5',
         route: '/ramadan',
         timezone: 'Asia/Jakarta',
         offsetMinutes: 5,
+        scheduledAt: '2026-09-08T11:00:00.000Z',
       })
     );
     expect(isApprovedReminderRoute('/')).toBe(true);
@@ -268,7 +280,7 @@ describe('native reminder reconciliation', () => {
       {
         ...ownedPending,
         id: 304,
-        schedule: { at: new Date('2026-09-10T04:00:00+07:00') },
+        schedule: { at: '2026-09-10T04:00:00+07:00' },
       },
     ]);
 
@@ -290,6 +302,11 @@ describe('native reminder reconciliation', () => {
     expect(platformNotificationsMock.ensureReminderNotificationChannel).toHaveBeenCalledTimes(1);
     expect(platformNotificationsMock.cancelNativeNotifications).toHaveBeenCalledWith([ownedPending.id]);
     expect(platformNotificationsMock.scheduleNativeNotifications).toHaveBeenCalledTimes(1);
+    expect(recoveryMock.markNativeReminderScheduleReconciled).toHaveBeenCalledWith({
+      timezoneId: 'Asia/Jakarta',
+      timezoneOffsetMinutes: 420,
+      localDayKey: '2026-09-08',
+    });
     expect(scheduledRequests).toHaveLength(10);
     expect(new Set(scheduledRequests.map((request: { id: number }) => request.id)).size).toBe(10);
     expect(
@@ -301,6 +318,7 @@ describe('native reminder reconciliation', () => {
     expect(
       scheduledRequests.every((request: { extra?: { source?: string } }) => request.extra?.source === REMINDER_NOTIFICATION_SOURCE)
     ).toBe(true);
+    expect(scheduledRequests.every((request: { allowWhileIdle?: boolean }) => request.allowWhileIdle === true)).toBe(true);
     expect(prayerApiMock.getDailyPrayerTimes).toHaveBeenCalledTimes(2);
     expect(result).toMatchObject({
       runtime: 'android',
@@ -320,6 +338,7 @@ describe('native reminder reconciliation', () => {
     expect(platformNotificationsMock.ensureReminderNotificationChannel).toHaveBeenCalledTimes(1);
     expect(platformNotificationsMock.cancelNativeNotifications).toHaveBeenCalledWith([ownedPending.id]);
     expect(platformNotificationsMock.scheduleNativeNotifications).not.toHaveBeenCalled();
+    expect(recoveryMock.markNativeReminderScheduleReconciled).toHaveBeenCalledTimes(1);
     expect(prayerApiMock.getDailyPrayerTimes).not.toHaveBeenCalled();
     expect(result).toMatchObject({
       enabled: false,
@@ -337,6 +356,7 @@ describe('native reminder reconciliation', () => {
     expect(platformNotificationsMock.ensureReminderNotificationChannel).toHaveBeenCalledTimes(1);
     expect(platformNotificationsMock.cancelNativeNotifications).toHaveBeenCalledWith([ownedPending.id]);
     expect(platformNotificationsMock.scheduleNativeNotifications).not.toHaveBeenCalled();
+    expect(recoveryMock.markNativeReminderScheduleReconciled).not.toHaveBeenCalled();
     expect(prayerApiMock.getDailyPrayerTimes).not.toHaveBeenCalled();
     expect(result).toMatchObject({
       enabled: true,
@@ -344,5 +364,14 @@ describe('native reminder reconciliation', () => {
       scheduledCount: 0,
       canceledCount: 1,
     });
+  });
+
+  it('keeps recovery dirty when scheduling fails before a successful reconcile', async () => {
+    vi.useFakeTimers({ now: new Date('2026-09-08T03:00:00+07:00') });
+    platformNotificationsMock.scheduleNativeNotifications.mockRejectedValueOnce(new Error('native schedule failed'));
+
+    await expect(reconcileNativeReminderSchedule(createSnapshot(true))).rejects.toThrow('native schedule failed');
+
+    expect(recoveryMock.markNativeReminderScheduleReconciled).not.toHaveBeenCalled();
   });
 });

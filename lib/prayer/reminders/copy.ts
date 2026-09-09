@@ -15,6 +15,8 @@ const RAMADAN_LABELS = {
 } as const;
 
 export const REMINDER_NOTIFICATION_SOURCE = 'sholatku-native-reminder' as const;
+export const NATIVE_REMINDER_OWNER = 'sholatku-prayer-reminders' as const;
+export const NATIVE_REMINDER_SCHEMA_VERSION = 1 as const;
 
 export function isApprovedReminderRoute(route: string): route is ReminderRoute {
   return route === '/' || route === '/ramadan';
@@ -66,12 +68,16 @@ export function buildReminderNotificationCopy(event: ReminderEvent): {
 export function buildReminderNotificationExtra(event: ReminderEvent): Record<string, unknown> {
   return {
     source: REMINDER_NOTIFICATION_SOURCE,
+    owner: NATIVE_REMINDER_OWNER,
+    schemaVersion: NATIVE_REMINDER_SCHEMA_VERSION,
     kind: event.kind,
+    eventType: event.kind,
     logicalId: event.id,
     date: event.date,
     prayer: event.prayer,
     route: event.route,
     timezone: event.timezone,
     offsetMinutes: event.offsetMinutes,
+    scheduledAt: event.reminderAt.toISOString(),
   };
 }

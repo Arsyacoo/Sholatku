@@ -15,12 +15,16 @@ export interface NativeNotificationRequest {
   title: string;
   body: string;
   at: Date;
+  allowWhileIdle?: boolean;
   extra?: Record<string, unknown>;
 }
 
-export interface NativeNotificationPending extends PendingLocalNotificationSchema {
-  schedule?: PendingLocalNotificationSchema['schedule'] & {
-    at?: Date;
+type NativePendingSchedule = NonNullable<PendingLocalNotificationSchema['schedule']>;
+
+export interface NativeNotificationPending extends Omit<PendingLocalNotificationSchema, 'schedule'> {
+  schedule?: Omit<NativePendingSchedule, 'at'> & {
+    // Android serializes scheduled dates back through the bridge as strings.
+    at?: Date | string | number;
   };
 }
 
@@ -126,7 +130,7 @@ export async function scheduleNativeNotifications(
       autoCancel: true,
       foreground: true,
       isExactNotification: false,
-      schedule: { at: notification.at },
+      schedule: { at: notification.at, allowWhileIdle: notification.allowWhileIdle },
       extra: notification.extra,
     })),
   });
