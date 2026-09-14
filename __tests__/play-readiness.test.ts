@@ -27,10 +27,16 @@ describe('Play readiness guardrails', () => {
     const packageJson = read('package.json');
     const config = read('vite.mobile.config.ts');
     expect(packageJson).toContain('build:mobile:internal');
+    expect(packageJson).toContain('build:mobile:direct');
     expect(packageJson).toContain('build:mobile:production');
     expect(config).toContain('resolveMobileBuildApiBaseUrl');
     expect(config).toContain('mode !== MOBILE_PRODUCTION_MODE');
+    expect(config).toContain('MOBILE_DIRECT_PREVIEW_MODE');
+    expect(config).toContain('direct-preview');
     expect(config).toContain('internal-staging');
+    expect(read('.env.mobile-direct-preview')).toContain(
+      'NEXT_PUBLIC_MOBILE_API_BASE_URL=https://sholatku-staging.vercel.app'
+    );
   });
 
   it('keeps release signing secret-safe and preserves debug signing', () => {
@@ -39,12 +45,33 @@ describe('Play readiness guardrails', () => {
     expect(gradle).toContain('SHOLATKU_UPLOAD_STORE_PASSWORD');
     expect(gradle).toContain('SHOLATKU_UPLOAD_KEY_ALIAS');
     expect(gradle).toContain('SHOLATKU_UPLOAD_KEY_PASSWORD');
+    expect(gradle).toContain('SHOLATKU_DIRECT_STORE_FILE');
+    expect(gradle).toContain('SHOLATKU_DIRECT_STORE_PASSWORD');
+    expect(gradle).toContain('SHOLATKU_DIRECT_KEY_ALIAS');
+    expect(gradle).toContain('SHOLATKU_DIRECT_KEY_PASSWORD');
     expect(gradle).toContain("System.getenv('USERPROFILE') ?: System.getProperty('user.home')");
     expect(gradle).toContain('System.getenv(name)');
     expect(gradle).toContain('signingConfig signingConfigs.release');
+    expect(gradle).toContain('signingConfig signingConfigs.direct');
+    expect(gradle).toContain('assembleDirect');
     expect(gradle).toContain('Release signing configuration is missing');
+    expect(gradle).toContain('Direct signing configuration is missing');
     expect(gradle).not.toMatch(/storePassword\s+['"][^'"]+['"]/);
     expect(gradle).not.toMatch(/keyPassword\s+['"][^'"]+['"]/);
+  });
+
+  it('keeps the direct preview download page explicit and non-production', () => {
+    const page = read('app/download/page.tsx');
+    const sitemap = read('app/sitemap.ts');
+    const docs = read('docs/ANDROID_DIRECT_DISTRIBUTION.md');
+
+    expect(page).toContain('Direct Preview / Beta');
+    expect(page).toContain('direct-preview');
+    expect(page).toContain('bukan versi production atau stable');
+    expect(page).toContain('APK belum tersedia');
+    expect(sitemap).toContain("'/download'");
+    expect(docs).toContain('Future Android Developer Verification');
+    expect(docs).toContain('https://developer.android.com/developer-verification');
   });
 
   it('keeps the final Sholatku launcher branding resource graph intact', () => {

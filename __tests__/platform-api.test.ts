@@ -51,6 +51,18 @@ describe('platform runtime and hosted API resolver', () => {
     );
   });
 
+  it('allows the explicit direct preview build only on the documented staging BFF', () => {
+    expect(resolveMobileBuildApiBaseUrl('mobile-direct-preview', 'https://sholatku-staging.vercel.app///')).toBe(
+      'https://sholatku-staging.vercel.app'
+    );
+    expect(() => resolveMobileBuildApiBaseUrl('mobile-direct-preview')).toThrow(
+      'NEXT_PUBLIC_MOBILE_API_BASE_URL wajib dikonfigurasi untuk mobile direct preview build.'
+    );
+    expect(() => resolveMobileBuildApiBaseUrl('mobile-direct-preview', 'https://api.example.com')).toThrow(
+      'Mobile direct preview build harus menggunakan staging BFF yang terdokumentasi.'
+    );
+  });
+
   it('keeps web calls relative and PWA-enabled', () => {
     expect(getAppRuntime()).toBe('web');
     expect(isNativeRuntime()).toBe(false);

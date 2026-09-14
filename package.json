@@ -13,6 +13,7 @@
     "build:mobile": "vite build --config vite.mobile.config.ts --mode mobile",
     "build:mobile:staging": "vite build --config vite.mobile.config.ts --mode mobile",
     "build:mobile:internal": "vite build --config vite.mobile.config.ts --mode mobile-internal",
+    "build:mobile:direct": "vite build --config vite.mobile.config.ts --mode mobile-direct-preview",
     "build:mobile:production": "vite build --config vite.mobile.config.ts --mode mobile-production",
     "dev:mobile": "vite --config vite.mobile.config.ts --mode mobile",
     "preview:mobile": "vite preview --config vite.mobile.config.ts --host 127.0.0.1",

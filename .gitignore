@@ -19,6 +19,7 @@ public/sw*
 
 # local mobile shell output
 /dist-mobile/
+/dist/releases/
 
 # misc
 .DS_Store

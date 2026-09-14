@@ -22,8 +22,23 @@ def releaseSigningConfigured = [
     uploadKeyPassword
 ].every { it }
 
+def directStoreFile = signingProperty('SHOLATKU_DIRECT_STORE_FILE')
+def directStorePassword = signingProperty('SHOLATKU_DIRECT_STORE_PASSWORD')
+def directKeyAlias = signingProperty('SHOLATKU_DIRECT_KEY_ALIAS')
+def directKeyPassword = signingProperty('SHOLATKU_DIRECT_KEY_PASSWORD')
+def directSigningConfigured = [
+    directStoreFile,
+    directStorePassword,
+    directKeyAlias,
+    directKeyPassword
+].every { it }
+
 if (!releaseSigningConfigured) {
     logger.lifecycle('Release signing is not configured. Set SHOLATKU_UPLOAD_STORE_FILE, SHOLATKU_UPLOAD_STORE_PASSWORD, SHOLATKU_UPLOAD_KEY_ALIAS, and SHOLATKU_UPLOAD_KEY_PASSWORD using environment variables or user-local Gradle properties.')
+}
+
+if (!directSigningConfigured) {
+    logger.lifecycle('Direct signing is not configured. Set SHOLATKU_DIRECT_STORE_FILE, SHOLATKU_DIRECT_STORE_PASSWORD, SHOLATKU_DIRECT_KEY_ALIAS, and SHOLATKU_DIRECT_KEY_PASSWORD using environment variables or user-local Gradle properties.')
 }
 
 android {
@@ -51,6 +66,14 @@ android {
                 keyPassword uploadKeyPassword
             }
         }
+        if (directSigningConfigured) {
+            direct {
+                storeFile file(directStoreFile)
+                storePassword directStorePassword
+                keyAlias directKeyAlias
+                keyPassword directKeyPassword
+            }
+        }
     }
     buildTypes {
         release {
@@ -60,6 +83,15 @@ android {
                 signingConfig signingConfigs.release
             }
         }
+        direct {
+            minifyEnabled false
+            debuggable false
+            matchingFallbacks = ['release']
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (directSigningConfigured) {
+                signingConfig signingConfigs.direct
+            }
+        }
     }
 }
 
@@ -67,6 +99,14 @@ tasks.matching { it.name == 'assembleRelease' || it.name == 'bundleRelease' }.co
     doFirst {
         if (!releaseSigningConfigured) {
             throw new GradleException('Release signing configuration is missing. Set SHOLATKU_UPLOAD_STORE_FILE, SHOLATKU_UPLOAD_STORE_PASSWORD, SHOLATKU_UPLOAD_KEY_ALIAS, and SHOLATKU_UPLOAD_KEY_PASSWORD using environment variables or user-local Gradle properties.')
+        }
+    }
+}
+
+tasks.matching { it.name == 'assembleDirect' }.configureEach {
+    doFirst {
+        if (!directSigningConfigured) {
+            throw new GradleException('Direct signing configuration is missing. Set SHOLATKU_DIRECT_STORE_FILE, SHOLATKU_DIRECT_STORE_PASSWORD, SHOLATKU_DIRECT_KEY_ALIAS, and SHOLATKU_DIRECT_KEY_PASSWORD using environment variables or user-local Gradle properties.')
         }
     }
 }

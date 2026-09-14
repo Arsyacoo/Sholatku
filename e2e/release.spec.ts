@@ -20,7 +20,8 @@ test('publishes truthful robots, sitemap, manifest, and route metadata', async (
   const sitemapText = await sitemap.text();
   expect(sitemapText).toContain('/quran/1');
   expect(sitemapText).toContain('/quran/114');
-  expect((sitemapText.match(/<url>/g) ?? []).length).toBe(119);
+  expect(sitemapText).toContain('/download');
+  expect((sitemapText.match(/<url>/g) ?? []).length).toBe(120);
 
   const manifest = await page.request.get('/manifest.webmanifest');
   expect(manifest.status()).toBe(200);
@@ -32,6 +33,12 @@ test('publishes truthful robots, sitemap, manifest, and route metadata', async (
   await expect(page).toHaveTitle(/Al-Baqarah.*Sholatku/);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', '/quran/2');
   await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /Baca Surat Al-Baqarah/);
+
+  await page.goto('/download');
+  await expect(page).toHaveTitle(/Android Preview \/ Beta.*Sholatku/);
+  await expect(page.getByRole('heading', { name: 'Sholatku untuk Android' })).toBeVisible();
+  await expect(page.getByText('Direct Preview / Beta', { exact: true })).toBeVisible();
+  await expect(page.getByText('APK belum tersedia', { exact: true })).toBeVisible();
   await assertNoErrors();
 });
 

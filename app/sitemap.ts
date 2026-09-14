@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { SURAH_LIST } from '@/lib/quran/surah-list';
 
-const PUBLIC_ROUTES = ['/', '/quran', '/monthly', '/qibla', '/ramadan'];
+const PUBLIC_ROUTES = ['/', '/quran', '/monthly', '/qibla', '/ramadan', '/download'];
 
 function toAbsoluteUrl(pathname: string): string {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();

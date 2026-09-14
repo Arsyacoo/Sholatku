@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import {
+  MOBILE_DIRECT_PREVIEW_MODE,
   MOBILE_INTERNAL_MODE,
   MOBILE_PRODUCTION_MODE,
   resolveMobileBuildApiBaseUrl,
@@ -17,11 +18,14 @@ export default defineConfig(({ mode }) => {
   );
   const buildChannel = mode === MOBILE_PRODUCTION_MODE
     ? 'production'
-    : mode === MOBILE_INTERNAL_MODE
-      ? 'internal-staging'
-      : 'staging';
+    : mode === MOBILE_DIRECT_PREVIEW_MODE
+      ? 'direct-preview'
+      : mode === MOBILE_INTERNAL_MODE
+        ? 'internal-staging'
+        : 'staging';
   const enableNativeReminderQa =
     mode !== MOBILE_PRODUCTION_MODE &&
+    mode !== MOBILE_DIRECT_PREVIEW_MODE &&
     (mode === 'mobile-qa' ||
     environment.NEXT_PUBLIC_NATIVE_REMINDER_QA === 'true' ||
     process.env.NEXT_PUBLIC_NATIVE_REMINDER_QA === 'true');
