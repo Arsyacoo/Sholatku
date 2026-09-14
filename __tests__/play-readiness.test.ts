@@ -33,6 +33,20 @@ describe('Play readiness guardrails', () => {
     expect(config).toContain('internal-staging');
   });
 
+  it('keeps release signing secret-safe and preserves debug signing', () => {
+    const gradle = read('android/app/build.gradle');
+    expect(gradle).toContain('SHOLATKU_UPLOAD_STORE_FILE');
+    expect(gradle).toContain('SHOLATKU_UPLOAD_STORE_PASSWORD');
+    expect(gradle).toContain('SHOLATKU_UPLOAD_KEY_ALIAS');
+    expect(gradle).toContain('SHOLATKU_UPLOAD_KEY_PASSWORD');
+    expect(gradle).toContain("System.getenv('USERPROFILE') ?: System.getProperty('user.home')");
+    expect(gradle).toContain('System.getenv(name)');
+    expect(gradle).toContain('signingConfig signingConfigs.release');
+    expect(gradle).toContain('Release signing configuration is missing');
+    expect(gradle).not.toMatch(/storePassword\s+['"][^'"]+['"]/);
+    expect(gradle).not.toMatch(/keyPassword\s+['"][^'"]+['"]/);
+  });
+
   it('keeps the final Sholatku launcher branding resource graph intact', () => {
     const adaptiveIcon = read('android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml');
     const adaptiveRoundIcon = read('android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml');

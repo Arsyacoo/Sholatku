@@ -1,5 +1,31 @@
 apply plugin: 'com.android.application'
 
+def localSigningProperties = new Properties()
+def localSigningHome = System.getenv('USERPROFILE') ?: System.getProperty('user.home')
+def localSigningPropertiesFile = new File(localSigningHome, '.gradle/gradle.properties')
+if (localSigningPropertiesFile.isFile()) {
+    localSigningPropertiesFile.withInputStream { localSigningProperties.load(it) }
+}
+
+def signingProperty = { String name ->
+    System.getenv(name) ?: project.findProperty(name)?.toString() ?: localSigningProperties.getProperty(name)
+}
+
+def uploadStoreFile = signingProperty('SHOLATKU_UPLOAD_STORE_FILE')
+def uploadStorePassword = signingProperty('SHOLATKU_UPLOAD_STORE_PASSWORD')
+def uploadKeyAlias = signingProperty('SHOLATKU_UPLOAD_KEY_ALIAS')
+def uploadKeyPassword = signingProperty('SHOLATKU_UPLOAD_KEY_PASSWORD')
+def releaseSigningConfigured = [
+    uploadStoreFile,
+    uploadStorePassword,
+    uploadKeyAlias,
+    uploadKeyPassword
+].every { it }
+
+if (!releaseSigningConfigured) {
+    logger.lifecycle('Release signing is not configured. Set SHOLATKU_UPLOAD_STORE_FILE, SHOLATKU_UPLOAD_STORE_PASSWORD, SHOLATKU_UPLOAD_KEY_ALIAS, and SHOLATKU_UPLOAD_KEY_PASSWORD using environment variables or user-local Gradle properties.')
+}
+
 android {
     namespace = "io.github.arsyacoo.sholatku"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -16,10 +42,31 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (releaseSigningConfigured) {
+            release {
+                storeFile file(uploadStoreFile)
+                storePassword uploadStorePassword
+                keyAlias uploadKeyAlias
+                keyPassword uploadKeyPassword
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (releaseSigningConfigured) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+}
+
+tasks.matching { it.name == 'assembleRelease' || it.name == 'bundleRelease' }.configureEach {
+    doFirst {
+        if (!releaseSigningConfigured) {
+            throw new GradleException('Release signing configuration is missing. Set SHOLATKU_UPLOAD_STORE_FILE, SHOLATKU_UPLOAD_STORE_PASSWORD, SHOLATKU_UPLOAD_KEY_ALIAS, and SHOLATKU_UPLOAD_KEY_PASSWORD using environment variables or user-local Gradle properties.')
         }
     }
 }
