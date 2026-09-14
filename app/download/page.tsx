@@ -37,8 +37,8 @@ export default function DownloadPage() {
               <div className="space-y-2 text-sm leading-relaxed text-amber-950 dark:text-amber-100">
                 <p className="font-bold">Status: Preview / Beta, channel direct-preview</p>
                 <p>
-                  APK belum tersedia. File download dan checksum akan ditambahkan setelah direct signing selesai dan
-                  artifact melewati verifikasi instalasi.
+                  APK preview sudah siap secara lokal. Link download publik menunggu publikasi resmi GitHub Release dan
+                  approval terpisah.
                 </p>
                 <p>
                   Backend preview menggunakan staging Sholatku. Endpoint ini bukan backend production dan tidak boleh
@@ -70,8 +70,8 @@ export default function DownloadPage() {
                 <div>
                   <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Download APK</h2>
                   <p className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                    Link resmi akan aktif setelah APK preview ditandatangani, diverifikasi, dan dipublikasikan dengan
-                    approval terpisah.
+                    APK ini sudah ditandatangani dan diverifikasi secara lokal. Link resmi akan aktif setelah artifact
+                    dipublikasikan dengan approval terpisah.
                   </p>
                 </div>
                 <button
@@ -80,9 +80,13 @@ export default function DownloadPage() {
                   className="inline-flex min-h-11 cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-surface-200 px-4 py-2.5 text-sm font-bold text-slate-500 dark:bg-surface-800 dark:text-slate-500"
                 >
                   <Download className="h-4 w-4" aria-hidden="true" />
-                  APK belum tersedia
+                  Menunggu publikasi resmi
                 </button>
-                <p className="text-xs text-slate-500 dark:text-slate-400">SHA-256: menunggu artifact direct preview.</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">File: sholatku-v0.1.0.apk</p>
+                <p className="break-all text-xs text-slate-500 dark:text-slate-400">
+                  SHA-256: dfa487a98dead883d2ef4232c622c13bf1b8a7e55e4c21f5cb8110f35444fe13
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Belum tersedia untuk download publik.</p>
               </div>
             </div>
           </section>

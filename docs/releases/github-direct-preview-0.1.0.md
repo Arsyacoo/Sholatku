@@ -29,7 +29,7 @@ disable it again after installation. Do not disable Play Protect or device secur
 
 ## Integrity
 
-SHA-256: pending signed artifact
+SHA-256: `dfa487a98dead883d2ef4232c622c13bf1b8a7e55e4c21f5cb8110f35444fe13`
 
 ## Notes
 

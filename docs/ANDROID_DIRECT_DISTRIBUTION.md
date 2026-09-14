@@ -26,14 +26,22 @@ The Google Play upload identity and the direct-distribution identity are separat
 - The direct keystore must stay outside the repository and must never be uploaded, committed, or shared publicly.
 - Direct APK updates must use the same direct certificate and a higher `versionCode`.
 
-The direct signing key has not been created yet. Its creation requires the explicit approval boundary
-`APPROVE DIRECT DISTRIBUTION KEY CREATION`.
+The direct signing key has been created after the explicit approval boundary. It is stored outside the repository at
+`C:\Users\arsya\.sholatku\signing\sholatku-direct.jks`, alias `sholatku-direct`. Its public certificate SHA-256 is
+`35:CB:53:AE:36:FE:16:90:0E:77:FA:F8:5D:E0:F7:51:18:4C:0C:F4:75:A5:DA:63:98:34:78:09:09:3B:B9:B0`.
+
+Back up `sholatku-direct.jks` in an encrypted offline location and store its password separately. Never upload the
+keystore or password to GitHub, chat, or public cloud storage.
 
 ## Website and release labeling
 
-The official website page is `/download`. It currently identifies the channel as **Direct Preview / Beta**, shows
-`direct-preview`, identifies the staging backend, and keeps the download disabled until a signed artifact exists. It
-must not imply that the preview is production-ready.
+The official website page is `/download`. It identifies the channel as **Direct Preview / Beta**, shows
+`direct-preview`, identifies the staging backend, and keeps the download disabled until the GitHub Release is published.
+It must not imply that the preview is production-ready.
+
+The locally verified artifact is `dist/releases/sholatku-v0.1.0.apk` with SHA-256
+`dfa487a98dead883d2ef4232c622c13bf1b8a7e55e4c21f5cb8110f35444fe13`. The matching checksum file is
+`dist/releases/sholatku-v0.1.0.apk.sha256`. The APK is signed with the direct certificate above.
 
 The future GitHub Release must use equivalent Preview / Beta wording and must not be published without the separate
 approval `APPROVE GITHUB DIRECT RELEASE`.

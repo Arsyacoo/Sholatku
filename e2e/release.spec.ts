@@ -38,7 +38,8 @@ test('publishes truthful robots, sitemap, manifest, and route metadata', async (
   await expect(page).toHaveTitle(/Android Preview \/ Beta.*Sholatku/);
   await expect(page.getByRole('heading', { name: 'Sholatku untuk Android' })).toBeVisible();
   await expect(page.getByText('Direct Preview / Beta', { exact: true })).toBeVisible();
-  await expect(page.getByText('APK belum tersedia', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Menunggu publikasi resmi' })).toBeDisabled();
+  await expect(page.getByText('dfa487a98dead883d2ef4232c622c13bf1b8a7e55e4c21f5cb8110f35444fe13')).toBeVisible();
   await assertNoErrors();
 });
 
