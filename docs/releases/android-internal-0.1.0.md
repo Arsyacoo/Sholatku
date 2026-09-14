@@ -1,7 +1,7 @@
 # Android Internal Candidate 0.1.0
 
-Status: **SIGNING PENDING**. This is a local Google Play Internal Testing preparation record only. No upload,
-publication, rollout, account change, or signing-key generation was performed.
+Status: **SIGNED INTERNAL TESTING CANDIDATE READY**. This is a local Google Play Internal Testing preparation record
+only. No upload, publication, rollout, or account change was performed.
 
 ## Candidate identity
 
@@ -10,17 +10,22 @@ publication, rollout, account change, or signing-key generation was performed.
 - `versionCode`: `1`
 - Build channel: `internal-staging`
 - Backend: `https://sholatku-staging.vercel.app` (intentional internal-testing staging only)
-- Source state: `main` at `c64592e` plus the current uncommitted Sprint 06/07A/07A.1/07A.3.1 worktree changes
+- Source commit: `7c2794a` (`build(android): configure secure release signing`)
+- Release metadata commit: to be recorded after this metadata update
 - Branding: Sprint 07A.3.1 developer-provided crescent-star launcher system
 - Candidate date: `2026-09-14` (`Asia/Jakarta`)
+- Upload keystore: `C:\Users\arsya\.sholatku\signing\sholatku-upload.jks` (outside repository)
+- Upload alias: `sholatku-upload`
+- Upload certificate SHA-256: `31:BA:5F:BC:F9:A3:95:50:6D:1D:E8:28:1B:32:45:01:B5:B0:C3:3A:F8:B5:A9:A1:01:2A:90:77:A7:98:48:52`
 
 ## Artifacts
 
-The release outputs below are unsigned because no upload key exists and no key-generation approval was given.
+The internal AAB below is signed with the developer-managed upload key. Passwords remain outside the repository and are
+provided to Gradle only through local environment variables or user-local Gradle properties.
 
 | Artifact | Path | Size | SHA-256 |
 | --- | --- | ---: | --- |
-| Internal AAB | `android/app/build/outputs/bundle/release/app-release.aab` | 3,534,197 bytes | `1062ff4356f5468e14cc623fe183942f555f0eefb7ee1780937b92d59c560e45` |
+| Internal AAB | `android/app/build/outputs/bundle/release/app-release.aab` | 3,564,996 bytes | `65d385fff3f5522a3d0d53f98076fa19d50ec3000e98f20fe906474ed10979e8` |
 | Unsigned release APK | `android/app/build/outputs/apk/release/app-release-unsigned.apk` | 3,727,504 bytes | `32b413e89611574ccf1e832f868b2e694b51d4fd66c82ee4bd154c0ae14d71f5` |
 | Debug APK | `android/app/build/outputs/apk/debug/app-debug.apk` | 4,805,754 bytes | `bf87d3006ddf0fe3a6da2015ea4340280ba6ce875ad4cc14602f78476d8d214f` |
 
@@ -40,7 +45,7 @@ The release outputs below are unsigned because no upload key exists and no key-g
 
 ## Verification evidence
 
-- `npm test`: 42 files, 234 tests passed.
+- `npm test`: 42 files, 235 tests passed.
 - `npm run lint`: passed with no ESLint warnings or errors.
 - `npx tsc --noEmit`: passed.
 - `npm run build`: passed.
@@ -49,13 +54,17 @@ The release outputs below are unsigned because no upload key exists and no key-g
 - `npm run build:mobile:internal`: passed.
 - `npm run verify:mobile-build`: passed.
 - `npx cap sync android`: passed.
-- Gradle `clean test assembleDebug assembleRelease bundleRelease`: passed.
+- Gradle `test`, `clean`, `assembleDebug`, and signed `bundleRelease`: passed.
 - `npm audit --omit=dev`: 0 vulnerabilities.
-- `npm run test:e2e:mobile`: 1 passed; the final internal candidate was then rebuilt and checked with direct mobile E2E.
+- `npm run test:e2e:mobile`: 1 passed; the signed internal candidate was rebuilt afterward from source commit `7c2794a`.
 - Debug APK `apksigner verify`: passed with Android v2 signing.
 - Release APK `zipalign -c -P 16`: passed.
 - Release APK `apksigner verify`: intentionally failed because it is unsigned.
-- AAB `jarsigner -verify`: intentionally reported `jar is unsigned`.
+- AAB `jarsigner -verify`: `jar verified`; the public signer certificate matches the upload keystore fingerprint above.
+- AAB signing uses a self-signed developer upload certificate, so the local JDK reports an untrusted certificate-chain
+  warning; this is expected until the certificate is registered with Google Play App Signing.
+- AAB signature has no timestamp; repeat the signing step before the certificate expiry if a long-lived archive must be
+  independently validated after `2054-01-30`.
 - Merged release manifest: target SDK `36`; cleartext disabled; no exact alarm, battery-exemption, background-location,
   foreground-service, camera, microphone, contacts, phone, or SMS permission.
 - Release AAB: no native `.so` entries found.
@@ -64,7 +73,8 @@ The release outputs below are unsigned because no upload key exists and no key-g
 
 ## Manual blockers and next gate
 
-- A developer-managed upload key and Play App Signing registration are still required before this AAB can be uploaded.
+- Play App Signing registration and the first manual Play Console upload remain required before this AAB can be used in
+  Internal Testing.
 - The public privacy-policy URL, privacy/support contact, Play Console declarations, and final store metadata remain
   manual account/product inputs.
 - The internal staging candidate must never be uploaded to Production or Open testing.

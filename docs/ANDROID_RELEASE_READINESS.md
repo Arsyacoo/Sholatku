@@ -1,8 +1,7 @@
 # Android Release Readiness
 
-Sprint: 07A / 07A.1 / 07A.3.1
-Status: internal-testing candidate preparation and final provided-icon branding complete with signing and Play Console gates
-remaining.
+Sprint: 07A / 07A.1 / 07A.3.1 / 07A.4 / 07A.5
+Status: local release checkpoint complete; explicit Play Internal Testing upload approval required.
 
 ## Verified in this repository
 
@@ -38,18 +37,25 @@ remaining.
   available from the local emulator configuration.
 - No analytics, ads, payment, account, Firebase, Crashlytics, or Sentry SDK was observed in the audited dependency/runtime
   source.
-- The current release artifact is rebuilt by Sprint 07A.3.1's explicit internal mode and is recorded in
-  `docs/releases/android-internal-0.1.0.md`; it is unsigned because no upload key exists or was created.
+- The current release artifact is rebuilt by Sprint 07A.5 from source commit `7c2794a` using the explicit internal mode
+  and is recorded in
+  `docs/releases/android-internal-0.1.0.md`; it is signed with the developer-managed upload key.
+- The upload keystore is stored outside the repository at `C:\Users\arsya\.sholatku\signing\sholatku-upload.jks`.
+  Alias: `sholatku-upload`. Public certificate SHA-256: `31:BA:5F:BC:F9:A3:95:50:6D:1D:E8:28:1B:32:45:01:B5:B0:C3:3A:F8:B5:A9:A1:01:2A:90:77:A7:98:48:52`.
+- Release signing reads only environment variables or user-local Gradle properties; the repository contains no
+  signing password or private key. The local build helper passes the password only through the child process
+  environment and clears it after Gradle exits.
 - No `.so` entries were found in the release AAB or APK. The current Capacitor/WebView artifact has no packaged native
   shared-library ABI inventory to verify.
-- Signing material was not generated or exposed. Keystore patterns are ignored by Git.
+- Signing material is not tracked or exposed. Keystore patterns are ignored by Git; only public certificate metadata is
+  recorded here.
 
 ## Sprint 07A preparation
 
 - Version remains `versionCode=1`, `versionName=0.1.0`; no Play upload history is available, so the code was not
   incremented merely for local builds.
-- Upload-key signing classification: no upload-key signing setup exists yet. Explicit developer approval is required
-  before local key generation.
+- Upload-key signing classification: the developer-managed upload key is created outside the repository, and its public
+  certificate is recorded above. No upload-key secret is tracked.
 - Internal release notes, tester plan, feedback template, update-path checklist, pre-launch checklist, and manual upload
   runbook are prepared in `docs/`.
 
@@ -57,7 +63,8 @@ remaining.
 
 - [BLOCKER] Final production BFF/API endpoint is not defined. Do not use the staging endpoint as a production release.
 - [BLOCKER] Official developer identity, privacy contact, and public privacy-policy URL are not yet supplied.
-- [BLOCKER] Upload key / Play App Signing configuration is not present; the release bundle must be signed manually later.
+- [MANUAL] Register the public upload certificate with Google Play App Signing during the first manual Play Console
+  upload. The signed internal candidate is ready locally, but Play Console setup remains account-dependent.
 - [BLOCKER] The public HTTPS Privacy Policy URL and official privacy/support contact are not supplied.
 - [MANUAL] `minifyEnabled=false` remains a deliberate conservative release choice; evaluate R8/shrinkResources in a later
   optimization sprint with a full regression pass.
@@ -68,4 +75,5 @@ remaining.
 ## Scope protection
 
 Sprint 04 reminder recovery logic was not modified. Exact alarm permissions and battery optimization exemptions were not
-added. No Play Console publication, production upload, account billing, signing-secret creation, or Git push was performed.
+added. No Play Console publication, production upload, account billing, or rollout was performed in Sprint 07A.5. The
+developer explicitly approved local upload-key creation; no signing secret was committed, and no automatic push was used.
