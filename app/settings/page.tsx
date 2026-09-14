@@ -25,7 +25,7 @@ import {
 } from '@/lib/storage/preferences';
 import type { PrayerReminderSettings, RamadanPreferences as RamadanPreferencesValue } from '@/types';
 import { useLocation } from '@/hooks/useLocation';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, Check, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SettingsPage() {
@@ -157,6 +157,22 @@ export default function SettingsPage() {
             settings={settings}
             reminderSettings={reminderSettings}
           />
+        </section>
+
+        <section className="pt-4 border-t border-surface-200 dark:border-surface-800">
+          <Link
+            href="/privacy"
+            className="flex min-h-16 items-center gap-3 rounded-2xl border border-surface-200 bg-white px-4 py-3 transition-colors hover:bg-surface-50 dark:border-surface-800 dark:bg-surface-900 dark:hover:bg-surface-800"
+            aria-label="Buka Kebijakan Privasi"
+          >
+            <ShieldCheck className="h-5 w-5 shrink-0 text-primary-600 dark:text-primary-400" aria-hidden="true" />
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold text-slate-900 dark:text-slate-100">Kebijakan Privasi</span>
+              <span className="block text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                Lihat data yang disimpan di perangkat dan dikirim ke layanan terkait.
+              </span>
+            </span>
+          </Link>
         </section>
       </main>
 

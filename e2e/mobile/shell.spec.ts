@@ -74,6 +74,11 @@ test('renders the real mobile shell routes and keeps API traffic on staging orig
   await expect(page.getByText('Tema Tampilan')).toBeVisible();
   await expect(page.getByRole('link', { name: /Setelan|Pengaturan/ })).toHaveAttribute('aria-current', 'page');
 
+  await page.getByRole('link', { name: 'Buka Kebijakan Privasi' }).click();
+  await expect(page).toHaveURL(/\/privacy$/);
+  await expect(page.getByRole('heading', { name: 'Kebijakan Privasi' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Data yang tersimpan di perangkat' })).toBeVisible();
+
   await page.goto('/ramadan');
   await expect(page).toHaveURL(/\/ramadan$/);
   await expect(page.getByRole('heading', { name: 'Imsakiyah' })).toBeVisible();

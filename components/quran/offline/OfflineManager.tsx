@@ -264,7 +264,7 @@ export function OfflineManager() {
                       type="button"
                       disabled={bulkStatus === 'downloading'}
                       onClick={() => void downloadSurah(surah.number)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-primary-300 px-2.5 py-1.5 text-xs font-bold text-primary-700 transition hover:bg-primary-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-primary-800 dark:text-primary-300 dark:hover:bg-primary-950/50"
+                      className="inline-flex scroll-mb-24 items-center gap-1.5 rounded-lg border border-primary-300 px-2.5 py-1.5 text-xs font-bold text-primary-700 transition hover:bg-primary-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-primary-800 dark:text-primary-300 dark:hover:bg-primary-950/50"
                       aria-label={`Download ${surah.name} untuk offline`}
                     >
                       <Download className="h-3.5 w-3.5" aria-hidden="true" /> Download

@@ -35,6 +35,10 @@ export const Footer: React.FC = () => {
           <Link href="/settings" className="hover:text-primary-600 transition-colors">
             Pengaturan
           </Link>
+          <span>&bull;</span>
+          <Link href="/privacy" className="hover:text-primary-600 transition-colors">
+            Kebijakan Privasi
+          </Link>
         </div>
       </div>
     </footer>

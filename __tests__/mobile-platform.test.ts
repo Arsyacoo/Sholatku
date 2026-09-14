@@ -16,6 +16,7 @@ describe('mobile route matching', () => {
     expect(matchMobileRoute('/monthly').kind).toBe('monthly');
     expect(matchMobileRoute('/qibla').kind).toBe('qibla');
     expect(matchMobileRoute('/settings').kind).toBe('settings');
+    expect(matchMobileRoute('/privacy').kind).toBe('privacy');
     expect(matchMobileRoute('/ramadan').kind).toBe('ramadan');
     expect(matchMobileRoute('/~offline').kind).toBe('offline');
   });

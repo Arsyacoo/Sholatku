@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import '../../app/globals.css';
 import { MobileShell } from './MobileShell';
 
+const MOBILE_BUILD_CHANNEL = process.env.NEXT_PUBLIC_MOBILE_BUILD_CHANNEL ?? 'unknown';
 const MOBILE_BODY_CLASS =
   'min-h-screen flex flex-col font-sans bg-surface-50 dark:bg-surface-950 text-slate-900 dark:text-slate-100 antialiased selection:bg-primary-500 selection:text-white';
 
@@ -10,6 +11,7 @@ function bootstrapMobileDocument(): void {
   if (typeof document === 'undefined') return;
 
   document.body.className = MOBILE_BODY_CLASS;
+  document.documentElement.dataset.sholatkuBuildChannel = MOBILE_BUILD_CHANNEL;
 
   try {
     const savedTheme = window.localStorage.getItem('sholatku_theme_mode');
