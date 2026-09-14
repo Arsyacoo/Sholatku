@@ -4,6 +4,9 @@ import { Download, ExternalLink, FlaskConical, ShieldCheck } from 'lucide-react'
 import { Footer } from '@/components/layout/Footer';
 import { Navbar } from '@/components/layout/Navbar';
 
+const directPreviewAssetUrl =
+  'https://github.com/Arsyacoo/Sholatku/releases/download/v0.1.0-preview.1/sholatku-latest.apk';
+
 export const metadata: Metadata = {
   title: 'Android Preview / Beta',
   description: 'Preview / Beta Sholatku untuk Android melalui distribusi APK langsung.',
@@ -77,6 +80,7 @@ export default function DownloadPage() {
                 <button
                   type="button"
                   disabled
+                  data-download-url={directPreviewAssetUrl}
                   className="inline-flex min-h-11 cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-surface-200 px-4 py-2.5 text-sm font-bold text-slate-500 dark:bg-surface-800 dark:text-slate-500"
                 >
                   <Download className="h-4 w-4" aria-hidden="true" />
@@ -87,6 +91,9 @@ export default function DownloadPage() {
                   SHA-256: dfa487a98dead883d2ef4232c622c13bf1b8a7e55e4c21f5cb8110f35444fe13
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">Belum tersedia untuk download publik.</p>
+                <p className="break-all text-xs text-slate-500 dark:text-slate-400">
+                  Target asset setelah GitHub Pre-release: {directPreviewAssetUrl}
+                </p>
               </div>
             </div>
           </section>

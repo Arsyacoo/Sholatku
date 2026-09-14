@@ -43,8 +43,17 @@ The locally verified artifact is `dist/releases/sholatku-v0.1.0.apk` with SHA-25
 `dfa487a98dead883d2ef4232c622c13bf1b8a7e55e4c21f5cb8110f35444fe13`. The matching checksum file is
 `dist/releases/sholatku-v0.1.0.apk.sha256`. The APK is signed with the direct certificate above.
 
-The future GitHub Release must use equivalent Preview / Beta wording and must not be published without the separate
-approval `APPROVE GITHUB DIRECT RELEASE`.
+The planned public preview identity is explicit and must not be changed to stable or production semantics:
+
+- Git tag: `v0.1.0-preview.1`
+- GitHub Release title: `Sholatku v0.1.0 Preview 1`
+- Release type: `GitHub Pre-release`
+- Android `versionName`: `0.1.0`
+- Android `versionCode`: `1`
+- Preview asset URL: `https://github.com/Arsyacoo/Sholatku/releases/download/v0.1.0-preview.1/sholatku-latest.apk`
+
+The GitHub Release must not be published without the separate approval `APPROVE GITHUB DIRECT RELEASE`. The preview
+download page must use the explicit pre-release tag asset URL above, never `releases/latest/download/`.
 
 ## Safe installation and update model
 

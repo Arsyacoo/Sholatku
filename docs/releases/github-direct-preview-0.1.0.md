@@ -1,9 +1,19 @@
-# Sholatku v0.1.0 - Direct Preview / Beta
+# Sholatku v0.1.0 Preview 1
 
 > Draft only. Do not publish this GitHub Release until the signed artifact is verified and
 > `APPROVE GITHUB DIRECT RELEASE` is received.
 
 Initial Android **Direct Preview / Beta** release for testing only. This is not a production or stable release.
+
+## Release metadata
+
+- Git tag: `v0.1.0-preview.1`
+- GitHub Release title: `Sholatku v0.1.0 Preview 1`
+- Release type: `GitHub Pre-release`
+- Android `versionName`: `0.1.0`
+- Android `versionCode`: `1`
+- Build channel: `direct-preview`
+- Backend: `https://sholatku-staging.vercel.app` (staging only)
 
 ## Highlights
 
@@ -23,7 +33,12 @@ Initial Android **Direct Preview / Beta** release for testing only. This is not 
 
 ## Installation
 
-Download `sholatku-v0.1.0.apk` only from the official Sholatku website or this official GitHub Release when published.
+Download `sholatku-latest.apk` only from the explicit pre-release asset URL after this official GitHub Release is
+published:
+
+`https://github.com/Arsyacoo/Sholatku/releases/download/v0.1.0-preview.1/sholatku-latest.apk`
+
+Do not use `releases/latest/download/` for this Preview / Beta release.
 Android may ask you to allow Install unknown apps for the browser or file manager being used. Allow only that source and
 disable it again after installation. Do not disable Play Protect or device security globally.
 

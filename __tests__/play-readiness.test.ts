@@ -69,10 +69,25 @@ describe('Play readiness guardrails', () => {
     expect(page).toContain('direct-preview');
     expect(page).toContain('bukan versi production atau stable');
     expect(page).toContain('Menunggu publikasi resmi');
+    expect(page).toContain('v0.1.0-preview.1/sholatku-latest.apk');
     expect(page).toContain('dfa487a98dead883d2ef4232c622c13bf1b8a7e55e4c21f5cb8110f35444fe13');
     expect(sitemap).toContain("'/download'");
     expect(docs).toContain('Future Android Developer Verification');
     expect(docs).toContain('https://developer.android.com/developer-verification');
+  });
+
+  it('keeps the direct preview release identity explicit', () => {
+    const notes = read('docs/releases/github-direct-preview-0.1.0.md');
+    const checkpoint = read('docs/releases/android-direct-0.1.0.md');
+
+    for (const document of [notes, checkpoint]) {
+      expect(document).toContain('v0.1.0-preview.1');
+      expect(document).toContain('Sholatku v0.1.0 Preview 1');
+      expect(document).toContain('GitHub Pre-release');
+      expect(document).toContain('direct-preview');
+      expect(document).toContain('https://sholatku-staging.vercel.app');
+      expect(document).not.toContain('https://github.com/Arsyacoo/Sholatku/releases/latest/download/');
+    }
   });
 
   it('keeps the final Sholatku launcher branding resource graph intact', () => {

@@ -13,6 +13,10 @@ publication remains approval-gated.
 - App label: `Sholatku`
 - Minimum Android version: Android 7.0 (`minSdkVersion=24`)
 - Backend: `https://sholatku-staging.vercel.app` (staging only)
+- Git tag plan: `v0.1.0-preview.1`
+- GitHub Release title plan: `Sholatku v0.1.0 Preview 1`
+- GitHub Release type plan: `GitHub Pre-release`
+- Preview asset URL plan: `https://github.com/Arsyacoo/Sholatku/releases/download/v0.1.0-preview.1/sholatku-latest.apk`
 
 ## Artifact status
 
@@ -45,5 +49,5 @@ Protect or device security globally.
 ## Traceability
 
 - Source commit: `01f491a`
-- GitHub tag: not created
-- GitHub Release: draft not published
+- GitHub tag: not created; planned tag is `v0.1.0-preview.1`
+- GitHub Release: not published; planned title is `Sholatku v0.1.0 Preview 1` and type is `GitHub Pre-release`
