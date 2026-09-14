@@ -11,7 +11,7 @@ only. No upload, publication, rollout, or account change was performed.
 - Build channel: `internal-staging`
 - Backend: `https://sholatku-staging.vercel.app` (intentional internal-testing staging only)
 - Source commit: `7c2794a` (`build(android): configure secure release signing`)
-- Release metadata commit: to be recorded after this metadata update
+- Release metadata checkpoint commit: `5af73c5` (`docs(release): record signed internal checkpoint`)
 - Branding: Sprint 07A.3.1 developer-provided crescent-star launcher system
 - Candidate date: `2026-09-14` (`Asia/Jakarta`)
 - Upload keystore: `C:\Users\arsya\.sholatku\signing\sholatku-upload.jks` (outside repository)
