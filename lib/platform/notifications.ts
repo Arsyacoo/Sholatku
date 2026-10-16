@@ -6,7 +6,10 @@ import type {
   ScheduleResult,
 } from '@capacitor/local-notifications';
 
+import type { UserSettings } from '@/types';
 import { isNativeRuntime } from './runtime';
+
+export type ReminderSound = UserSettings['adhanSound'];
 
 export type NormalizedNotificationPermissionState = 'prompt' | 'granted' | 'denied' | 'unsupported';
 
@@ -16,6 +19,7 @@ export interface NativeNotificationRequest {
   body: string;
   at: Date;
   allowWhileIdle?: boolean;
+  sound?: ReminderSound;
   extra?: Record<string, unknown>;
 }
 
@@ -32,7 +36,7 @@ export interface NativeNotificationChannel extends Channel {
   id: string;
   name: string;
   description: string;
-  importance: 3;
+  importance: 2 | 3;
 }
 
 export const NATIVE_REMINDER_CHANNEL_ID = 'prayer-reminders';
@@ -44,6 +48,24 @@ const REMINDER_CHANNEL: NativeNotificationChannel = {
   name: NATIVE_REMINDER_CHANNEL_NAME,
   description: NATIVE_REMINDER_CHANNEL_DESCRIPTION,
   importance: 3,
+};
+
+// Android channel sound is immutable after creation, so each sound choice gets its own channel.
+const REMINDER_CHANNELS: Record<ReminderSound, NativeNotificationChannel> = {
+  beep: REMINDER_CHANNEL,
+  adhan_short: {
+    id: 'prayer-reminders-adhan',
+    name: 'Adzan Waktu Sholat',
+    description: 'Suara adzan saat masuk waktu sholat',
+    importance: 3,
+    sound: 'adhan.ogg',
+  },
+  none: {
+    id: 'prayer-reminders-silent',
+    name: 'Pengingat Tanpa Suara',
+    description: 'Pengingat waktu sholat tanpa suara',
+    importance: 2,
+  },
 };
 
 let pluginPromise: Promise<typeof import('@capacitor/local-notifications')> | null = null;
@@ -101,9 +123,10 @@ export async function ensureReminderNotificationChannel(): Promise<void> {
   if (!reminderChannelPromise) {
     reminderChannelPromise = (async () => {
       const { LocalNotifications } = await getPlugin();
-      const channels = await LocalNotifications.listChannels();
-      if (channels.channels.some((channel) => channel.id === REMINDER_CHANNEL.id)) return;
-      await LocalNotifications.createChannel(REMINDER_CHANNEL);
+      const existing = new Set((await LocalNotifications.listChannels()).channels.map((channel) => channel.id));
+      for (const channel of Object.values(REMINDER_CHANNELS)) {
+        if (!existing.has(channel.id)) await LocalNotifications.createChannel(channel);
+      }
     })().catch((error) => {
       reminderChannelPromise = null;
       throw error;
@@ -126,7 +149,7 @@ export async function scheduleNativeNotifications(
       id: notification.id,
       title: notification.title,
       body: notification.body,
-      channelId: REMINDER_CHANNEL.id,
+      channelId: getNativeReminderChannelId(notification.sound),
       autoCancel: true,
       foreground: true,
       isExactNotification: false,
@@ -173,6 +196,6 @@ export function isNativeReminderNotification(notification: NativeNotificationPen
   return notification.extra?.source === 'sholatku-native-reminder';
 }
 
-export function getNativeReminderChannelId(): string {
-  return REMINDER_CHANNEL.id;
+export function getNativeReminderChannelId(sound: ReminderSound = 'beep'): string {
+  return (REMINDER_CHANNELS[sound] ?? REMINDER_CHANNEL).id;
 }

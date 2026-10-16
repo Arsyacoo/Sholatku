@@ -84,6 +84,12 @@ describe('native notification adapter', () => {
         importance: 3,
       })
     );
+    expect(localNotificationsMock.createChannel).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'prayer-reminders-adhan', sound: 'adhan.ogg', importance: 3 })
+    );
+    expect(localNotificationsMock.createChannel).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'prayer-reminders-silent', importance: 2 })
+    );
     expect(localNotificationsMock.schedule).toHaveBeenCalledWith(
       expect.objectContaining({
         notifications: [
@@ -105,6 +111,20 @@ describe('native notification adapter', () => {
       })
     );
     expect(result).toEqual({ notifications: [] });
+  });
+
+  it('routes each reminder sound to its own channel', async () => {
+    const at = new Date('2026-09-08T04:40:00+07:00');
+    await scheduleNativeNotifications([
+      { id: 1, title: 'Subuh', body: 'Waktu Subuh', at, sound: 'adhan_short' },
+      { id: 2, title: 'Dzuhur', body: 'Waktu Dzuhur', at, sound: 'none' },
+    ]);
+
+    const [{ notifications }] = localNotificationsMock.schedule.mock.calls.at(-1)!;
+    expect(notifications.map((item: { channelId: string }) => item.channelId)).toEqual([
+      'prayer-reminders-adhan',
+      'prayer-reminders-silent',
+    ]);
   });
 
   it('cancels only the requested native reminder ids', async () => {

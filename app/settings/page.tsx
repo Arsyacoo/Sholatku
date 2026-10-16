@@ -135,6 +135,8 @@ export default function SettingsPage() {
             onEnabledChange={(enabled) =>
               updateSetting((current) => ({ ...current, enableNotifications: enabled }))
             }
+            sound={settings.adhanSound}
+            onSoundChange={(adhanSound) => updateSetting((current) => ({ ...current, adhanSound }))}
           />
         </section>
 
