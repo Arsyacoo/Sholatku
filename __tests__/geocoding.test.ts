@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   CITY_SEARCH_CACHE_LIMIT,
-  CITY_SEARCH_DEBOUNCE_MS,
   CITY_SEARCH_MIN_LENGTH,
   normalizeCityQuery,
   reverseGeocode,
   searchCities,
+  searchOnlineCities,
 } from '@/lib/location/geocoding';
 import { NetworkRequestError } from '@/lib/network/fetch';
 import { LatestRequestController } from '@/lib/network/latest-request';
@@ -27,13 +27,14 @@ afterEach(() => {
 });
 
 describe('geocoding hardening', () => {
-  it('uses a provider-friendly debounce and ignores short queries', async () => {
+  it('ignores short queries and never calls Nominatim for curated cities', async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
 
-    expect(CITY_SEARCH_DEBOUNCE_MS).toBe(400);
     expect(CITY_SEARCH_MIN_LENGTH).toBe(3);
     await expect(searchCities(' a ')).resolves.toEqual([]);
+    await expect(searchOnlineCities(' a ')).resolves.toEqual([]);
+    expect((await searchCities('jakarta')).length).toBeGreaterThan(0);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

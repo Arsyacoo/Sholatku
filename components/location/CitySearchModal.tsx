@@ -6,12 +6,13 @@ import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { CitySearchResult, UserLocation } from '@/types';
 import {
-  CITY_SEARCH_DEBOUNCE_MS,
   CITY_SEARCH_MIN_LENGTH,
+  NOMINATIM_MIN_INTERVAL_MS,
   normalizeCityQuery,
-  searchCities,
+  OSM_ATTRIBUTION_URL,
+  searchOnlineCities,
 } from '@/lib/location/geocoding';
-import { POPULAR_CITIES } from '@/lib/location/cities-id';
+import { POPULAR_CITIES, searchLocalCities } from '@/lib/location/cities-id';
 import { isNetworkRequestError } from '@/lib/network/fetch';
 import { LatestRequestController } from '@/lib/network/latest-request';
 
@@ -36,9 +37,10 @@ export const CitySearchModal: React.FC<CitySearchModalProps> = ({
   const [results, setResults] = useState<CitySearchResult[]>(POPULAR_CITIES.slice(0, 10));
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<'timeout' | 'network' | null>(null);
-  const [retryKey, setRetryKey] = useState(0);
+  const [isOnlineResult, setIsOnlineResult] = useState(false);
   const requestsRef = useRef<LatestRequestController | null>(null);
   if (!requestsRef.current) requestsRef.current = new LatestRequestController();
+  const lastOnlineSearchAtRef = useRef(0);
 
   useEffect(() => {
     if (!isOpen) {
@@ -47,47 +49,51 @@ export const CitySearchModal: React.FC<CitySearchModalProps> = ({
       setResults(POPULAR_CITIES.slice(0, 10));
       setSearchError(null);
       setIsSearching(false);
+      setIsOnlineResult(false);
       return;
     }
   }, [isOpen]);
 
+  // Typing only filters the bundled city list; Nominatim forbids search-as-you-type.
   useEffect(() => {
     if (!isOpen) return;
     const normalizedQuery = normalizeCityQuery(query);
     requestsRef.current?.cancel();
     setSearchError(null);
+    setIsSearching(false);
+    setIsOnlineResult(false);
     if (!normalizedQuery) {
       setResults(POPULAR_CITIES.slice(0, 10));
-      setIsSearching(false);
-      return;
+    } else {
+      setResults(normalizedQuery.length < CITY_SEARCH_MIN_LENGTH ? [] : searchLocalCities(normalizedQuery, 8));
     }
-    if (normalizedQuery.length < CITY_SEARCH_MIN_LENGTH) {
-      setResults([]);
-      setIsSearching(false);
-      return;
-    }
+    return () => requestsRef.current?.cancel();
+  }, [isOpen, query]);
 
-    setResults([]);
+  const canSearchOnline = normalizeCityQuery(query).length >= CITY_SEARCH_MIN_LENGTH;
+
+  const handleOnlineSearch = async () => {
+    const now = Date.now();
+    if (!canSearchOnline || isSearching || now - lastOnlineSearchAtRef.current < NOMINATIM_MIN_INTERVAL_MS) return;
+    lastOnlineSearchAtRef.current = now;
+
+    const request = requestsRef.current!.begin();
+    setSearchError(null);
     setIsSearching(true);
-    const timer = setTimeout(async () => {
-      const request = requestsRef.current!.begin();
-      try {
-        const nextResults = await searchCities(query, { signal: request.signal });
-        if (request.isCurrent()) setResults(nextResults);
-      } catch (error) {
-        if (!request.isCurrent() || isNetworkRequestError(error, 'aborted')) return;
-        setSearchError(isNetworkRequestError(error, 'timeout') ? 'timeout' : 'network');
-      } finally {
-        if (request.isCurrent()) setIsSearching(false);
-        requestsRef.current?.finish(request);
+    try {
+      const nextResults = await searchOnlineCities(query, { signal: request.signal });
+      if (request.isCurrent()) {
+        setResults(nextResults);
+        setIsOnlineResult(true);
       }
-    }, CITY_SEARCH_DEBOUNCE_MS);
-
-    return () => {
-      clearTimeout(timer);
-      requestsRef.current?.cancel();
-    };
-  }, [isOpen, query, retryKey]);
+    } catch (error) {
+      if (!request.isCurrent() || isNetworkRequestError(error, 'aborted')) return;
+      setSearchError(isNetworkRequestError(error, 'timeout') ? 'timeout' : 'network');
+    } finally {
+      if (request.isCurrent()) setIsSearching(false);
+      requestsRef.current?.finish(request);
+    }
+  };
 
   const handleSelect = (city: CitySearchResult) => {
     onSelectCity(city);
@@ -133,7 +139,14 @@ export const CitySearchModal: React.FC<CitySearchModalProps> = ({
         </div>
 
         {/* Search Input */}
-        <div className="relative">
+        <form
+          className="relative"
+          role="search"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleOnlineSearch();
+          }}
+        >
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
@@ -146,7 +159,7 @@ export const CitySearchModal: React.FC<CitySearchModalProps> = ({
           {isSearching && (
             <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-slate-400" />
           )}
-        </div>
+        </form>
 
         {/* Results List */}
         <div className="max-h-72 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
@@ -165,13 +178,15 @@ export const CitySearchModal: React.FC<CitySearchModalProps> = ({
                   ? 'Pencarian lokasi terlalu lama. Silakan coba lagi.'
                   : 'Layanan pencarian lokasi sedang tidak tersedia.'}
               </p>
-              <Button variant="outline" size="sm" onClick={() => setRetryKey((value) => value + 1)}>
+              <Button variant="outline" size="sm" onClick={() => void handleOnlineSearch()}>
                 Coba Lagi
               </Button>
             </div>
           ) : results.length === 0 ? (
             <div className="text-center py-8 text-sm text-slate-500">
-              Tidak ditemukan kota dengan kata kunci &ldquo;{query}&rdquo;
+              {isOnlineResult
+                ? <>Tidak ditemukan kota dengan kata kunci &ldquo;{query}&rdquo;</>
+                : <>&ldquo;{query}&rdquo; tidak ada di daftar kota. Tekan Enter untuk mencari secara online.</>}
             </div>
           ) : (
             results.map((city) => {
@@ -211,6 +226,21 @@ export const CitySearchModal: React.FC<CitySearchModalProps> = ({
             })
           )}
         </div>
+
+        {canSearchOnline && !isSearching && !isOnlineResult && (
+          <Button variant="outline" size="sm" className="w-full" onClick={() => void handleOnlineSearch()}>
+            <Search className="h-3.5 w-3.5" />
+            Cari &ldquo;{query.trim()}&rdquo; secara online
+          </Button>
+        )}
+        {isOnlineResult && (
+          <p className="text-center text-[11px] text-slate-500 dark:text-slate-400">
+            Data lokasi ©{' '}
+            <a href={OSM_ATTRIBUTION_URL} target="_blank" rel="noopener noreferrer" className="underline">
+              OpenStreetMap contributors
+            </a>
+          </p>
+        )}
       </div>
     </Modal>
   );
