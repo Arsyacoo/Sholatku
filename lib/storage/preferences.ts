@@ -330,6 +330,7 @@ export function getDefaultRamadanPreferences(): RamadanPreferences {
     mode: 'automatic',
     imsakOffsetMinutes: DEFAULT_IMSAK_OFFSET_MINUTES,
     showHomeCard: true,
+    hijriAdjustment: 0,
     reminders: {
       imsak: { enabled: false, offsetMinutes: 0 },
       maghrib: { enabled: false, offsetMinutes: 0 },
@@ -364,6 +365,7 @@ function normalizeRamadanPreferences(value: unknown): RamadanPreferences {
       ? input.imsakOffsetMinutes
       : defaults.imsakOffsetMinutes,
     showHomeCard: typeof input.showHomeCard === 'boolean' ? input.showHomeCard : defaults.showHomeCard,
+    hijriAdjustment: input.hijriAdjustment === -1 || input.hijriAdjustment === 1 ? input.hijriAdjustment : 0,
     reminders: {
       imsak: normalizeReminder(reminders?.imsak),
       maghrib: normalizeReminder(reminders?.maghrib),

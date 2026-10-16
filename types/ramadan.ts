@@ -2,10 +2,14 @@ import type { PrayerReminderOffset, PrayerReminderPreference } from './settings'
 
 export type RamadanMode = 'automatic' | 'enabled' | 'disabled';
 
+/** Days added to the calculated Umm al-Qura date to match a local announcement (e.g. sidang isbat). */
+export type HijriAdjustment = -1 | 0 | 1;
+
 export interface RamadanModePreference {
   mode: RamadanMode;
   imsakOffsetMinutes: 5 | 10 | 15 | 20;
   showHomeCard: boolean;
+  hijriAdjustment?: HijriAdjustment;
 }
 
 export interface RamadanReminderSettings {

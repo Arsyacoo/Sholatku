@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { MoonStar } from 'lucide-react';
-import type { RamadanMode, RamadanPreferences as RamadanPreferencesValue, RamadanReminderSettings } from '@/types';
+import type { HijriAdjustment, RamadanMode, RamadanPreferences as RamadanPreferencesValue, RamadanReminderSettings } from '@/types';
 import { IMSAK_OFFSET_OPTIONS } from '@/lib/ramadan/timing';
 import { Select } from '../ui/Select';
 
@@ -32,6 +32,12 @@ const IMSAK_SELECT_OPTIONS = IMSAK_OFFSET_OPTIONS.map((offset) => ({
   value: offset,
   label: `${offset} menit sebelum Subuh`,
 }));
+
+const HIJRI_ADJUSTMENT_OPTIONS: Array<{ value: HijriAdjustment; label: string }> = [
+  { value: -1, label: '-1 hari' },
+  { value: 0, label: 'Tanpa koreksi' },
+  { value: 1, label: '+1 hari' },
+];
 
 const REMINDER_SELECT_OPTIONS = REMINDER_OPTIONS.map((option) => ({
   value: option.value,
@@ -99,6 +105,22 @@ export const RamadanPreferences: React.FC<RamadanPreferencesProps> = ({ value, o
           size="sm"
           className="w-[180px] shrink-0"
         />
+      </div>
+
+      <div className="space-y-1.5 border-t border-surface-100 pt-3 dark:border-surface-800">
+        <div className="flex items-center justify-between gap-3">
+          <label htmlFor="ramadan-hijri-adjustment" className="text-sm font-semibold text-slate-700 dark:text-slate-200">Koreksi tanggal Hijriah</label>
+          <Select
+            id="ramadan-hijri-adjustment"
+            value={value.hijriAdjustment ?? 0}
+            options={HIJRI_ADJUSTMENT_OPTIONS}
+            onValueChange={(hijriAdjustment) => onChange({ ...value, hijriAdjustment })}
+            ariaLabel="Koreksi tanggal Hijriah"
+            size="sm"
+            className="w-[180px] shrink-0"
+          />
+        </div>
+        <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">Sesuaikan bila tanggal berbeda dengan pengumuman resmi, misalnya hasil sidang isbat. Berlaku untuk tanggal Hijriah di Beranda dan mode Ramadan.</p>
       </div>
 
       <label className="flex items-center justify-between gap-3 border-t border-surface-100 pt-3 text-sm font-semibold text-slate-700 dark:border-surface-800 dark:text-slate-200">
