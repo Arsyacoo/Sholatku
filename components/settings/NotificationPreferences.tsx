@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Bell, CheckCircle2, Info, Send, Smartphone, ShieldAlert } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Select } from '../ui/Select';
-import type { PrayerReminderOffset, PrayerReminderSettings } from '@/types';
+import type { PrayerReminderOffset, PrayerReminderSettings, UserSettings } from '@/types';
 import { PRAYER_REMINDER_PRAYERS } from '@/types';
 import { getPrayerReminderCapabilities } from '@/lib/prayer/reminders/capabilities';
 import type { PrayerReminderCapabilities } from '@/lib/prayer/reminders/types';
@@ -28,7 +28,15 @@ interface NotificationPreferencesProps {
   enabled: boolean;
   onChange: (settings: PrayerReminderSettings) => void;
   onEnabledChange: (enabled: boolean) => void;
+  sound: UserSettings['adhanSound'];
+  onSoundChange: (sound: UserSettings['adhanSound']) => void;
 }
+
+const SOUND_SELECT_OPTIONS: Array<{ value: UserSettings['adhanSound']; label: string }> = [
+  { value: 'beep', label: 'Bunyi bawaan' },
+  { value: 'adhan_short', label: 'Adzan' },
+  { value: 'none', label: 'Tanpa suara' },
+];
 
 const PRAYER_LABELS: Record<(typeof PRAYER_REMINDER_PRAYERS)[number], string> = {
   fajr: 'Subuh',
@@ -111,6 +119,8 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
   enabled,
   onChange,
   onEnabledChange,
+  sound,
+  onSoundChange,
 }) => {
   const runtime = getAppRuntime();
   const isNativeAndroid = runtime === 'android';
@@ -343,6 +353,26 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
             })}
           </div>
         </div>
+
+        {isNativeAndroid && (
+          <div className="space-y-1.5 border-t border-surface-100 p-4 dark:border-surface-800">
+            <div className="flex items-center justify-between gap-3">
+              <label htmlFor="prayer-reminder-sound" className="text-sm font-semibold text-slate-700 dark:text-slate-200">Suara pengingat</label>
+              <Select
+                id="prayer-reminder-sound"
+                value={sound}
+                options={SOUND_SELECT_OPTIONS}
+                onValueChange={onSoundChange}
+                ariaLabel="Suara pengingat"
+                size="sm"
+                className="w-[164px] shrink-0"
+              />
+            </div>
+            <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              Adzan diputar saat pengingat diatur tepat waktu. Pengingat sebelum waktu sholat dan Imsak tetap memakai bunyi bawaan.
+            </p>
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center gap-2 border-t border-surface-100 px-4 py-3 dark:border-surface-800">
           {(!isNativeAndroid || isDev) && (

@@ -44,7 +44,8 @@ vi.mock('@/lib/platform/reminder-recovery', () => recoveryMock);
 vi.mock('@/lib/prayer/api', () => prayerApiMock);
 vi.mock('@/lib/ramadan/calendar', () => ramadanCalendarMock);
 
-import { getNativeReminderDiagnostics, reconcileNativeReminderSchedule } from '@/lib/prayer/reminders/native';
+import { getNativeReminderDiagnostics, getReminderSound, reconcileNativeReminderSchedule } from '@/lib/prayer/reminders/native';
+import type { ReminderEvent } from '@/lib/prayer/reminders/types';
 
 function setNativeRuntime(): void {
   (globalThis as typeof globalThis & {
@@ -373,5 +374,20 @@ describe('native reminder reconciliation', () => {
     await expect(reconcileNativeReminderSchedule(createSnapshot(true))).rejects.toThrow('native schedule failed');
 
     expect(recoveryMock.markNativeReminderScheduleReconciled).not.toHaveBeenCalled();
+  });
+});
+
+describe('reminder sound selection', () => {
+  const base = { id: 'x', date: '2026-09-01', prayerAt: new Date(), reminderAt: new Date(), timezone: 'Asia/Jakarta' };
+  const atTime = { ...base, kind: 'prayer', route: '/', prayer: 'fajr', offsetMinutes: 0 } as ReminderEvent;
+  const before = { ...atTime, offsetMinutes: 10 } as ReminderEvent;
+  const imsak = { ...base, kind: 'ramadan', route: '/ramadan', prayer: 'imsak', offsetMinutes: 0 } as ReminderEvent;
+
+  it('plays adhan only when a prayer time begins', () => {
+    expect(getReminderSound('adhan_short', atTime)).toBe('adhan_short');
+    expect(getReminderSound('adhan_short', before)).toBe('beep');
+    expect(getReminderSound('adhan_short', imsak)).toBe('beep');
+    expect(getReminderSound('none', atTime)).toBe('none');
+    expect(getReminderSound('beep', atTime)).toBe('beep');
   });
 });

@@ -21,3 +21,9 @@ license checker or mass-upgrade dependencies as part of this sprint.
 
 Provider terms, attribution requirements, rate limits, and production endpoint contracts must be verified by the developer.
 The app must not imply that a provider endorses Sholatku.
+
+## Bundled media
+
+- `android/app/src/main/res/raw/adhan.ogg`: "Adhan.ogg" by Aishatu98, from Wikimedia Commons
+  (https://commons.wikimedia.org/wiki/File:Adhan.ogg), released under CC0 1.0 (public domain dedication).
+  Unmodified; SHA-1 `b86432f1581e11f898de1dc3402af0d541af110e`. Used as the optional Android adhan reminder sound.

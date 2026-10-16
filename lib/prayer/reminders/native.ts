@@ -17,6 +17,7 @@ import {
   scheduleNativeNotifications,
   type NativeNotificationPending,
   type NativeNotificationRequest,
+  type ReminderSound,
   type NormalizedNotificationPermissionState,
 } from '@/lib/platform/notifications';
 
@@ -109,7 +110,13 @@ function mapPendingSummary(notification: NativeNotificationPending): NativeRemin
   };
 }
 
-function buildNativeNotificationRequest(event: ReminderEvent): NativeNotificationRequest {
+/** Adhan only plays when a prayer time actually begins; earlier reminders and Imsak keep the default sound. */
+export function getReminderSound(sound: ReminderSound, event: ReminderEvent): ReminderSound {
+  if (sound !== 'adhan_short') return sound;
+  return event.kind === 'prayer' && event.offsetMinutes === 0 ? 'adhan_short' : 'beep';
+}
+
+function buildNativeNotificationRequest(event: ReminderEvent, sound: ReminderSound): NativeNotificationRequest {
   const copy = buildReminderNotificationCopy(event);
   return {
     id: createNativeNotificationId(event.id),
@@ -117,6 +124,7 @@ function buildNativeNotificationRequest(event: ReminderEvent): NativeNotificatio
     body: copy.body,
     at: event.reminderAt,
     allowWhileIdle: true,
+    sound: getReminderSound(sound, event),
     extra: buildReminderNotificationExtra(event),
   };
 }
@@ -226,7 +234,7 @@ export async function reconcileNativeReminderSchedule(
   }
 
   const events = await buildNativeReminderEvents(snapshot, new Date());
-  const requests = events.map(buildNativeNotificationRequest);
+  const requests = events.map((event) => buildNativeNotificationRequest(event, snapshot.settings.adhanSound));
 
   await cancelNativeNotifications(pendingIds);
   await scheduleNativeNotifications(requests);
