@@ -12,7 +12,9 @@ interface GeocodingRequestOptions {
 }
 
 export const CITY_SEARCH_MIN_LENGTH = 3;
-export const CITY_SEARCH_DEBOUNCE_MS = 400;
+/** Nominatim usage policy: at most one request per second, and no search-as-you-type. */
+export const NOMINATIM_MIN_INTERVAL_MS = 1_000;
+export const OSM_ATTRIBUTION_URL = 'https://www.openstreetmap.org/copyright';
 export const CITY_SEARCH_CACHE_LIMIT = 25;
 
 const searchCache = new Map<string, CitySearchResult[]>();
@@ -169,6 +171,17 @@ export async function searchCities(
 ): Promise<CitySearchResult[]> {
   const normalizedQuery = normalizeCityQuery(query);
   if (normalizedQuery.length < CITY_SEARCH_MIN_LENGTH) return [];
+  const localResults = searchLocalCities(normalizedQuery, 8);
+  return localResults.length > 0 ? localResults : searchOnlineCities(normalizedQuery, options);
+}
+
+/** Queries Nominatim directly. Call only on an explicit user action, never while typing. */
+export async function searchOnlineCities(
+  query: string,
+  options: GeocodingRequestOptions = {}
+): Promise<CitySearchResult[]> {
+  const normalizedQuery = normalizeCityQuery(query);
+  if (normalizedQuery.length < CITY_SEARCH_MIN_LENGTH) return [];
 
   const cached = searchCache.get(normalizedQuery);
   if (cached) {
@@ -176,9 +189,6 @@ export async function searchCities(
     searchCache.set(normalizedQuery, cached);
     return cached;
   }
-
-  const localResults = searchLocalCities(normalizedQuery, 8);
-  if (localResults.length > 0) return cacheResults(normalizedQuery, localResults);
 
   const data = await fetchJsonWithTimeout<unknown>(
     `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(normalizedQuery)}&limit=6&addressdetails=1&extratags=1`,
