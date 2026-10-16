@@ -1,7 +1,8 @@
 import { DailyPrayerSchedule, MonthlyPrayerItem, UserLocation, UserSettings } from '@/types';
 import { normalizeAlAdhanDay, normalizeAlAdhanMonth } from './normalize';
 import { calculateOfflinePrayers } from './calculation';
-import { formatDateInTimeZone, formatIndonesianDateInTimeZone, getApproximateHijriDate, getTimeZoneOffsetMinutes, normalizeTimeZone, zonedTimeToUtc } from '../time/timezone';
+import { formatDateInTimeZone, formatIndonesianDateInTimeZone, getTimeZoneOffsetMinutes, normalizeTimeZone, zonedTimeToUtc } from '../time/timezone';
+import { getApproximateHijriDate } from '../ramadan/calendar';
 import {
   fetchJsonWithTimeout,
   isNetworkRequestError,

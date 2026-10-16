@@ -1,4 +1,5 @@
 import type { HijriDateParts, RamadanDateRange, RamadanModePreference, RamadanStatus } from '@/types';
+import { ISLAMIC_MONTHS } from '@/lib/time/timezone';
 
 const RAMADAN_MONTH = 9;
 const DEFAULT_HIJRI_YEAR = 1448;
@@ -48,6 +49,23 @@ function shiftDays(date: Date, adjustment: number): Date {
   return adjustment ? new Date(date.getTime() + adjustment * DAY_MS) : date;
 }
 
+const hijriFormatters = new Map<string, Intl.DateTimeFormat>();
+
+// Building a formatter is costly and Ramadan range lookups call this for ~1,800 days.
+function getHijriFormatter(timeZone: string): Intl.DateTimeFormat {
+  let formatter = hijriFormatters.get(timeZone);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
+      timeZone,
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric',
+    });
+    hijriFormatters.set(timeZone, formatter);
+  }
+  return formatter;
+}
+
 /**
  * Reads the device/runtime Hijri calendar without claiming an official local announcement.
  * The timezone is important: Ramadan day follows the user's local civil date.
@@ -56,13 +74,7 @@ function shiftDays(date: Date, adjustment: number): Date {
 export function getHijriDate(date: Date, timeZone = 'UTC', adjustment = 0): HijriDateParts {
   date = shiftDays(date, adjustment);
   try {
-    const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
-      timeZone,
-      day: 'numeric',
-      month: 'numeric',
-      year: 'numeric',
-    });
-    const parts = formatter.formatToParts(date);
+    const parts = getHijriFormatter(timeZone).formatToParts(date);
     const result = {
       day: parseNumericPart(parts, 'day'),
       month: parseNumericPart(parts, 'month'),
@@ -154,23 +166,25 @@ export function getRelevantRamadanYear(date: Date, timeZone = 'UTC', adjustment 
 
 export const RAMADAN_HIJRI_MONTH = RAMADAN_MONTH;
 
-/** Formats a date as an Indonesian Hijri label, e.g. "1 Ramadan 1447 H". */
+/**
+ * Formats a date as an Indonesian Hijri label, e.g. "1 Ramadhan 1447 H".
+ * Month names come from a fixed list: Android WebView ICU knows the Umm al-Qura calendar
+ * but lacks Indonesian Hijri month names and silently prints Gregorian ones ("5 Mei 1448 H").
+ */
 export function formatHijriDate(date: Date, timeZone = 'UTC', adjustment = 0): string {
-  try {
-    const parts = new Intl.DateTimeFormat('id-ID-u-ca-islamic-umalqura', {
-      timeZone,
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    }).formatToParts(shiftDays(date, adjustment));
-    const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value;
-    const day = value('day');
-    const month = value('month');
-    const year = value('year');
-    if (day && month && year) return `${day} ${month} ${year} H`;
-  } catch {
-    // Fall through to the numeric civil calendar below.
-  }
   const hijri = getHijriDate(date, timeZone, adjustment);
-  return `${hijri.day}/${hijri.month} ${hijri.year} H`;
+  return `${hijri.day} ${ISLAMIC_MONTHS[hijri.month - 1] ?? hijri.month} ${hijri.year} H`;
+}
+
+/** Offline Hijri label for a schedule date, in the runtime timezone. */
+export function getApproximateHijriDate(date: Date) {
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  const hijri = getHijriDate(date, timeZone);
+  const month = ISLAMIC_MONTHS[hijri.month - 1] ?? String(hijri.month);
+  return {
+    day: String(hijri.day),
+    month: { en: month, ar: month },
+    year: String(hijri.year),
+    formatted: `${hijri.day} ${month} ${hijri.year} H`,
+  };
 }
