@@ -5,10 +5,10 @@
     <string name="package_name">io.github.arsyacoo.sholatku</string>
     <string name="custom_url_scheme">io.github.arsyacoo.sholatku</string>
     <string name="widget_label_small">Sholat Berikutnya</string>
-    <string name="widget_label_wide">Jadwal Sholat Ringkas</string>
+    <string name="widget_label_wide">Menuju Sholat</string>
     <string name="widget_label_large">Jadwal Sholat Hari Ini</string>
     <string name="widget_description_small">Sholat berikutnya dengan hitung mundur</string>
-    <string name="widget_description_wide">Lima waktu sholat dan hitung mundur</string>
+    <string name="widget_description_wide">Sholat berikutnya, nama Arab, jam masuk, dan hitung mundur</string>
     <string name="widget_description_large">Kota, tanggal Hijriah, hitung mundur, dan lima waktu sholat</string>
     <string name="widget_stale">Buka Sholatku untuk memperbarui jadwal</string>
 </resources>

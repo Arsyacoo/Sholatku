@@ -8,33 +8,22 @@
         <item name="android:gravity">center_vertical</item>
     </style>
 
-    <!-- Latin prayer name: the display voice, in the app's Plus Jakarta Sans. -->
-    <style name="WidgetPrayerName">
+    <!-- Prayer names arrive as bitmaps in the brand fonts (see WidgetTextRenderer). -->
+    <style name="WidgetDisplayImage">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:fontFamily">@font/plus_jakarta_sans_bold</item>
-        <item name="android:includeFontPadding">false</item>
-        <item name="android:maxLines">1</item>
-        <item name="android:text">@string/app_name</item>
-        <item name="android:textColor">@color/widget_text</item>
+        <item name="android:adjustViewBounds">true</item>
+        <item name="android:scaleType">fitStart</item>
     </style>
 
-    <!-- Arabic prayer name in gold Amiri, as on the home hero card. -->
-    <style name="WidgetPrayerArabic">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:fontFamily">@font/amiri_regular</item>
-        <item name="android:includeFontPadding">false</item>
-        <item name="android:maxLines">1</item>
-        <item name="android:textColor">@color/widget_gold</item>
-    </style>
-
+    <!-- Chronometer cannot take a bundled font in RemoteViews: thin system numerals, fixed-width digits. -->
     <style name="WidgetCountdown">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:fontFamily">@font/plus_jakarta_sans_bold</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:fontFeatureSettings">tnum</item>
         <item name="android:includeFontPadding">false</item>
-        <item name="android:letterSpacing">-0.02</item>
+        <item name="android:maxLines">1</item>
         <item name="android:textColor">@color/widget_text</item>
     </style>
 
@@ -80,7 +69,8 @@
         <item name="android:autoSizeMinTextSize">8sp</item>
         <item name="android:autoSizeMaxTextSize">13sp</item>
         <item name="android:layout_marginTop">2dp</item>
-        <item name="android:fontFamily">@font/plus_jakarta_sans_bold</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:fontFeatureSettings">tnum</item>
         <item name="android:includeFontPadding">false</item>
         <item name="android:maxLines">1</item>
         <item name="android:textSize">13sp</item>

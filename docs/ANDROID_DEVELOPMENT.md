@@ -233,3 +233,6 @@ Three widget sizes share one data source: `Sholat Berikutnya` (2x1), `Jadwal Sho
   in Doze; no exact-alarm permission is used.
 - When the stored week runs out, widgets show "Buka Sholatku untuk memperbarui jadwal" instead of stale times.
 - The pure selection logic is covered by `PrayerWidgetScheduleTest` (`./gradlew :app:testDebugUnitTest`).
+- Launchers ignore `android:fontFamily="@font/..."` inside RemoteViews. Prayer names are therefore drawn into bitmaps in
+  Plus Jakarta Sans and Amiri by `WidgetTextRenderer`; the live countdown stays a `Chronometer` in the system
+  `sans-serif-light` face with tabular figures.
