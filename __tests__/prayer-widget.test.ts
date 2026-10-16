@@ -40,6 +40,7 @@ describe('Android prayer widget payload', () => {
     expect(payload.days[0].prayers.map((prayer) => prayer.name)).toEqual(['Subuh', 'Dzuhur', 'Ashar', 'Maghrib', 'Isya']);
     expect(payload.days[0].prayers[0]).toEqual({
       name: 'Subuh',
+      arabic: 'الفجر',
       time: '04:30',
       at: Date.parse('2026-02-27T21:30:00Z'),
     });

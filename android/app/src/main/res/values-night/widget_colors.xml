@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="widget_background">#F20F172A</color>
-    <color name="widget_text">#F1F5F9</color>
-    <color name="widget_text_secondary">#94A3B8</color>
-    <color name="widget_accent">#2DD4BF</color>
-    <color name="widget_highlight">#134E4A</color>
+    <!-- Deeper teal at night so the card does not glow against a dark home screen. -->
+    <color name="widget_bg_start">#134E4A</color>
+    <color name="widget_bg_center">#115E59</color>
+    <color name="widget_bg_end">#042F2E</color>
+    <color name="widget_glow_gold">#2EF59E0B</color>
+    <color name="widget_glow_teal">#242DD4BF</color>
 </resources>

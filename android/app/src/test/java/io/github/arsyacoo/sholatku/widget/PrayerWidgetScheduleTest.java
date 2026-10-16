@@ -9,11 +9,12 @@ import org.junit.Test;
 
 public class PrayerWidgetScheduleTest {
     private static final String[] NAMES = {"Subuh", "Dzuhur", "Ashar", "Maghrib", "Isya"};
+    private static final String[] ARABIC = {"الفجر", "الظهر", "العصر", "المغرب", "العشاء"};
     private static final String[] TIMES = {"04:00", "12:00", "15:00", "18:00", "19:00"};
 
     private static PrayerWidgetSchedule.Day day(long base) {
         long[] at = {base + 4, base + 12, base + 15, base + 18, base + 19};
-        return new PrayerWidgetSchedule.Day("1 Ramadan 1447 H", NAMES, TIMES, at);
+        return new PrayerWidgetSchedule.Day("1 Ramadhan 1447 H", NAMES, ARABIC, TIMES, at);
     }
 
     @Test

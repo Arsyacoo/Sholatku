@@ -2,40 +2,50 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     style="@style/WidgetRoot"
-    android:paddingHorizontal="12dp"
-    android:paddingVertical="6dp">
+    android:paddingHorizontal="14dp"
+    android:paddingVertical="8dp">
+
+    <!-- 2x1 has room for one name; the Arabic name lives in the wider sizes. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <ImageView style="@style/WidgetIcon" android:src="@drawable/ic_widget_moon" />
+        <TextView
+            android:id="@+id/widget_next_name"
+            style="@style/WidgetPrayerName"
+            android:layout_width="0dp"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:textSize="14sp" />
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal">
-        <TextView
-            android:id="@+id/widget_next_name"
+        <Chronometer
+            android:id="@+id/widget_countdown"
+            style="@style/WidgetCountdown"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="28dp"
             android:layout_weight="1"
-            android:maxLines="1"
-            android:text="@string/app_name"
-            android:textColor="@color/widget_text"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            android:autoSizeMaxTextSize="24sp"
+            android:autoSizeMinTextSize="12sp"
+            android:autoSizeTextType="uniform"
+            android:gravity="center_vertical"
+            android:maxLines="1" />
         <TextView
             android:id="@+id/widget_next_time"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            style="@style/WidgetSecondary"
+            android:layout_marginStart="6dp"
             android:text="--:--"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="15sp" />
+            android:textSize="12sp" />
     </LinearLayout>
-
-    <Chronometer
-        android:id="@+id/widget_countdown"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:includeFontPadding="false"
-        android:textColor="@color/widget_accent"
-        android:textSize="20sp"
-        android:textStyle="bold" />
 
     <TextView android:id="@+id/widget_message" style="@style/WidgetMessage" />
 </LinearLayout>

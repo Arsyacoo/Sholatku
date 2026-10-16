@@ -2,6 +2,7 @@ import { registerPlugin } from '@capacitor/core';
 
 import type { MonthlyPrayerItem, RamadanPreferences, UserLocation, UserSettings } from '@/types';
 import { getMonthlyPrayerTimes } from '@/lib/prayer/api';
+import { PRAYER_NAMES } from '@/lib/prayer/constants';
 import { addDaysToCanonicalDate } from '@/lib/prayer/date';
 import { parsePrayerDateTime } from '@/lib/prayer/reminders/schedule';
 import { formatHijriDate } from '@/lib/ramadan/calendar';
@@ -12,13 +13,7 @@ import { isNativeRuntime } from './runtime';
 /** Days pushed to the Android widget; it shows a "open the app" message once they run out. */
 export const PRAYER_WIDGET_DAYS = 7;
 
-const WIDGET_PRAYERS = [
-  ['fajr', 'Subuh'],
-  ['dhuhr', 'Dzuhur'],
-  ['asr', 'Ashar'],
-  ['maghrib', 'Maghrib'],
-  ['isha', 'Isya'],
-] as const;
+const WIDGET_PRAYERS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
 
 export interface PrayerWidgetPayload {
   version: 1;
@@ -26,7 +21,7 @@ export interface PrayerWidgetPayload {
   days: Array<{
     date: string;
     hijri: string;
-    prayers: Array<{ name: string; time: string; at: number }>;
+    prayers: Array<{ name: string; arabic: string; time: string; at: number }>;
   }>;
 }
 
@@ -55,8 +50,9 @@ export function buildPrayerWidgetPayload(
     .map((item) => ({
       date: item.date,
       hijri: formatHijriDate(zonedTimeToUtc(item.date, '12:00', timeZone), timeZone, hijriAdjustment),
-      prayers: WIDGET_PRAYERS.map(([key, name]) => ({
-        name,
+      prayers: WIDGET_PRAYERS.map((key) => ({
+        name: PRAYER_NAMES[key].id,
+        arabic: PRAYER_NAMES[key].ar,
         time: item.timings[key],
         at: parsePrayerDateTime(item.date, item.timings[key], timeZone).getTime(),
       })),

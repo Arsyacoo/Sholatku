@@ -46,15 +46,17 @@ final class PrayerWidgetStore {
             if (prayers.length() != PrayerWidgetSchedule.PRAYER_COUNT) throw new JSONException("Expected five prayers.");
 
             String[] names = new String[PrayerWidgetSchedule.PRAYER_COUNT];
+            String[] arabic = new String[PrayerWidgetSchedule.PRAYER_COUNT];
             String[] times = new String[PrayerWidgetSchedule.PRAYER_COUNT];
             long[] at = new long[PrayerWidgetSchedule.PRAYER_COUNT];
             for (int i = 0; i < PrayerWidgetSchedule.PRAYER_COUNT; i++) {
                 JSONObject prayer = prayers.getJSONObject(i);
                 names[i] = prayer.getString("name");
+                arabic[i] = prayer.optString("arabic", "");
                 times[i] = prayer.getString("time");
                 at[i] = prayer.getLong("at");
             }
-            days.add(new PrayerWidgetSchedule.Day(rawDay.optString("hijri", ""), names, times, at));
+            days.add(new PrayerWidgetSchedule.Day(rawDay.optString("hijri", ""), names, arabic, times, at));
         }
         return new PrayerWidgetSchedule(root.optString("city", ""), days);
     }

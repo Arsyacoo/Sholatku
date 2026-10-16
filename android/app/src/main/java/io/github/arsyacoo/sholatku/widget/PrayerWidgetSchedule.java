@@ -13,12 +13,14 @@ final class PrayerWidgetSchedule {
     static final class Day {
         final String hijri;
         final String[] names;
+        final String[] arabic;
         final String[] times;
         final long[] at;
 
-        Day(String hijri, String[] names, String[] times, long[] at) {
+        Day(String hijri, String[] names, String[] arabic, String[] times, long[] at) {
             this.hijri = hijri;
             this.names = names;
+            this.arabic = arabic;
             this.times = times;
             this.at = at;
         }

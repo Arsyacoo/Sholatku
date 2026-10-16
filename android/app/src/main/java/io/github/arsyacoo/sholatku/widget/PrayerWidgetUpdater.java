@@ -67,7 +67,9 @@ final class PrayerWidgetUpdater {
 
         if (selection == null) {
             views.setTextViewText(R.id.widget_next_name, "Sholatku");
+            views.setTextViewText(R.id.widget_next_arabic, "");
             views.setTextViewText(R.id.widget_next_time, "--:--");
+            views.setTextViewText(R.id.widget_next_time_long, "--:--");
             views.setTextViewText(R.id.widget_header, schedule == null ? "" : schedule.city);
             views.setViewVisibility(R.id.widget_countdown, View.GONE);
             views.setViewVisibility(R.id.widget_message, View.VISIBLE);
@@ -78,7 +80,9 @@ final class PrayerWidgetUpdater {
         PrayerWidgetSchedule.Day day = selection.day;
         int next = selection.nextIndex;
         views.setTextViewText(R.id.widget_next_name, day.names[next]);
+        views.setTextViewText(R.id.widget_next_arabic, day.arabic[next]);
         views.setTextViewText(R.id.widget_next_time, day.times[next]);
+        views.setTextViewText(R.id.widget_next_time_long, "Masuk pukul " + day.times[next]);
         views.setTextViewText(
             R.id.widget_header,
             day.hijri.isEmpty() ? schedule.city : schedule.city + " · " + day.hijri
@@ -89,10 +93,16 @@ final class PrayerWidgetUpdater {
         views.setChronometer(R.id.widget_countdown, SystemClock.elapsedRealtime() + (selection.nextAt() - now), null, true);
         views.setChronometerCountDown(R.id.widget_countdown, true);
 
+        int text = context.getColor(R.color.widget_text);
+        int secondary = context.getColor(R.color.widget_text_secondary);
+        int gold = context.getColor(R.color.widget_gold_soft);
         for (int i = 0; i < PrayerWidgetSchedule.PRAYER_COUNT; i++) {
+            boolean isNext = i == next;
             views.setTextViewText(NAME_IDS[i], day.names[i]);
             views.setTextViewText(TIME_IDS[i], day.times[i]);
-            views.setInt(COLUMN_IDS[i], "setBackgroundResource", i == next ? R.drawable.widget_highlight : 0);
+            views.setTextColor(NAME_IDS[i], isNext ? text : secondary);
+            views.setTextColor(TIME_IDS[i], isNext ? gold : text);
+            views.setInt(COLUMN_IDS[i], "setBackgroundResource", isNext ? R.drawable.widget_highlight : 0);
         }
         return views;
     }
