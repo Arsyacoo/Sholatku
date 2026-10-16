@@ -8,6 +8,7 @@ import { getNativeReminderRecoveryState } from '@/lib/platform/reminder-recovery
 import { buildNativeReminderScheduleFingerprint, needsNativeReminderReconciliation } from '@/lib/prayer/reminders/recovery';
 import { formatDateInTimeZone, normalizeTimeZone, zonedTimeToUtc } from '@/lib/time/timezone';
 import { isNativeRuntime } from '@/lib/platform/runtime';
+import { syncPrayerWidget } from '@/lib/platform/widget';
 
 function getNextDayCheckDelay(timeZone: string, now = new Date()): number {
   const normalizedTimeZone = normalizeTimeZone(timeZone);
@@ -73,6 +74,10 @@ export function NativeReminderBridge() {
         }
       } finally {
         if (!cancelled) {
+          // Widgets are independent of reminders, so a reminder failure must not leave them stale.
+          await syncPrayerWidget(snapshot).catch((error) => {
+            console.warn(`Failed to update prayer widget (${reason}):`, error);
+          });
           scheduleNextDayCheck(snapshot.location.timezone);
         }
         inFlightRef.current = false;
