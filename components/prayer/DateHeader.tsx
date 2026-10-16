@@ -3,13 +3,26 @@
 import React from 'react';
 import { Calendar, Moon } from 'lucide-react';
 import { DailyPrayerSchedule } from '@/types';
+import { formatHijriDate } from '@/lib/ramadan/calendar';
+import { normalizeScheduleDate } from '@/lib/ramadan/timing';
+import { zonedTimeToUtc } from '@/lib/time/timezone';
 
 interface DateHeaderProps {
   schedule: DailyPrayerSchedule | null;
+  hijriAdjustment?: number;
 }
 
-export const DateHeader: React.FC<DateHeaderProps> = ({ schedule }) => {
+export const DateHeader: React.FC<DateHeaderProps> = ({ schedule, hijriAdjustment = 0 }) => {
   if (!schedule) return null;
+
+  // Without a correction keep the provider label; with one, recompute so it matches Ramadan mode.
+  const hijriLabel = hijriAdjustment
+    ? formatHijriDate(
+        zonedTimeToUtc(normalizeScheduleDate(schedule.date), '12:00', schedule.timezone),
+        schedule.timezone,
+        hijriAdjustment
+      )
+    : schedule.hijriDate.formatted;
 
   return (
     <div
@@ -33,7 +46,7 @@ export const DateHeader: React.FC<DateHeaderProps> = ({ schedule }) => {
           data-testid="hijri-date"
         >
           <Moon className="h-3.5 w-3.5 shrink-0 text-gold-500" aria-hidden="true" />
-          <span className="truncate">{schedule.hijriDate.formatted}</span>
+          <span className="truncate">{hijriLabel}</span>
         </p>
       </div>
     </div>

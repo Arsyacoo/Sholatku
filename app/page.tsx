@@ -104,7 +104,7 @@ export default function HomePage() {
 
         {/* Date Display */}
         <div className="mt-4 sm:mt-6">
-          <DateHeader schedule={schedule} />
+          <DateHeader schedule={schedule} hijriAdjustment={ramadanPreferences.hijriAdjustment} />
         </div>
 
         {/* Next Prayer Hero Card */}

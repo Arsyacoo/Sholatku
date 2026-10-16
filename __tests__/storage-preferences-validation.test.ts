@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  getRamadanPreferences,
   getSavedLocation,
   getSavedSettings,
 } from '@/lib/storage/preferences';
@@ -22,6 +23,14 @@ beforeEach(() => {
 });
 
 describe('persisted preference validation', () => {
+  it('keeps only a supported Hijri adjustment', () => {
+    expect(getRamadanPreferences().hijriAdjustment).toBe(0);
+    storage.sholatku_ramadan_preferences_v1 = JSON.stringify({ hijriAdjustment: -1 });
+    expect(getRamadanPreferences().hijriAdjustment).toBe(-1);
+    storage.sholatku_ramadan_preferences_v1 = JSON.stringify({ hijriAdjustment: 5 });
+    expect(getRamadanPreferences().hijriAdjustment).toBe(0);
+  });
+
   it('falls back safely for corrupt and invalid location/settings', () => {
     storage.sholatku_user_location_v1 = JSON.stringify({ latitude: 'hello', longitude: 999 });
     storage.sholatku_user_settings_v1 = JSON.stringify({ method: '999', madhab: 'invalid', adjustments: { fajr: NaN }, theme: 'nope' });

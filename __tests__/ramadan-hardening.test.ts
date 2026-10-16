@@ -66,6 +66,7 @@ describe('Ramadan preferences and schedule hardening', () => {
       mode: 'enabled',
       imsakOffsetMinutes: 15,
       showHomeCard: false,
+      hijriAdjustment: -1,
       reminders: { imsak: { enabled: true, offsetMinutes: 0 }, maghrib: { enabled: true, offsetMinutes: 5 } },
     };
     saveRamadanPreferences(preferences);

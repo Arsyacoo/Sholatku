@@ -42,11 +42,19 @@ function getTabularHijriDate(date: Date): HijriDateParts {
   return { day: islamicDay, month: islamicMonth, year: islamicYear };
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function shiftDays(date: Date, adjustment: number): Date {
+  return adjustment ? new Date(date.getTime() + adjustment * DAY_MS) : date;
+}
+
 /**
  * Reads the device/runtime Hijri calendar without claiming an official local announcement.
  * The timezone is important: Ramadan day follows the user's local civil date.
+ * `adjustment` shifts the calculated date by whole days to follow a local announcement.
  */
-export function getHijriDate(date: Date, timeZone = 'UTC'): HijriDateParts {
+export function getHijriDate(date: Date, timeZone = 'UTC', adjustment = 0): HijriDateParts {
+  date = shiftDays(date, adjustment);
   try {
     const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
       timeZone,
@@ -78,7 +86,7 @@ function estimateGregorianYear(hijriYear: number): number {
 }
 
 /** Finds all Gregorian dates belonging to a calculated Hijri Ramadan month. */
-export function getRamadanDateRange(hijriYear: number, timeZone = 'UTC'): RamadanDateRange {
+export function getRamadanDateRange(hijriYear: number, timeZone = 'UTC', adjustment = 0): RamadanDateRange {
   const estimatedYear = estimateGregorianYear(hijriYear);
   // A Hijri year overlaps two Gregorian years. A deliberately wide window
   // keeps the lookup correct around Ramadan even when the year estimate lands
@@ -88,7 +96,7 @@ export function getRamadanDateRange(hijriYear: number, timeZone = 'UTC'): Ramada
   const dates: string[] = [];
 
   for (const cursor = new Date(start); cursor < end; cursor.setUTCDate(cursor.getUTCDate() + 1)) {
-    const hijri = getHijriDate(cursor, timeZone);
+    const hijri = getHijriDate(cursor, timeZone, adjustment);
     if (hijri.year === hijriYear && hijri.month === RAMADAN_MONTH) dates.push(formatIsoDate(cursor));
   }
 
@@ -106,7 +114,7 @@ export function getRamadanStatus(
   preference: RamadanModePreference,
   timeZone = 'UTC'
 ): RamadanStatus {
-  const hijri = getHijriDate(date, timeZone);
+  const hijri = getHijriDate(date, timeZone, preference.hijriAdjustment ?? 0);
   const calculatedRamadan = hijri.month === RAMADAN_MONTH;
 
   if (preference.mode === 'disabled') {
@@ -139,9 +147,30 @@ export function getRamadanStatus(
 }
 
 /** Returns the calculated Ramadan year currently relevant to a date (current or next). */
-export function getRelevantRamadanYear(date: Date, timeZone = 'UTC'): number {
-  const hijri = getHijriDate(date, timeZone);
+export function getRelevantRamadanYear(date: Date, timeZone = 'UTC', adjustment = 0): number {
+  const hijri = getHijriDate(date, timeZone, adjustment);
   return hijri.month >= 10 ? hijri.year + 1 : hijri.year;
 }
 
 export const RAMADAN_HIJRI_MONTH = RAMADAN_MONTH;
+
+/** Formats a date as an Indonesian Hijri label, e.g. "1 Ramadan 1447 H". */
+export function formatHijriDate(date: Date, timeZone = 'UTC', adjustment = 0): string {
+  try {
+    const parts = new Intl.DateTimeFormat('id-ID-u-ca-islamic-umalqura', {
+      timeZone,
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).formatToParts(shiftDays(date, adjustment));
+    const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value;
+    const day = value('day');
+    const month = value('month');
+    const year = value('year');
+    if (day && month && year) return `${day} ${month} ${year} H`;
+  } catch {
+    // Fall through to the numeric civil calendar below.
+  }
+  const hijri = getHijriDate(date, timeZone, adjustment);
+  return `${hijri.day}/${hijri.month} ${hijri.year} H`;
+}

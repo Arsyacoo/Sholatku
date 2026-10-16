@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { RamadanModePreference } from '@/types';
 import {
+  formatHijriDate,
   getHijriDate,
   getRamadanDateRange,
   getRamadanStatus,
@@ -53,6 +54,22 @@ describe('Ramadan calendar domain', () => {
     expect(result.year).toBeGreaterThan(1400);
     expect(result.month).toBeGreaterThanOrEqual(1);
     expect(result.month).toBeLessThanOrEqual(12);
+  });
+
+  it('shifts Ramadan by the local Hijri adjustment', () => {
+    // Umm al-Qura starts Ramadan 1447 on 18 Feb 2026; Indonesia (Kemenag) started on 19 Feb.
+    const feb18 = new Date('2026-02-18T05:00:00Z');
+    const feb19 = new Date('2026-02-19T05:00:00Z');
+    expect(getRamadanStatus(feb18, automatic, 'Asia/Jakarta').ramadanDay).toBe(1);
+
+    const indonesia = { ...automatic, hijriAdjustment: -1 as const };
+    expect(getRamadanStatus(feb18, indonesia, 'Asia/Jakarta')).toMatchObject({ isRamadan: false, hijriMonth: 8 });
+    expect(getRamadanStatus(feb19, indonesia, 'Asia/Jakarta').ramadanDay).toBe(1);
+    expect(getRamadanDateRange(1447, 'Asia/Jakarta', -1).startDate).toBe('2026-02-19');
+    expect(getRamadanDateRange(1447, 'Asia/Jakarta', 1).startDate).toBe('2026-02-17');
+
+    expect(formatHijriDate(feb18, 'Asia/Jakarta')).toBe('1 Ramadan 1447 H');
+    expect(formatHijriDate(feb18, 'Asia/Jakarta', -1)).toBe('29 Syakban 1447 H');
   });
 });
 

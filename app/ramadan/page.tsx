@@ -37,13 +37,17 @@ export default function RamadanPage() {
 
   const hijriYear = useMemo(
     () => now
-      ? getRelevantRamadanYear(now, location.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone)
+      ? getRelevantRamadanYear(
+          now,
+          location.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+          preferences.hijriAdjustment ?? 0
+        )
       : null,
-    [now, location.timezone]
+    [now, location.timezone, preferences.hijriAdjustment]
   );
   const range = useMemo(
-    () => hijriYear === null ? null : getRamadanDateRange(hijriYear, location.timezone),
-    [hijriYear, location.timezone]
+    () => hijriYear === null ? null : getRamadanDateRange(hijriYear, location.timezone, preferences.hijriAdjustment ?? 0),
+    [hijriYear, location.timezone, preferences.hijriAdjustment]
   );
 
   useEffect(() => {
@@ -124,7 +128,7 @@ export default function RamadanPage() {
             <div>
               <p className="font-semibold">Imsak dihitung {preferences.imsakOffsetMinutes} menit sebelum Subuh.</p>
               <p className="mt-1 text-xs leading-relaxed text-primary-800/80 dark:text-primary-200/80">
-                Tanggal mengikuti kalender Hijriah yang dihitung Sholatku dan dapat berbeda dari pengumuman resmi setempat.
+                Tanggal mengikuti kalender Hijriah yang dihitung Sholatku dan dapat berbeda dari pengumuman resmi setempat. Koreksi ±1 hari tersedia di Pengaturan.
               </p>
             </div>
           </div>
