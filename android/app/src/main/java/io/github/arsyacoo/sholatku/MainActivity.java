@@ -10,6 +10,7 @@ public class MainActivity extends BridgeActivity {
     protected void load() {
         registerPlugin(SholatkuReminderRecoveryPlugin.class);
         registerPlugin(SholatkuWidgetPlugin.class);
+        registerPlugin(SholatkuSettingsPlugin.class);
         super.load();
     }
 

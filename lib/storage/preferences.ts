@@ -179,6 +179,15 @@ export function getDefaultPrayerReminderSettings(): PrayerReminderSettings {
   }, {} as PrayerReminderSettings);
 }
 
+/** Turns on all five prayers at prayer time, but only when the user has not chosen any reminder yet. */
+export function withDefaultPrayerReminders(current: PrayerReminderSettings): PrayerReminderSettings {
+  if (PRAYER_REMINDER_PRAYERS.some((prayer) => current[prayer].enabled)) return current;
+  return PRAYER_REMINDER_PRAYERS.reduce((settings, prayer) => {
+    settings[prayer] = { enabled: true, offsetMinutes: 0 };
+    return settings;
+  }, {} as PrayerReminderSettings);
+}
+
 function isReminderOffset(value: unknown): value is PrayerReminderOffset {
   return typeof value === 'number' && REMINDER_OFFSETS.includes(value as PrayerReminderOffset);
 }

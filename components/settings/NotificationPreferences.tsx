@@ -25,6 +25,7 @@ import {
 
 declare const __SHOLATKU_NATIVE_REMINDER_QA__: boolean | undefined;
 import { getAppRuntime } from '@/lib/platform/runtime';
+import { openAppSettings } from '@/lib/platform/app-settings';
 
 interface NotificationPreferencesProps {
   value: PrayerReminderSettings;
@@ -442,6 +443,32 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
           <p className="px-4 pb-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300" role="status" aria-live="polite">
             {testMessage}
           </p>
+        )}
+
+        {isNativeAndroid && (
+          <details className="group border-t border-surface-100 px-4 py-3 dark:border-surface-800">
+            <summary className="cursor-pointer text-sm font-semibold text-slate-800 marker:text-slate-400 dark:text-slate-200">
+              Pengingat tidak muncul?
+            </summary>
+            <div className="mt-2 space-y-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+              <p>Beberapa ponsel menghentikan aplikasi untuk menghemat baterai. Buka pengaturan aplikasi Sholatku, lalu:</p>
+              <ul className="list-disc space-y-1 pl-4">
+                <li>
+                  <span className="font-semibold">Samsung:</span> Baterai → pilih &ldquo;Tidak dibatasi&rdquo;. Di Izin
+                  aplikasi, matikan &ldquo;Kelola aplikasi jika tidak digunakan&rdquo;. Pastikan Sholatku tidak ada di
+                  daftar &ldquo;Aplikasi tidur&rdquo;.
+                </li>
+                <li>
+                  <span className="font-semibold">Xiaomi, Oppo, Vivo, Realme:</span> aktifkan &ldquo;Mulai
+                  otomatis&rdquo; / Autostart dan matikan penghemat baterai untuk Sholatku.
+                </li>
+                <li>Jangan tutup paksa Sholatku dari daftar aplikasi terbaru; Android menahan pengingat sampai aplikasi dibuka lagi.</li>
+              </ul>
+              <Button variant="outline" size="sm" onClick={() => void openAppSettings()}>
+                Buka pengaturan aplikasi
+              </Button>
+            </div>
+          </details>
         )}
 
         <p className="flex items-start gap-2 border-t border-surface-100 px-4 py-3 text-xs leading-relaxed text-slate-500 dark:border-surface-800 dark:text-slate-400">
