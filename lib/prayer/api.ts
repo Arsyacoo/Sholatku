@@ -1,5 +1,5 @@
 import { DailyPrayerSchedule, MonthlyPrayerItem, UserLocation, UserSettings } from '@/types';
-import { normalizeAlAdhanDay, normalizeAlAdhanMonth } from './normalize';
+import { applyPrayerAdjustments, normalizeAlAdhanDay, normalizeAlAdhanMonth } from './normalize';
 import { calculateOfflinePrayers } from './calculation';
 import { formatDateInTimeZone, formatIndonesianDateInTimeZone, getApproximateHijriDate, getTimeZoneOffsetMinutes, normalizeTimeZone, zonedTimeToUtc } from '../time/timezone';
 import {
@@ -82,7 +82,10 @@ export async function getDailyPrayerTimes(
   throwIfAborted(options.signal);
   const scheduleInstant = zonedTimeToUtc(scheduleDate, '12:00', timezone);
   const timezoneOffset = getTimeZoneOffsetMinutes(scheduleInstant, timezone) / 60;
-  const calculated = calculateOfflinePrayers(scheduleInstant, location.latitude, location.longitude, timezoneOffset);
+  const calculated = applyPrayerAdjustments(
+    calculateOfflinePrayers(scheduleInstant, location.latitude, location.longitude, timezoneOffset),
+    settings.adjustments
+  );
   const hijri = getApproximateHijriDate(scheduleInstant);
 
   return {
@@ -172,7 +175,10 @@ export async function getMonthlyPrayerTimes(
 
   for (let d = 1; d <= daysInMonth; d++) {
     const currentDate = new Date(Date.UTC(year, month - 1, d, 12));
-    const timings = calculateOfflinePrayers(currentDate, location.latitude, location.longitude, offset);
+    const timings = applyPrayerAdjustments(
+      calculateOfflinePrayers(currentDate, location.latitude, location.longitude, offset),
+      settings.adjustments
+    );
     const hijri = getApproximateHijriDate(currentDate);
 
     list.push({
