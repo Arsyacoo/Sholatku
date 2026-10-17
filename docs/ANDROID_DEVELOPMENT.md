@@ -232,8 +232,8 @@ API 36 Doze QA showed a normal inexact alarm remained deferred after roughly one
 
 The final permission policy is:
 
-- `INTERNET`, `POST_NOTIFICATIONS`, `RECEIVE_BOOT_COMPLETED`, `SCHEDULE_EXACT_ALARM` (user-granted), and plugin-provided `WAKE_LOCK` are expected.
-- `USE_EXACT_ALARM`, foreground-service, battery-optimization, fine-location, and background-location permissions remain excluded.
+- `INTERNET`, `POST_NOTIFICATIONS`, `RECEIVE_BOOT_COMPLETED`, `SCHEDULE_EXACT_ALARM` (user-granted), foreground `ACCESS_COARSE_LOCATION` / `ACCESS_FINE_LOCATION` (the GPS button; Capacitor's WebView requests both, and Android 12+ users may pick approximate), and plugin-provided `WAKE_LOCK` are expected.
+- `USE_EXACT_ALARM`, foreground-service, battery-optimization, and background-location permissions remain excluded.
 
 ## Home-screen widgets
 
