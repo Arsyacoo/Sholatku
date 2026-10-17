@@ -48,6 +48,25 @@ final class PrayerWidgetSchedule {
         this.days = Collections.unmodifiableList(days);
     }
 
+    static final int DOT_PASSED = 0;
+    static final int DOT_NEXT = 1;
+    static final int DOT_UPCOMING = 2;
+
+    /** Timeline dot state for prayer {@code index} when {@code next} is the upcoming prayer. */
+    static int dotState(int index, int next) {
+        if (index < next) return DOT_PASSED;
+        return index == next ? DOT_NEXT : DOT_UPCOMING;
+    }
+
+    /** The line is lit from the first dot up to the next prayer; nothing extends past the outer dots. */
+    static boolean isLeftSegmentLit(int index, int next) {
+        return index > 0 && index <= next;
+    }
+
+    static boolean isRightSegmentLit(int index, int next) {
+        return index < PRAYER_COUNT - 1 && index < next;
+    }
+
     /** First prayer still ahead of {@code nowMillis}, or null when the stored schedule has run out. */
     Selection select(long nowMillis) {
         for (Day day : days) {

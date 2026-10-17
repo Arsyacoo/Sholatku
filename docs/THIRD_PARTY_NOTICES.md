@@ -30,5 +30,3 @@ The app must not imply that a provider endorses Sholatku.
 - `android/app/src/main/res/font/plus_jakarta_sans_bold.ttf`: Plus Jakarta Sans Bold, Copyright 2020 The Plus Jakarta
   Sans Project Authors (https://github.com/tokotype/PlusJakartaSans), SIL Open Font License 1.1. Used by the home-screen
   widgets.
-- `android/app/src/main/res/font/amiri_regular.ttf`: Amiri Regular, Copyright 2010-2022 The Amiri Project Authors
-  (https://github.com/aliftype/amiri), SIL Open Font License 1.1. Used for Arabic prayer names in the widgets.

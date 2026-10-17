@@ -2,31 +2,21 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     style="@style/WidgetRoot"
-    android:paddingHorizontal="14dp"
+    android:paddingHorizontal="16dp"
     android:paddingVertical="8dp">
 
-    <!-- 2x1 shows the name and countdown only; Arabic and the start time live in the wider sizes. -->
-    <LinearLayout
+    <ImageView
+        android:id="@+id/widget_next_label"
+        style="@style/WidgetDisplayImage"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-        <ImageView style="@style/WidgetIcon" android:src="@drawable/ic_widget_moon" />
-        <ImageView
-            android:id="@+id/widget_next_name"
-            style="@style/WidgetDisplayImage"
-            android:layout_width="0dp"
-            android:layout_height="20dp"
-            android:layout_marginStart="6dp"
-            android:layout_weight="1" />
-    </LinearLayout>
+        android:layout_height="18dp" />
 
     <!-- Display numerals in dp: on a 2x1 a scaled-up countdown would lose its seconds. -->
     <Chronometer
         android:id="@+id/widget_countdown"
         style="@style/WidgetCountdown"
-        android:layout_marginTop="3dp"
-        android:textSize="22dp" />
+        android:layout_marginTop="2dp"
+        android:textSize="24dp" />
 
     <TextView android:id="@+id/widget_message" style="@style/WidgetMessage" />
 </LinearLayout>
