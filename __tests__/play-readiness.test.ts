@@ -16,8 +16,9 @@ describe('Play readiness guardrails', () => {
   it('keeps the Android manifest privacy and permission boundaries explicit', () => {
     const manifest = read('android/app/src/main/AndroidManifest.xml');
     expect(manifest).toContain('android:usesCleartextTraffic="false"');
-    expect(manifest).toContain('android.permission.SCHEDULE_EXACT_ALARM');
-    expect(manifest).toContain('tools:node="remove"');
+    // Exact alarms are user-granted so prayer reminders are not delayed by Doze.
+    expect(manifest).toContain('<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />');
+    expect(manifest).toMatch(/LocalNotificationRestoreReceiver"\s+tools:node="remove"/);
     expect(manifest).not.toContain('USE_EXACT_ALARM');
     expect(manifest).not.toContain('REQUEST_IGNORE_BATTERY_OPTIMIZATIONS');
     expect(manifest).not.toContain('ACCESS_BACKGROUND_LOCATION');

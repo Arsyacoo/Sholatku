@@ -118,6 +118,24 @@ export async function requestNotificationPermission(): Promise<NormalizedNotific
   return normalizePermissionState(status.display);
 }
 
+export type ExactAlarmPermissionState = 'granted' | 'denied' | 'unsupported';
+
+/** Exact alarms ("Alarms & reminders") keep Doze from delaying reminders by minutes. Always granted below Android 12. */
+export async function getExactAlarmPermissionState(): Promise<ExactAlarmPermissionState> {
+  if (!isNativeRuntime()) return 'unsupported';
+  const { LocalNotifications } = await getPlugin();
+  const status = await LocalNotifications.checkExactNotificationSetting();
+  return status.exact_alarm === 'granted' ? 'granted' : 'denied';
+}
+
+/** Opens the system "Alarms & reminders" screen; resolves with the state after the user returns. */
+export async function requestExactAlarmPermission(): Promise<ExactAlarmPermissionState> {
+  if (!isNativeRuntime()) return 'unsupported';
+  const { LocalNotifications } = await getPlugin();
+  const status = await LocalNotifications.changeExactNotificationSetting();
+  return status.exact_alarm === 'granted' ? 'granted' : 'denied';
+}
+
 export async function ensureReminderNotificationChannel(): Promise<void> {
   if (!isNativeRuntime()) return;
   if (!reminderChannelPromise) {
@@ -143,6 +161,9 @@ export async function scheduleNativeNotifications(
 
   const { LocalNotifications } = await getPlugin();
   await ensureReminderNotificationChannel();
+  // Ask for exact delivery only when already allowed: with isExactNotification true and no permission,
+  // the plugin opens the system settings screen, which must never happen during a background sync.
+  const exact = (await getExactAlarmPermissionState()) === 'granted';
 
   return LocalNotifications.schedule({
     notifications: notifications.map((notification) => ({
@@ -152,7 +173,7 @@ export async function scheduleNativeNotifications(
       channelId: getNativeReminderChannelId(notification.sound),
       autoCancel: true,
       foreground: true,
-      isExactNotification: false,
+      isExactNotification: exact,
       schedule: { at: notification.at, allowWhileIdle: notification.allowWhileIdle },
       extra: notification.extra,
     })),
