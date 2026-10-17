@@ -2,13 +2,13 @@
 
 ## Current candidate
 
-- `versionName`: `0.2.2`
-- `versionCode`: `4`
+- `versionName`: `0.2.3`
+- `versionCode`: `5`
 - Application ID: `io.github.arsyacoo.sholatku`
 
 Published direct previews, none of whose codes may be reused: `0.1.0` / `1` (`v0.1.0-preview.1`), `0.2.0` / `2`
-(`v0.2.0-preview.2`) and `0.2.1` / `3` (`v0.2.1-preview.3`). `0.2.2` / `4` is Direct Preview 4 (`v0.2.2-preview.4`);
-see `docs/releases/github-direct-preview-0.2.2.md`.
+(`v0.2.0-preview.2`), `0.2.1` / `3` (`v0.2.1-preview.3`) and `0.2.2` / `4` (`v0.2.2-preview.4`). `0.2.3` / `5` is Direct
+Preview 5 (`v0.2.3-preview.5`); see `docs/releases/github-direct-preview-0.2.3.md`.
 
 ## Rules
 

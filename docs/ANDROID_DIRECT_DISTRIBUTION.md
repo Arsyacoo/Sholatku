@@ -7,7 +7,7 @@ stable release.
 
 - Application ID: `io.github.arsyacoo.sholatku`
 - App label: `Sholatku`
-- Version: `0.2.2` (`versionCode=4`), Direct Preview 4 (`v0.2.2-preview.4`); earlier previews were `0.2.1` (`3`), `0.2.0` (`2`) and `0.1.0` (`1`)
+- Version: `0.2.3` (`versionCode=5`), Direct Preview 5 (`v0.2.3-preview.5`); earlier previews were `0.2.2` (`4`), `0.2.1` (`3`), `0.2.0` (`2`) and `0.1.0` (`1`)
 - Minimum Android version: Android 7.0 (`minSdkVersion=24`)
 - Build mode: `npm run build:mobile:direct`
 - Build channel: `direct-preview`
