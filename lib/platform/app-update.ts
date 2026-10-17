@@ -16,6 +16,8 @@ const DISMISSED_KEY = 'sholatku_update_dismissed_v1';
 
 /** GitHub allows 60 unauthenticated API calls per hour per IP; one check per 12 hours is plenty. */
 export const UPDATE_CHECK_INTERVAL_MS = 12 * 60 * 60 * 1000;
+/** Repeated taps on "Cek pembaruan" within this window reuse the last result instead of calling GitHub again. */
+export const MANUAL_CHECK_COOLDOWN_MS = 60 * 1000;
 
 export interface AvailableUpdate {
   version: string;
@@ -27,11 +29,10 @@ export interface AvailableUpdate {
 export interface AppUpdateStatus {
   currentVersion: string;
   update: AvailableUpdate | null;
-}
-
-interface CachedCheck extends AppUpdateStatus {
   checkedAt: number;
 }
+
+type CachedCheck = AppUpdateStatus;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -111,21 +112,17 @@ export async function checkForAppUpdate(
   const now = options.now ?? Date.now();
   const { version: currentVersion } = await App.getInfo();
   const cached = readCache();
-  if (
-    !options.force &&
-    cached &&
-    cached.currentVersion === currentVersion &&
-    now - cached.checkedAt < UPDATE_CHECK_INTERVAL_MS
-  ) {
-    return { currentVersion, update: cached.update };
+  const maxAge = options.force ? MANUAL_CHECK_COOLDOWN_MS : UPDATE_CHECK_INTERVAL_MS;
+  if (cached && cached.currentVersion === currentVersion && now - cached.checkedAt < maxAge) {
+    return { currentVersion, update: cached.update, checkedAt: cached.checkedAt };
   }
 
   const releases = await fetchJsonWithTimeout<unknown>(RELEASES_API_URL, {
     timeoutMs: NETWORK_TIMEOUTS.appUpdate,
     headers: { Accept: 'application/vnd.github+json' },
   });
-  const status = { currentVersion, update: findAvailableUpdate(releases, currentVersion) };
-  writeCache({ ...status, checkedAt: now });
+  const status = { currentVersion, update: findAvailableUpdate(releases, currentVersion), checkedAt: now };
+  writeCache(status);
   return status;
 }
 
