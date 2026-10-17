@@ -21,6 +21,9 @@ describe('Play readiness guardrails', () => {
     expect(manifest).toMatch(/LocalNotificationRestoreReceiver"\s+tools:node="remove"/);
     expect(manifest).not.toContain('USE_EXACT_ALARM');
     expect(manifest).not.toContain('REQUEST_IGNORE_BATTERY_OPTIMIZATIONS');
+    // Foreground location powers the GPS button; background location stays out.
+    expect(manifest).toContain('android.permission.ACCESS_COARSE_LOCATION');
+    expect(manifest).toContain('android.permission.ACCESS_FINE_LOCATION');
     expect(manifest).not.toContain('ACCESS_BACKGROUND_LOCATION');
   });
 

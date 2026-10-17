@@ -69,46 +69,62 @@ export function useLocation() {
     setErrorMessage(null);
     const request = reverseRequestsRef.current!.begin();
 
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const { latitude, longitude } = pos.coords;
-          const detectedLoc = await reverseGeocode(latitude, longitude, { signal: request.signal });
-          if (!request.isCurrent()) return;
-          updateLocation(detectedLoc);
-          setStatus('granted');
-        } catch (err: unknown) {
-          if (!request.isCurrent() || isNetworkRequestError(err, 'aborted')) return;
-          console.error('Error reverse geocoding:', err);
-          setStatus('error');
-          setErrorMessage('Gagal mengenali nama wilayah koordinat Anda.');
-        } finally {
-          reverseRequestsRef.current?.finish(request);
-        }
-      },
-      (error) => {
+    const handlePosition = async (pos: GeolocationPosition) => {
+      try {
+        const { latitude, longitude } = pos.coords;
+        const detectedLoc = await reverseGeocode(latitude, longitude, { signal: request.signal });
         if (!request.isCurrent()) return;
-        if (error.code === error.PERMISSION_DENIED) {
-          setStatus('denied');
-          setErrorMessage('Izin lokasi ditolak. Anda dapat memilih kota secara manual.');
-        } else if (error.code === error.POSITION_UNAVAILABLE) {
-          setStatus('error');
-          setErrorMessage('Sinyal lokasi tidak tersedia saat ini.');
-        } else if (error.code === error.TIMEOUT) {
-          setStatus('error');
-          setErrorMessage('Permintaan lokasi melebihi batas waktu (timeout).');
-        } else {
-          setStatus('error');
-          setErrorMessage('Terjadi kendala saat membaca lokasi perangkat.');
-        }
+        updateLocation(detectedLoc);
+        setStatus('granted');
+      } catch (err: unknown) {
+        if (!request.isCurrent() || isNetworkRequestError(err, 'aborted')) return;
+        console.error('Error reverse geocoding:', err);
+        setStatus('error');
+        setErrorMessage('Gagal mengenali nama wilayah koordinat Anda.');
+      } finally {
         reverseRequestsRef.current?.finish(request);
-      },
-      {
-        enableHighAccuracy: false,
-        timeout: 10000,
-        maximumAge: 300000, // 5 mins cache
       }
-    );
+    };
+
+    const handleError = (error: GeolocationPositionError) => {
+      if (!request.isCurrent()) return;
+      if (error.code === error.PERMISSION_DENIED) {
+        setStatus('denied');
+        setErrorMessage('Izin lokasi ditolak. Anda dapat memilih kota secara manual.');
+      } else if (error.code === error.POSITION_UNAVAILABLE) {
+        setStatus('error');
+        setErrorMessage('Sinyal lokasi tidak tersedia saat ini.');
+      } else if (error.code === error.TIMEOUT) {
+        setStatus('error');
+        setErrorMessage('Permintaan lokasi melebihi batas waktu (timeout).');
+      } else {
+        setStatus('error');
+        setErrorMessage('Terjadi kendala saat membaca lokasi perangkat.');
+      }
+      reverseRequestsRef.current?.finish(request);
+    };
+
+    // City-level accuracy is enough, so ask the network provider first. Some phones have it off or slow;
+    // then retry once with GPS before giving up. A denied permission is never retried.
+    const attempt = (highAccuracy: boolean) => {
+      navigator.geolocation.getCurrentPosition(
+        handlePosition,
+        (error) => {
+          const retryable = error.code === error.TIMEOUT || error.code === error.POSITION_UNAVAILABLE;
+          if (!highAccuracy && retryable && request.isCurrent()) {
+            attempt(true);
+            return;
+          }
+          handleError(error);
+        },
+        {
+          enableHighAccuracy: highAccuracy,
+          timeout: highAccuracy ? 15000 : 10000,
+          maximumAge: 300000, // 5 mins cache
+        }
+      );
+    };
+    attempt(false);
   }, [updateLocation]);
 
   useEffect(() => () => reverseRequestsRef.current?.cancel(), []);
