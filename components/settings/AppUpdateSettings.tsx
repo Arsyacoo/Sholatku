@@ -6,6 +6,13 @@ import { checkForAppUpdate, type AppUpdateStatus } from '@/lib/platform/app-upda
 import { isNativeRuntime } from '@/lib/platform/runtime';
 import { Button } from '../ui/Button';
 
+/** GitHub often answers in ~200 ms; keep the spinner up long enough to be seen. */
+const MIN_CHECK_FEEDBACK_MS = 800;
+
+function formatCheckedAt(checkedAt: number): string {
+  return new Date(checkedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+}
+
 /** Android only: shows the installed version and a manual "check for updates" against GitHub Releases. */
 export const AppUpdateSettings: React.FC = () => {
   const [isNative, setIsNative] = useState(false);
@@ -25,7 +32,11 @@ export const AppUpdateSettings: React.FC = () => {
     setIsChecking(true);
     setError(false);
     try {
-      setStatus(await checkForAppUpdate({ force: true }));
+      const [next] = await Promise.all([
+        checkForAppUpdate({ force: true }),
+        new Promise((resolve) => setTimeout(resolve, MIN_CHECK_FEEDBACK_MS)),
+      ]);
+      setStatus(next);
     } catch {
       setError(true);
     } finally {
@@ -44,12 +55,14 @@ export const AppUpdateSettings: React.FC = () => {
             Versi aplikasi {status?.currentVersion ?? ''}
           </p>
           <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400" aria-live="polite">
-            {error
+            {isChecking
+              ? 'Memeriksa pembaruan...'
+              : error
               ? 'Tidak dapat memeriksa pembaruan. Periksa koneksi lalu coba lagi.'
               : update
               ? `Versi ${update.version} tersedia. Unduh lalu pilih Update; data tetap tersimpan.`
               : status
-              ? 'Anda memakai versi terbaru.'
+              ? `Anda memakai versi terbaru. Dicek pukul ${formatCheckedAt(status.checkedAt)}.`
               : 'Memeriksa pembaruan...'}
           </p>
         </div>
@@ -63,8 +76,8 @@ export const AppUpdateSettings: React.FC = () => {
             </a>
           )}
           <Button variant="outline" size="sm" onClick={handleCheck} isLoading={isChecking}>
-            <RefreshCw className="h-3.5 w-3.5" />
-            Cek pembaruan
+            {!isChecking && <RefreshCw className="h-3.5 w-3.5" />}
+            {isChecking ? 'Memeriksa...' : 'Cek pembaruan'}
           </Button>
         </div>
       </div>

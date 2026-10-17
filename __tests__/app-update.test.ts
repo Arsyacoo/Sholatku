@@ -10,6 +10,7 @@ import {
   findAvailableUpdate,
   isUpdateDismissed,
   parseReleaseVersion,
+  MANUAL_CHECK_COOLDOWN_MS,
   UPDATE_CHECK_INTERVAL_MS,
 } from '@/lib/platform/app-update';
 
@@ -86,8 +87,14 @@ describe('update check on Android', () => {
     await checkForAppUpdate({ now: 1_000 + UPDATE_CHECK_INTERVAL_MS - 1 });
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
-    await checkForAppUpdate({ now: 2_000, force: true });
-    await checkForAppUpdate({ now: 2_000 + UPDATE_CHECK_INTERVAL_MS + 1 });
+    // Spamming "Cek pembaruan" reuses the result for a minute.
+    const spam = await checkForAppUpdate({ now: 1_000 + MANUAL_CHECK_COOLDOWN_MS - 1, force: true });
+    expect(spam?.checkedAt).toBe(1_000);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    const forced = MANUAL_CHECK_COOLDOWN_MS + 1_000;
+    expect((await checkForAppUpdate({ now: forced, force: true }))?.checkedAt).toBe(forced);
+    await checkForAppUpdate({ now: forced + UPDATE_CHECK_INTERVAL_MS + 1 });
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
