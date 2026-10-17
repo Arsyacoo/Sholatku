@@ -1,5 +1,6 @@
 export type CalculationMethodId = 
   | '20' // Kemenag - Kementerian Agama Republik Indonesia (SIHAT)
+  | 'muhammadiyah' // Majelis Tarjih Muhammadiyah (Fajr 18°, Isha 18°); AlAdhan custom method
   | '3'  // Muslim World League (MWL)
   | '2'  // ISNA (Islamic Society of North America)
   | '4'  // Umm Al-Qura University, Makkah
