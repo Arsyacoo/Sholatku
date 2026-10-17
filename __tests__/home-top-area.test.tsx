@@ -66,7 +66,8 @@ describe('home top area', () => {
     expect(html).toContain('data-testid="gregorian-date"');
     expect(html).toContain('data-testid="hijri-date"');
     expect(html).toContain('Rabu, 9 September 2026');
-    expect(html).toContain('27 Rabi');
+    // The provider label ("27 Rabi' al-awwal") is replaced by the app's own month names.
+    expect(html).toContain('27 Rabiul Awwal 1448 H');
     expect(html.indexOf('data-testid="gregorian-date"')).toBeLessThan(html.indexOf('data-testid="hijri-date"'));
   });
 });

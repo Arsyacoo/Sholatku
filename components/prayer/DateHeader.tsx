@@ -15,14 +15,13 @@ interface DateHeaderProps {
 export const DateHeader: React.FC<DateHeaderProps> = ({ schedule, hijriAdjustment = 0 }) => {
   if (!schedule) return null;
 
-  // Without a correction keep the provider label; with one, recompute so it matches Ramadan mode.
-  const hijriLabel = hijriAdjustment
-    ? formatHijriDate(
-        zonedTimeToUtc(normalizeScheduleDate(schedule.date), '12:00', schedule.timezone),
-        schedule.timezone,
-        hijriAdjustment
-      )
-    : schedule.hijriDate.formatted;
+  // Always derive the label from the same calendar and month names as Ramadan mode and the widgets;
+  // provider labels use their own transliteration (e.g. "Jumādá al-ūlá").
+  const hijriLabel = formatHijriDate(
+    zonedTimeToUtc(normalizeScheduleDate(schedule.date), '12:00', schedule.timezone),
+    schedule.timezone,
+    hijriAdjustment
+  );
 
   return (
     <div
