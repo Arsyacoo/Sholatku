@@ -137,8 +137,10 @@ final class PrayerWidgetUpdater {
             views.setTextViewText(LABEL_IDS[i], day.names[i]);
             views.setTextColor(LABEL_IDS[i], i == next ? text : passed ? muted : secondary);
             if (wide) {
-                int stateColor = i == next ? gold : passed ? muted : secondary;
-                views.setInt(ICON_IDS[i], "setColorFilter", i == next ? gold : passed ? muted : secondary);
+                // The pill already marks the next prayer, so every other column stays quiet, passed or not.
+                int stateColor = i == next ? gold : muted;
+                views.setTextColor(LABEL_IDS[i], i == next ? text : muted);
+                views.setInt(ICON_IDS[i], "setColorFilter", stateColor);
                 views.setImageViewBitmap(TIME_IMAGE_IDS[i], WidgetTextRenderer.render(
                     context, day.times[i], R.font.plus_jakarta_sans_bold, 13f, stateColor
                 ));
