@@ -36,6 +36,13 @@ final class PrayerWidgetUpdater {
     private static final int[] COLUMN_IDS = {
         R.id.widget_col_0, R.id.widget_col_1, R.id.widget_col_2, R.id.widget_col_3, R.id.widget_col_4,
     };
+    private static final int[] ICON_IDS = {
+        R.id.widget_icon_0, R.id.widget_icon_1, R.id.widget_icon_2, R.id.widget_icon_3, R.id.widget_icon_4,
+    };
+    private static final int[] TIME_IMAGE_IDS = {
+        R.id.widget_time_img_0, R.id.widget_time_img_1, R.id.widget_time_img_2, R.id.widget_time_img_3,
+        R.id.widget_time_img_4,
+    };
     private static final int[] DOT_IDS = {
         R.id.widget_dot_0, R.id.widget_dot_1, R.id.widget_dot_2, R.id.widget_dot_3, R.id.widget_dot_4,
     };
@@ -107,7 +114,8 @@ final class PrayerWidgetUpdater {
         views.setViewVisibility(R.id.widget_schedule, View.VISIBLE);
         views.setViewVisibility(R.id.widget_countdown, View.VISIBLE);
         // On 4x1 the countdown sits under the name, where a bare "13:49" would read as a prayer time.
-        String countdownFormat = LAYOUTS[size] == R.layout.widget_prayer_wide ? "−%s" : null;
+        boolean wide = LAYOUTS[size] == R.layout.widget_prayer_wide;
+        String countdownFormat = wide ? "−%s" : null;
         views.setChronometer(
             R.id.widget_countdown, SystemClock.elapsedRealtime() + (selection.nextAt() - now), countdownFormat, true
         );
@@ -128,6 +136,13 @@ final class PrayerWidgetUpdater {
             views.setTextColor(TIME_IDS[i], i == next ? gold : passed ? muted : secondary);
             views.setTextViewText(LABEL_IDS[i], day.names[i]);
             views.setTextColor(LABEL_IDS[i], i == next ? text : passed ? muted : secondary);
+            if (wide) {
+                int stateColor = i == next ? gold : passed ? muted : text;
+                views.setInt(ICON_IDS[i], "setColorFilter", i == next ? gold : passed ? muted : secondary);
+                views.setImageViewBitmap(TIME_IMAGE_IDS[i], WidgetTextRenderer.render(
+                    context, day.times[i], R.font.plus_jakarta_sans_bold, 13f, stateColor
+                ));
+            }
             views.setInt(
                 COLUMN_IDS[i], "setBackgroundResource", i == next ? R.drawable.widget_pill_next : R.color.widget_transparent
             );
