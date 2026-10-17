@@ -19,6 +19,22 @@ export function cleanTimeString(rawTime: string): string {
 /**
  * Applies minute adjustment offset to a "HH:mm" time string.
  */
+type AdjustableTimings = Record<keyof PrayerAdjustment, string>;
+
+/** Applies the user's per-prayer minute corrections; every schedule source (API or offline) must go through this. */
+export function applyPrayerAdjustments<T extends AdjustableTimings>(timings: T, adjustments?: PrayerAdjustment): T {
+  if (!adjustments) return timings;
+  return {
+    ...timings,
+    fajr: applyTimeOffset(timings.fajr, adjustments.fajr || 0),
+    sunrise: applyTimeOffset(timings.sunrise, adjustments.sunrise || 0),
+    dhuhr: applyTimeOffset(timings.dhuhr, adjustments.dhuhr || 0),
+    asr: applyTimeOffset(timings.asr, adjustments.asr || 0),
+    maghrib: applyTimeOffset(timings.maghrib, adjustments.maghrib || 0),
+    isha: applyTimeOffset(timings.isha, adjustments.isha || 0),
+  };
+}
+
 export function applyTimeOffset(timeStr: string, offsetMinutes: number): string {
   if (!offsetMinutes) return timeStr;
   const [h, m] = timeStr.split(':').map(Number);
@@ -53,15 +69,7 @@ export function normalizeAlAdhanDay(
     midnight: cleanTimeString(timings.Midnight || timings.midnight),
   };
 
-  // Apply user-defined minute adjustments if provided
-  if (adjustments) {
-    cleanTimings.fajr = applyTimeOffset(cleanTimings.fajr, adjustments.fajr || 0);
-    cleanTimings.sunrise = applyTimeOffset(cleanTimings.sunrise, adjustments.sunrise || 0);
-    cleanTimings.dhuhr = applyTimeOffset(cleanTimings.dhuhr, adjustments.dhuhr || 0);
-    cleanTimings.asr = applyTimeOffset(cleanTimings.asr, adjustments.asr || 0);
-    cleanTimings.maghrib = applyTimeOffset(cleanTimings.maghrib, adjustments.maghrib || 0);
-    cleanTimings.isha = applyTimeOffset(cleanTimings.isha, adjustments.isha || 0);
-  }
+  Object.assign(cleanTimings, applyPrayerAdjustments(cleanTimings, adjustments));
 
   const gregorian = dateMeta.gregorian || {};
   const hijri = dateMeta.hijri || {};
