@@ -9,6 +9,7 @@ import { CitySearchModal } from '@/components/location/CitySearchModal';
 import { LocationPermissionNotice } from '@/components/location/LocationPermissionNotice';
 import { DateHeader } from '@/components/prayer/DateHeader';
 import { AppUpdateBanner } from '@/components/layout/AppUpdateBanner';
+import { AndroidOnboarding } from '@/components/platform/AndroidOnboarding';
 import { NextPrayerHero } from '@/components/prayer/NextPrayerHero';
 import { PrayerScheduleList } from '@/components/prayer/PrayerScheduleList';
 import { useLocation } from '@/hooks/useLocation';
@@ -94,6 +95,14 @@ export default function HomePage() {
         <div className="mt-4 empty:hidden sm:mt-6">
           <AppUpdateBanner />
         </div>
+        <AndroidOnboarding
+          locationStatus={geoStatus}
+          onDetectLocation={detectLocation}
+          onPreferencesChanged={() => {
+            setSettings(getSavedSettings());
+            setReminderSettings(getPrayerReminderSettings());
+          }}
+        />
 
         {/* Location Permission / Error Alert (if any) */}
         {!dismissNotice && (

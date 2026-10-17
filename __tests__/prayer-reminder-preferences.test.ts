@@ -5,6 +5,7 @@ import {
   resetPrayerReminderSettings,
   savePrayerReminderSettings,
   updatePrayerReminder,
+  withDefaultPrayerReminders,
 } from '@/lib/storage/preferences';
 import { getPrayerReminderCapabilities } from '@/lib/prayer/reminders/capabilities';
 import { PRAYER_REMINDER_PRAYERS, PrayerReminderOffset } from '@/types';
@@ -62,6 +63,18 @@ describe('Prayer reminder preferences', () => {
     updatePrayerReminder('isha', { enabled: true, offsetMinutes: 30 });
     expect(resetPrayerReminderSettings().isha.enabled).toBe(false);
     expect(getPrayerReminderSettings().isha.offsetMinutes).toBe(0);
+  });
+});
+
+describe('Onboarding reminder defaults', () => {
+  it('enables all five prayers at prayer time only when nothing was chosen yet', () => {
+    const enabled = withDefaultPrayerReminders(getDefaultPrayerReminderSettings());
+    for (const prayer of PRAYER_REMINDER_PRAYERS) {
+      expect(enabled[prayer]).toEqual({ enabled: true, offsetMinutes: 0 });
+    }
+
+    const custom = { ...getDefaultPrayerReminderSettings(), fajr: { enabled: true, offsetMinutes: 10 as const } };
+    expect(withDefaultPrayerReminders(custom)).toBe(custom);
   });
 });
 
