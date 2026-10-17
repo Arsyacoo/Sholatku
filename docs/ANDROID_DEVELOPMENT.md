@@ -220,3 +220,19 @@ The final permission policy is:
 
 - `INTERNET`, `POST_NOTIFICATIONS`, `RECEIVE_BOOT_COMPLETED`, and plugin-provided `WAKE_LOCK` are expected.
 - `SCHEDULE_EXACT_ALARM`, `USE_EXACT_ALARM`, foreground-service, battery-optimization, fine-location, and background-location permissions remain excluded.
+
+## Home-screen widgets
+
+Three widget sizes share one data source: `Sholat Berikutnya` (2x1), `Jadwal Sholat Ringkas` (4x1), and
+`Jadwal Sholat Hari Ini` (4x2).
+
+- JS stays the only place that calculates prayer times. `NativeReminderBridge` calls `syncPrayerWidget`, which sends seven
+  days of prayer instants (epoch millis), display times, city, and Hijri labels to the `SholatkuWidget` plugin.
+- Native code stores that payload in `SharedPreferences`, picks the next prayer, shows a live `Chronometer` countdown, and
+  schedules an inexact `setAndAllowWhileIdle` alarm to move to the following prayer. The roll-over can lag a few minutes
+  in Doze; no exact-alarm permission is used.
+- When the stored week runs out, widgets show "Buka Sholatku untuk memperbarui jadwal" instead of stale times.
+- The pure selection logic is covered by `PrayerWidgetScheduleTest` (`./gradlew :app:testDebugUnitTest`).
+- Launchers ignore `android:fontFamily="@font/..."` inside RemoteViews. Prayer names are therefore drawn into bitmaps in
+  Plus Jakarta Sans and Amiri by `WidgetTextRenderer`; the live countdown stays a `Chronometer` in the system
+  `sans-serif-light` face with tabular figures.

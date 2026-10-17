@@ -4,7 +4,8 @@ const INDONESIAN_MONTHS = [
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
 ];
 
-const ISLAMIC_MONTHS = [
+/** Indonesian Hijri month names, indexed by Hijri month - 1. */
+export const ISLAMIC_MONTHS = [
   'Muharram', 'Safar', 'Rabiul Awwal', 'Rabiul Akhir',
   'Jumadil Awwal', 'Jumadil Akhir', 'Rajab', 'Syaban',
   'Ramadhan', 'Syawal', 'Dzulqa’dah', 'Dzulhijjah'
@@ -146,37 +147,4 @@ export function formatTime24(hours: number, minutes: number): string {
   const h = String(hours).padStart(2, '0');
   const m = String(minutes).padStart(2, '0');
   return `${h}:${m}`;
-}
-
-/**
- * Approximate Hijri date converter (standard Umm al-Qura calculation)
- */
-export function getApproximateHijriDate(date: Date) {
-  // Use Intl.DateTimeFormat with islamic-umalqura calendar where supported
-  try {
-    const formatter = new Intl.DateTimeFormat('id-ID-u-ca-islamic-umalqura', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-    const parts = formatter.formatToParts(date);
-    const day = parts.find((p) => p.type === 'day')?.value || '1';
-    const month = parts.find((p) => p.type === 'month')?.value || 'Muharram';
-    const year = parts.find((p) => p.type === 'year')?.value || '1448';
-
-    return {
-      day,
-      month: { en: month, ar: month },
-      year,
-      formatted: `${day} ${month} ${year} H`,
-    };
-  } catch (e) {
-    // Fallback simple calculation
-    return {
-      day: '12',
-      month: { en: 'Safar', ar: 'صفر' },
-      year: '1448',
-      formatted: '12 Safar 1448 H',
-    };
-  }
 }

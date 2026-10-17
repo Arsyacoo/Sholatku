@@ -68,8 +68,10 @@ describe('Ramadan calendar domain', () => {
     expect(getRamadanDateRange(1447, 'Asia/Jakarta', -1).startDate).toBe('2026-02-19');
     expect(getRamadanDateRange(1447, 'Asia/Jakarta', 1).startDate).toBe('2026-02-17');
 
-    expect(formatHijriDate(feb18, 'Asia/Jakarta')).toBe('1 Ramadan 1447 H');
-    expect(formatHijriDate(feb18, 'Asia/Jakarta', -1)).toBe('29 Syakban 1447 H');
+    expect(formatHijriDate(feb18, 'Asia/Jakarta')).toBe('1 Ramadhan 1447 H');
+    expect(formatHijriDate(feb18, 'Asia/Jakarta', -1)).toBe('29 Syaban 1447 H');
+    // Android WebView printed Gregorian month names here ("5 Mei 1448 H").
+    expect(formatHijriDate(new Date('2026-10-16T05:00:00Z'), 'Asia/Jakarta')).toBe('5 Jumadil Awwal 1448 H');
   });
 });
 

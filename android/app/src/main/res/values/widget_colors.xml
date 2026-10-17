@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mirrors the home-screen NextPrayerHero card: primary-800 → primary-700 → teal-900 with a gold glow. -->
+    <color name="widget_bg_start">#115E59</color>
+    <color name="widget_bg_center">#0F766E</color>
+    <color name="widget_bg_end">#134E4A</color>
+    <color name="widget_glow_gold">#40F59E0B</color>
+    <color name="widget_glow_teal">#332DD4BF</color>
+    <color name="widget_text">#FFFFFF</color>
+    <color name="widget_text_secondary">#CCFBF1</color>
+    <color name="widget_gold">#FCD34D</color>
+    <color name="widget_gold_soft">#FDE68A</color>
+    <color name="widget_panel">#2E000000</color>
+    <color name="widget_hairline">#1FFFFFFF</color>
+    <color name="widget_highlight_fill">#1FFFFFFF</color>
+    <color name="widget_highlight_stroke">#99FCD34D</color>
+    <color name="widget_transparent">#00000000</color>
+</resources>
