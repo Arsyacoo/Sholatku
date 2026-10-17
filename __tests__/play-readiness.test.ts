@@ -25,6 +25,9 @@ describe('Play readiness guardrails', () => {
     expect(manifest).toContain('android.permission.ACCESS_COARSE_LOCATION');
     expect(manifest).toContain('android.permission.ACCESS_FINE_LOCATION');
     expect(manifest).not.toContain('ACCESS_BACKGROUND_LOCATION');
+    // Self-update installs are for GitHub direct builds only.
+    expect(manifest).not.toContain('REQUEST_INSTALL_PACKAGES');
+    expect(read('android/app/src/direct/AndroidManifest.xml')).toContain('android.permission.REQUEST_INSTALL_PACKAGES');
   });
 
   it('makes a production mobile build require an explicit API mode', () => {
