@@ -8,6 +8,7 @@ import { LocationHeader } from '@/components/location/LocationHeader';
 import { CitySearchModal } from '@/components/location/CitySearchModal';
 import { LocationPermissionNotice } from '@/components/location/LocationPermissionNotice';
 import { DateHeader } from '@/components/prayer/DateHeader';
+import { AppUpdateBanner } from '@/components/layout/AppUpdateBanner';
 import { NextPrayerHero } from '@/components/prayer/NextPrayerHero';
 import { PrayerScheduleList } from '@/components/prayer/PrayerScheduleList';
 import { useLocation } from '@/hooks/useLocation';
@@ -89,6 +90,10 @@ export default function HomePage() {
           onRefresh={refreshSchedule}
           isRefreshing={isRefreshing}
         />
+
+        <div className="mt-4 empty:hidden sm:mt-6">
+          <AppUpdateBanner />
+        </div>
 
         {/* Location Permission / Error Alert (if any) */}
         {!dismissNotice && (

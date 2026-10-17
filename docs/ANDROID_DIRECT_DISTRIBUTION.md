@@ -68,7 +68,23 @@ Checksum verification helps detect transfer errors, but it does not by itself pr
 to disable Play Protect or device security globally.
 
 Direct distribution does not install updates automatically. Future updates require the same direct signing identity and
-a higher `versionCode`. No automatic APK installer or background update checker is part of this sprint.
+a higher `versionCode`.
+
+### In-app update notice
+
+Starting with the build after 0.2.0, the Android app checks GitHub Releases (`lib/platform/app-update.ts`) at most once
+every 12 hours, plus on demand from Settings → "Cek pembaruan". When a newer release exists it shows a banner on the home
+screen and links to the APK; Android then offers **Update** and keeps local data. There is no silent install: Android
+always asks the user to confirm an APK from outside Play.
+
+For the checker to see a release, every release must:
+
+- use a tag `vMAJOR.MINOR.PATCH[-suffix]` whose version is higher than the previous `versionName` (bump `versionName`,
+  not just the preview number), and set `versionName` in `android/app/build.gradle` to that same version;
+- be published (not a draft) and attach the APK as `sholatku-latest.apk`;
+- keep the direct signing certificate and a higher `versionCode`, or Android refuses the in-place update.
+
+Users on 0.2.0 or earlier have no checker and must download the first build that includes it manually once.
 
 ## Future Android Developer Verification
 

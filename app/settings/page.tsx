@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/Footer';
 import { CalculationMethodSelector } from '@/components/settings/CalculationMethodSelector';
 import { MadhabSelector } from '@/components/settings/MadhabSelector';
 import { PrayerAdjustmentEditor } from '@/components/settings/PrayerAdjustmentEditor';
+import { AppUpdateSettings } from '@/components/settings/AppUpdateSettings';
 import { NotificationPreferences } from '@/components/settings/NotificationPreferences';
 import { PrayerCalendarExport } from '@/components/settings/PrayerCalendarExport';
 import { ThemeSelector } from '@/components/settings/ThemeSelector';
@@ -159,6 +160,10 @@ export default function SettingsPage() {
             settings={settings}
             reminderSettings={reminderSettings}
           />
+        </section>
+
+        <section className="pt-4 border-t border-surface-200 dark:border-surface-800 empty:hidden">
+          <AppUpdateSettings />
         </section>
 
         <section className="pt-4 border-t border-surface-200 dark:border-surface-800">
