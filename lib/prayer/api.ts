@@ -1,6 +1,7 @@
 import { DailyPrayerSchedule, MonthlyPrayerItem, UserLocation, UserSettings } from '@/types';
 import { applyPrayerAdjustments, normalizeAlAdhanDay, normalizeAlAdhanMonth } from './normalize';
 import { calculateOfflinePrayers } from './calculation';
+import { aladhanMethodQuery, offlineFajrAngle } from './constants';
 import { formatDateInTimeZone, formatIndonesianDateInTimeZone, getTimeZoneOffsetMinutes, normalizeTimeZone, zonedTimeToUtc } from '../time/timezone';
 import { getApproximateHijriDate } from '../ramadan/calendar';
 import {
@@ -64,7 +65,7 @@ export async function getDailyPrayerTimes(
   // Direct AlAdhan API fallback
   try {
     const data = await fetchJsonWithTimeout<any>(
-      `https://api.aladhan.com/v1/timings/${timestamp}?latitude=${location.latitude}&longitude=${location.longitude}&method=${method}&school=${school}`,
+      `https://api.aladhan.com/v1/timings/${timestamp}?latitude=${location.latitude}&longitude=${location.longitude}&${aladhanMethodQuery(method)}&school=${school}`,
       {
         timeoutMs: NETWORK_TIMEOUTS.prayerProvider,
         signal: options.signal,
@@ -84,7 +85,7 @@ export async function getDailyPrayerTimes(
   const scheduleInstant = zonedTimeToUtc(scheduleDate, '12:00', timezone);
   const timezoneOffset = getTimeZoneOffsetMinutes(scheduleInstant, timezone) / 60;
   const calculated = applyPrayerAdjustments(
-    calculateOfflinePrayers(scheduleInstant, location.latitude, location.longitude, timezoneOffset),
+    calculateOfflinePrayers(scheduleInstant, location.latitude, location.longitude, timezoneOffset, offlineFajrAngle(method)),
     settings.adjustments
   );
   const hijri = getApproximateHijriDate(scheduleInstant);
@@ -153,7 +154,7 @@ export async function getMonthlyPrayerTimes(
   // Direct AlAdhan Calendar API
   try {
     const data = await fetchJsonWithTimeout<any>(
-      `https://api.aladhan.com/v1/calendar/${year}/${month}?latitude=${location.latitude}&longitude=${location.longitude}&method=${method}&school=${school}`,
+      `https://api.aladhan.com/v1/calendar/${year}/${month}?latitude=${location.latitude}&longitude=${location.longitude}&${aladhanMethodQuery(method)}&school=${school}`,
       {
         timeoutMs: NETWORK_TIMEOUTS.prayerProvider,
         signal: options.signal,
@@ -177,7 +178,7 @@ export async function getMonthlyPrayerTimes(
   for (let d = 1; d <= daysInMonth; d++) {
     const currentDate = new Date(Date.UTC(year, month - 1, d, 12));
     const timings = applyPrayerAdjustments(
-      calculateOfflinePrayers(currentDate, location.latitude, location.longitude, offset),
+      calculateOfflinePrayers(currentDate, location.latitude, location.longitude, offset, offlineFajrAngle(method)),
       settings.adjustments
     );
     const hijri = getApproximateHijriDate(currentDate);

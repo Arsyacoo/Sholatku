@@ -1,10 +1,16 @@
-import { CalculationMethod, UserSettings, UserLocation } from '@/types';
+import { CalculationMethod, CalculationMethodId, UserSettings, UserLocation } from '@/types';
 
 export const CALCULATION_METHODS: CalculationMethod[] = [
   {
     id: '20',
     name: 'Kemenag RI (Kementerian Agama)',
     description: 'Standar resmi Indonesia (Fajr 20°, Isha 18°)',
+    region: 'Indonesia',
+  },
+  {
+    id: 'muhammadiyah',
+    name: 'Muhammadiyah (Majelis Tarjih)',
+    description: 'Keputusan Munas Tarjih 2020 (Fajr 18°, Isha 18°); Subuh sekitar 8 menit lebih lambat dari Kemenag',
     region: 'Indonesia',
   },
   {
@@ -44,6 +50,22 @@ export const CALCULATION_METHODS: CalculationMethod[] = [
     region: 'Turki',
   },
 ];
+
+/** AlAdhan has no Muhammadiyah preset, so it uses the custom method 99 with "Fajr,Maghrib,Isha" settings. */
+const ALADHAN_CUSTOM_METHODS: Partial<Record<CalculationMethodId, string>> = {
+  muhammadiyah: '18,null,18',
+};
+
+/** Query string selecting `method` on the AlAdhan timings/calendar endpoints. */
+export function aladhanMethodQuery(method: string): string {
+  const custom = ALADHAN_CUSTOM_METHODS[method as CalculationMethodId];
+  return custom ? `method=99&methodSettings=${encodeURIComponent(custom)}` : `method=${method}`;
+}
+
+/** Fajr depression angle for the offline fallback, which otherwise follows Kemenag (-20°). */
+export function offlineFajrAngle(method: string): number {
+  return method === 'muhammadiyah' ? -18 : -20;
+}
 
 export const PRAYER_NAMES = {
   fajr: { en: 'Fajr', id: 'Subuh', ar: 'الفجر' },

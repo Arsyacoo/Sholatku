@@ -115,7 +115,8 @@ export function calculateOfflinePrayers(
   date: Date,
   lat: number,
   lon: number,
-  timezoneOffset: number
+  timezoneOffset: number,
+  fajrAngle = -20
 ): OfflinePrayerTimes {
   if (!(date instanceof Date) || !Number.isFinite(date.getTime())) {
     throw new PrayerCalculationError('invalid-input', 'Tanggal perhitungan tidak valid.');
@@ -143,7 +144,7 @@ export function calculateOfflinePrayers(
   // Solar noon
   const solarNoon = 12 + (timezoneOffset * 15 - lon) / 15 - eqTime / 60;
 
-  // Fajr angle (-20 deg for Kemenag), Sunrise (-0.833 deg), Isha (-18 deg)
+  // Fajr angle (-20 deg for Kemenag, -18 for Muhammadiyah), Sunrise (-0.833 deg), Isha (-18 deg)
   const calculateHourAngle = (angleDeg: number, eventName: string) => {
     const angleRad = (angleDeg * Math.PI) / 180;
     const cosHourAngle =
@@ -163,7 +164,7 @@ export function calculateOfflinePrayers(
   const asrHA = asrRadians === null ? null : (asrRadians * 180) / Math.PI / 15;
 
   const sunriseHA = calculateHourAngle(-0.833, 'Terbit');
-  const fajrHA = calculateHourAngle(-20, 'Fajar');
+  const fajrHA = calculateHourAngle(fajrAngle, 'Fajar');
   const ishaHA = calculateHourAngle(-18, 'Isya');
   if (sunriseHA === null || sunriseHA <= 0 || sunriseHA >= 12 || asrHA === null) {
     throw new PrayerCalculationError(

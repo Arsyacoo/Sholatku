@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchWithTimeout, NETWORK_TIMEOUTS, readJsonResponse } from '@/lib/network/fetch';
 import { ApiInputError, parseMonthlyPrayerQuery } from '@/lib/api/validation';
+import { aladhanMethodQuery } from '@/lib/prayer/constants';
 import { apiError, isObject, logSafeApiError, providerErrorStatus } from '@/lib/api/response';
 
 export async function GET(request: NextRequest) {
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
     return apiError('INTERNAL_ERROR', 'Terjadi kesalahan internal.', 500);
   }
 
-  const targetUrl = `https://api.aladhan.com/v1/calendar/${query.year}/${query.month}?latitude=${query.latitude}&longitude=${query.longitude}&method=${query.method}&school=${query.school}`;
+  const targetUrl = `https://api.aladhan.com/v1/calendar/${query.year}/${query.month}?latitude=${query.latitude}&longitude=${query.longitude}&${aladhanMethodQuery(query.method)}&school=${query.school}`;
 
   try {
     const response = await fetchWithTimeout(targetUrl, {
