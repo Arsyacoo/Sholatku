@@ -30,6 +30,12 @@ final class PrayerWidgetUpdater {
     private static final int[] TIME_IDS = {
         R.id.widget_time_0, R.id.widget_time_1, R.id.widget_time_2, R.id.widget_time_3, R.id.widget_time_4,
     };
+    private static final int[] LABEL_IDS = {
+        R.id.widget_label_0, R.id.widget_label_1, R.id.widget_label_2, R.id.widget_label_3, R.id.widget_label_4,
+    };
+    private static final int[] COLUMN_IDS = {
+        R.id.widget_col_0, R.id.widget_col_1, R.id.widget_col_2, R.id.widget_col_3, R.id.widget_col_4,
+    };
     private static final int[] DOT_IDS = {
         R.id.widget_dot_0, R.id.widget_dot_1, R.id.widget_dot_2, R.id.widget_dot_3, R.id.widget_dot_4,
     };
@@ -77,7 +83,6 @@ final class PrayerWidgetUpdater {
         if (selection == null) {
             setDisplayText(context, views, R.id.widget_next_name, "Sholatku", NAME_SP[size], text);
             setDisplayText(context, views, R.id.widget_next_label, "Sholatku", NAME_SP[size], text);
-            views.setTextViewText(R.id.widget_next_time, "");
             views.setTextViewText(R.id.widget_header, schedule == null ? "" : schedule.city);
             views.setViewVisibility(R.id.widget_countdown, View.GONE);
             views.setViewVisibility(R.id.widget_schedule, View.GONE);
@@ -88,7 +93,6 @@ final class PrayerWidgetUpdater {
         PrayerWidgetSchedule.Day day = selection.day;
         int next = selection.nextIndex;
         setDisplayText(context, views, R.id.widget_next_name, day.names[next], NAME_SP[size], text);
-        views.setTextViewText(R.id.widget_next_time, day.times[next]);
         // 2x1 is too narrow for a separate time view: draw "Dzuhur  11:38" as one bitmap that scales to fit.
         views.setImageViewBitmap(R.id.widget_next_label, WidgetTextRenderer.render(
             context, day.names[next], day.times[next], R.font.plus_jakarta_sans_bold, NAME_SP[size],
@@ -102,10 +106,15 @@ final class PrayerWidgetUpdater {
         views.setViewVisibility(R.id.widget_message, View.GONE);
         views.setViewVisibility(R.id.widget_schedule, View.VISIBLE);
         views.setViewVisibility(R.id.widget_countdown, View.VISIBLE);
-        views.setChronometer(R.id.widget_countdown, SystemClock.elapsedRealtime() + (selection.nextAt() - now), null, true);
+        // On 4x1 the countdown sits under the name, where a bare "13:49" would read as a prayer time.
+        String countdownFormat = LAYOUTS[size] == R.layout.widget_prayer_wide ? "−%s" : null;
+        views.setChronometer(
+            R.id.widget_countdown, SystemClock.elapsedRealtime() + (selection.nextAt() - now), countdownFormat, true
+        );
         views.setChronometerCountDown(R.id.widget_countdown, true);
 
         int secondary = context.getColor(R.color.widget_text_secondary);
+        int muted = context.getColor(R.color.widget_text_muted);
         int gold = context.getColor(R.color.widget_gold_soft);
         for (int i = 0; i < PrayerWidgetSchedule.PRAYER_COUNT; i++) {
             views.setImageViewResource(DOT_IDS[i], DOT_DRAWABLES[PrayerWidgetSchedule.dotState(i, next)]);
@@ -114,8 +123,15 @@ final class PrayerWidgetUpdater {
                 RIGHT_SEGMENT_IDS[i], "setBackgroundResource",
                 segmentColor(i == PrayerWidgetSchedule.PRAYER_COUNT - 1, PrayerWidgetSchedule.isRightSegmentLit(i, next))
             );
+            boolean passed = i < next;
             views.setTextViewText(TIME_IDS[i], day.times[i]);
-            views.setTextColor(TIME_IDS[i], i == next ? gold : secondary);
+            views.setTextColor(TIME_IDS[i], i == next ? gold : passed ? muted : secondary);
+            views.setTextViewText(LABEL_IDS[i], day.names[i]);
+            views.setTextColor(LABEL_IDS[i], i == next ? text : passed ? muted : secondary);
+            views.setInt(
+                COLUMN_IDS[i], "setBackgroundResource", i == next ? R.drawable.widget_pill_next : R.color.widget_transparent
+            );
+            views.setContentDescription(COLUMN_IDS[i], day.names[i] + " " + day.times[i]);
             views.setContentDescription(DOT_IDS[i], day.names[i] + " " + day.times[i]);
         }
         return views;

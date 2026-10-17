@@ -7,5 +7,7 @@
     <color name="widget_gold_soft">#FDE68A</color>
     <color name="widget_line_on">#FFFFFF</color>
     <color name="widget_line_off">#735EEAD4</color>
+    <color name="widget_text_muted">#99CCFBF1</color>
+    <color name="widget_pill">#33FFFFFF</color>
     <color name="widget_transparent">#00000000</color>
 </resources>

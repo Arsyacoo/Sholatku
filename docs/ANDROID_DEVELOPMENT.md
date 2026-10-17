@@ -250,6 +250,9 @@ Three widget sizes share one data source: `Sholat Berikutnya` (2x1), `Menuju Sho
 - Launchers ignore `android:fontFamily="@font/..."` inside RemoteViews. Prayer names are therefore drawn into bitmaps in
   Plus Jakarta Sans by `WidgetTextRenderer`; the live countdown stays a `Chronometer` in the system `sans-serif-light`
   face with tabular figures.
-- The 4x1 and 4x2 sizes show the day as a timeline (`widget_prayer_timeline.xml`): five dots on one line built from
+- The 4x1 size shows the next prayer with a `−mm:ss` countdown on the left and five name/time columns on the right;
+  passed prayers are muted and the next one sits in a soft pill (`widget_pill_next`). Labels use one fixed size, since
+  per-view autosize shrank only the long names.
+- The 4x2 size shows the day as a timeline (`widget_prayer_timeline.xml`): five dots on one line built from
   plain RemoteViews, so it stays crisp at any widget width. Passed prayers are filled, the next prayer is a gold ring,
   upcoming ones are hollow, and the line is lit up to the next prayer (`PrayerWidgetSchedule.dotState`).

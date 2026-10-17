@@ -75,6 +75,30 @@
         <item name="android:textSize">12sp</item>
     </style>
 
+    <!-- 4x1 day strip: one column per prayer; the next one gets widget_pill_next as background. -->
+    <style name="WidgetPrayerColumn">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:paddingVertical">5dp</item>
+    </style>
+    <!-- One fixed size for all five labels: per-view autosize shrank only the long names and looked uneven. -->
+    <style name="WidgetPrayerLabel" parent="WidgetSecondary">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center</item>
+        <item name="android:letterSpacing">0.02</item>
+        <item name="android:textSize">9sp</item>
+    </style>
+    <style name="WidgetPrayerTime" parent="WidgetTimelineTime">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_weight">0</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:textColor">@color/widget_text</item>
+    </style>
+
     <style name="WidgetMessage" parent="WidgetSecondary">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_marginTop">6dp</item>

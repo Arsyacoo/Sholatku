@@ -1,38 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 4x1: the next prayer and its countdown on the left, the whole day on the right with the next prayer in a pill. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     style="@style/WidgetRoot"
-    android:paddingHorizontal="18dp"
+    android:orientation="horizontal"
+    android:paddingHorizontal="16dp"
     android:paddingVertical="8dp">
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="vertical">
         <ImageView android:id="@+id/widget_next_name" style="@style/WidgetDisplayImage" />
-        <TextView
-            android:id="@+id/widget_next_time"
-            style="@style/WidgetSecondary"
-            android:layout_width="0dp"
-            android:layout_marginStart="8dp"
-            android:layout_weight="1"
-            android:text="--:--"
-            android:textSize="12sp" />
         <Chronometer
             android:id="@+id/widget_countdown"
             style="@style/WidgetCountdown"
-            android:textSize="22sp" />
+            android:layout_marginTop="3dp"
+            android:fontFamily="sans-serif"
+            android:textColor="@color/widget_gold_soft"
+            android:textSize="13sp" />
+        <TextView android:id="@+id/widget_message" style="@style/WidgetMessage" android:layout_marginTop="2dp" />
     </LinearLayout>
+
+    <ImageView
+        android:layout_width="1dp"
+        android:layout_height="32dp"
+        android:layout_marginHorizontal="12dp"
+        android:importantForAccessibility="no"
+        android:src="@color/widget_line_off" />
 
     <LinearLayout
         android:id="@+id/widget_schedule"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:orientation="vertical">
-        <include layout="@layout/widget_prayer_timeline" />
+        android:layout_weight="1"
+        android:orientation="horizontal">
+        <LinearLayout android:id="@+id/widget_col_0" style="@style/WidgetPrayerColumn">
+            <TextView android:id="@+id/widget_label_0" style="@style/WidgetPrayerLabel" />
+            <TextView android:id="@+id/widget_time_0" style="@style/WidgetPrayerTime" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/widget_col_1" style="@style/WidgetPrayerColumn">
+            <TextView android:id="@+id/widget_label_1" style="@style/WidgetPrayerLabel" />
+            <TextView android:id="@+id/widget_time_1" style="@style/WidgetPrayerTime" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/widget_col_2" style="@style/WidgetPrayerColumn">
+            <TextView android:id="@+id/widget_label_2" style="@style/WidgetPrayerLabel" />
+            <TextView android:id="@+id/widget_time_2" style="@style/WidgetPrayerTime" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/widget_col_3" style="@style/WidgetPrayerColumn">
+            <TextView android:id="@+id/widget_label_3" style="@style/WidgetPrayerLabel" />
+            <TextView android:id="@+id/widget_time_3" style="@style/WidgetPrayerTime" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/widget_col_4" style="@style/WidgetPrayerColumn">
+            <TextView android:id="@+id/widget_label_4" style="@style/WidgetPrayerLabel" />
+            <TextView android:id="@+id/widget_time_4" style="@style/WidgetPrayerTime" />
+        </LinearLayout>
     </LinearLayout>
-
-    <TextView android:id="@+id/widget_message" style="@style/WidgetMessage" />
 </LinearLayout>
