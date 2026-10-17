@@ -74,8 +74,12 @@ a higher `versionCode`.
 
 Starting with the build after 0.2.0, the Android app checks GitHub Releases (`lib/platform/app-update.ts`) at most once
 every 12 hours, plus on demand from Settings → "Cek pembaruan". When a newer release exists it shows a banner on the home
-screen and links to the APK; Android then offers **Update** and keeps local data. There is no silent install: Android
-always asks the user to confirm an APK from outside Play.
+screen. From 0.2.3, "Perbarui" downloads the APK inside the app (`SholatkuUpdatePlugin`, into the app cache) and opens
+the system installer, because Chrome's custom-tab view can leave APK downloads stuck at 100%. The first time, Android
+opens "Install unknown apps" for Sholatku; the user allows it, returns, and taps again. The plugin only accepts URLs under
+the repository's `releases/download/` path and rejects an APK whose package differs or whose `versionCode` is not
+higher. `REQUEST_INSTALL_PACKAGES` is declared in `android/app/src/direct/AndroidManifest.xml` only. There is no silent
+install: Android always asks the user to confirm, and keeps local data.
 
 For the checker to see a release, every release must:
 

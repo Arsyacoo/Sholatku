@@ -11,6 +11,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(SholatkuReminderRecoveryPlugin.class);
         registerPlugin(SholatkuWidgetPlugin.class);
         registerPlugin(SholatkuSettingsPlugin.class);
+        registerPlugin(SholatkuUpdatePlugin.class);
         super.load();
     }
 

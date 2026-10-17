@@ -1,4 +1,5 @@
 import { App } from '@capacitor/app';
+import { registerPlugin } from '@capacitor/core';
 
 import { fetchJsonWithTimeout, NETWORK_TIMEOUTS } from '../network/fetch';
 import { isNativeRuntime } from './runtime';
@@ -140,4 +141,18 @@ export function dismissUpdate(version: string): void {
   } catch {
     // Dismissal is a convenience; the banner simply returns next launch.
   }
+}
+
+interface UpdatePlugin {
+  downloadAndInstall(options: { url: string }): Promise<{ status: UpdateInstallStatus }>;
+}
+
+/** `needs-permission`: Android opened "Install unknown apps" for Sholatku; the user allows it and taps again. */
+export type UpdateInstallStatus = 'needs-permission' | 'installer-opened';
+
+const updatePlugin = registerPlugin<UpdatePlugin>('SholatkuUpdate');
+
+/** Downloads the release APK inside the app and opens the system installer (browsers can stall APK downloads). */
+export async function installUpdate(update: AvailableUpdate): Promise<UpdateInstallStatus> {
+  return (await updatePlugin.downloadAndInstall({ url: update.downloadUrl })).status;
 }

@@ -8,6 +8,7 @@ import {
   isUpdateDismissed,
   type AvailableUpdate,
 } from '@/lib/platform/app-update';
+import { UpdateInstallButton } from '../platform/UpdateInstallButton';
 
 /** Android only: announces a newer GitHub release; Android installs the APK as an in-place update. */
 export const AppUpdateBanner: React.FC = () => {
@@ -36,15 +37,11 @@ export const AppUpdateBanner: React.FC = () => {
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-primary-950 dark:text-primary-50">Sholatku {update.version} tersedia</p>
         <p className="mt-0.5 text-xs leading-relaxed text-primary-800/90 dark:text-primary-200/90">
-          Unduh lalu buka APK-nya, kemudian pilih Update. Data dan pengaturan tetap tersimpan.
+          Ketuk Perbarui, lalu pilih Update di layar Android. Data dan pengaturan tetap tersimpan.
         </p>
-        <a
-          href={update.downloadUrl}
-          className="mt-2 inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-primary-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-primary-700"
-        >
-          <Download className="h-3.5 w-3.5" aria-hidden="true" />
-          Unduh pembaruan
-        </a>
+        <div className="mt-2">
+          <UpdateInstallButton update={update} />
+        </div>
       </div>
       <button
         type="button"
