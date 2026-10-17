@@ -2,12 +2,12 @@
 
 ## Current candidate
 
-- `versionName`: `0.1.0`
-- `versionCode`: `1`
+- `versionName`: `0.2.0`
+- `versionCode`: `2`
 - Application ID: `io.github.arsyacoo.sholatku`
 
-This is the first local Internal Testing candidate. No existing Play Console upload history is available in the
-repository, so `versionCode` remains `1`. Local rebuilds do not require a version increment.
+`versionCode 1` (`0.1.0`) shipped publicly as GitHub Pre-release `v0.1.0-preview.1`, so it is superseded and must never
+be reused. `0.2.0` / `2` is Direct Preview 2 (`v0.2.0-preview.2`); see `docs/releases/github-direct-preview-0.2.0.md`.
 
 ## Rules
 
