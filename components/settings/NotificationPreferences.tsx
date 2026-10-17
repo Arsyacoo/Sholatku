@@ -15,8 +15,11 @@ import {
 } from '@/lib/prayer/reminders/native';
 import { sendTestNotification } from '@/lib/prayer/reminders/notification';
 import {
+  getExactAlarmPermissionState,
   getNotificationPermissionState,
+  requestExactAlarmPermission,
   requestNotificationPermission,
+  type ExactAlarmPermissionState,
   type NormalizedNotificationPermissionState,
 } from '@/lib/platform/notifications';
 
@@ -134,6 +137,7 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
   const [testMessage, setTestMessage] = useState<string | null>(null);
   const [capabilities, setCapabilities] = useState<PrayerReminderCapabilities>(INITIAL_CAPABILITIES);
   const [diagnostics, setDiagnostics] = useState<NativeReminderDiagnostics | null>(null);
+  const [exactAlarmState, setExactAlarmState] = useState<ExactAlarmPermissionState>('unsupported');
 
   useEffect(() => {
     let cancelled = false;
@@ -150,8 +154,14 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
         setCapabilities(nextCapabilities);
 
         if (isNativeAndroid) {
-          const nextDiagnostics = await getNativeReminderDiagnostics();
-          if (!cancelled) setDiagnostics(nextDiagnostics);
+          const [nextDiagnostics, nextExactAlarmState] = await Promise.all([
+            getNativeReminderDiagnostics(),
+            getExactAlarmPermissionState(),
+          ]);
+          if (!cancelled) {
+            setDiagnostics(nextDiagnostics);
+            setExactAlarmState(nextExactAlarmState);
+          }
         } else {
           setDiagnostics(null);
         }
@@ -316,6 +326,33 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
           <p className="mx-4 mb-3 rounded-xl bg-amber-50 p-3 text-xs leading-relaxed text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
             Notifikasi diblokir di perangkat. Ubah izin notifikasi di pengaturan perangkat untuk memakai pengingat Sholatku.
           </p>
+        )}
+        {isNativeAndroid && enabled && permissionState === 'granted' && (
+          exactAlarmState === 'granted' ? (
+            <p className="mx-4 mb-3 flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-300">
+              <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              Pengingat tepat waktu aktif.
+            </p>
+          ) : exactAlarmState === 'denied' ? (
+            <div className="mx-4 mb-3 space-y-2 rounded-xl bg-amber-50 p-3 text-xs leading-relaxed text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+              <p>
+                Pengingat bisa terlambat beberapa menit saat ponsel menghemat baterai. Izinkan &ldquo;Alarm &amp; pengingat&rdquo;
+                agar adzan berbunyi tepat waktu.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  const next = await requestExactAlarmPermission();
+                  setExactAlarmState(next);
+                  // Reschedule so pending reminders switch to exact delivery right away.
+                  window.dispatchEvent(new CustomEvent('sholatku:prayer-reminders-changed', { detail: value }));
+                }}
+              >
+                Izinkan Alarm &amp; pengingat
+              </Button>
+            </div>
+          ) : null
         )}
         {permissionState === 'unsupported' && (
           <p className="mx-4 mb-3 rounded-xl bg-surface-50 p-3 text-xs leading-relaxed text-slate-600 dark:bg-surface-800 dark:text-slate-300">

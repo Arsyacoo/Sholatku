@@ -1,8 +1,10 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import {
   cancelNativeNotifications,
+  getExactAlarmPermissionState,
   getNativePendingNotifications,
   getNotificationPermissionState,
+  requestExactAlarmPermission,
   requestNotificationPermission,
   scheduleNativeNotifications,
 } from '@/lib/platform/notifications';
@@ -16,6 +18,8 @@ const localNotificationsMock = vi.hoisted(() => ({
   cancel: vi.fn(),
   getPending: vi.fn(),
   addListener: vi.fn(),
+  checkExactNotificationSetting: vi.fn(),
+  changeExactNotificationSetting: vi.fn(),
 }));
 
 vi.mock('@capacitor/local-notifications', () => ({
@@ -45,6 +49,8 @@ beforeEach(() => {
   localNotificationsMock.checkPermissions.mockResolvedValue({ display: 'granted' });
   localNotificationsMock.requestPermissions.mockResolvedValue({ display: 'granted' });
   localNotificationsMock.addListener.mockResolvedValue({ remove: vi.fn().mockResolvedValue(undefined) });
+  localNotificationsMock.checkExactNotificationSetting.mockResolvedValue({ exact_alarm: 'denied' });
+  localNotificationsMock.changeExactNotificationSetting.mockResolvedValue({ exact_alarm: 'granted' });
 });
 
 afterEach(() => {
@@ -60,7 +66,7 @@ describe('native notification adapter', () => {
     await expect(requestNotificationPermission()).resolves.toBe('denied');
   });
 
-  it('schedules inexact local notifications on the shared channel', async () => {
+  it('falls back to inexact local notifications without the exact alarm permission', async () => {
     const scheduledAt = new Date('2026-09-08T04:30:00+07:00');
     const result = await scheduleNativeNotifications([
       {
@@ -125,6 +131,24 @@ describe('native notification adapter', () => {
       'prayer-reminders-adhan',
       'prayer-reminders-silent',
     ]);
+  });
+
+  it('schedules exact alarms only once "Alarms & reminders" is granted', async () => {
+    const at = new Date('2026-09-08T04:40:00+07:00');
+    const request = [{ id: 7, title: 'Subuh', body: 'Waktu Subuh', at }];
+
+    await scheduleNativeNotifications(request);
+    expect(localNotificationsMock.schedule.mock.calls.at(-1)![0].notifications[0].isExactNotification).toBe(false);
+    expect(localNotificationsMock.changeExactNotificationSetting).not.toHaveBeenCalled();
+
+    localNotificationsMock.checkExactNotificationSetting.mockResolvedValue({ exact_alarm: 'granted' });
+    await scheduleNativeNotifications(request);
+    expect(localNotificationsMock.schedule.mock.calls.at(-1)![0].notifications[0].isExactNotification).toBe(true);
+  });
+
+  it('reports and requests the exact alarm permission', async () => {
+    await expect(getExactAlarmPermissionState()).resolves.toBe('denied');
+    await expect(requestExactAlarmPermission()).resolves.toBe('granted');
   });
 
   it('cancels only the requested native reminder ids', async () => {

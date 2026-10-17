@@ -53,6 +53,8 @@ public final class SholatkuReminderRecoveryReceiver extends BroadcastReceiver {
         NotificationStorage storage = new NotificationStorage(context);
         List<LocalNotification> futureNotifications = new ArrayList<>();
         long now = System.currentTimeMillis();
+        boolean exact = Build.VERSION.SDK_INT < Build.VERSION_CODES.S
+            || context.getSystemService(AlarmManager.class).canScheduleExactAlarms();
 
         for (String id : storage.getSavedNotificationIds()) {
             try {
@@ -73,8 +75,8 @@ public final class SholatkuReminderRecoveryReceiver extends BroadcastReceiver {
                     continue;
                 }
 
-                // Recovery hardens all restored records to the app's inexact scheduling policy.
-                notification.setExactNotification(false);
+                // Restore exact delivery only while the user still allows exact alarms.
+                notification.setExactNotification(exact);
                 futureNotifications.add(notification);
             } catch (Exception exception) {
                 Log.w(TAG, "Skipped malformed saved notification " + id, exception);

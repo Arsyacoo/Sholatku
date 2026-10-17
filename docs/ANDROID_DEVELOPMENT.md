@@ -198,7 +198,7 @@ npm run test:e2e:mobile
 
 ## Sprint 04 reminder recovery
 
-Android reminder recovery stays inexact and uses the existing Capacitor Local Notifications v8 storage. Sholatku does not patch the plugin or duplicate prayer-time calculation in native code.
+Android reminder recovery uses the existing Capacitor Local Notifications v8 storage. Sholatku does not patch the plugin or duplicate prayer-time calculation in native code.
 
 The upstream `LocalNotificationRestoreReceiver` is deliberately removed from the merged app manifest. In version `8.3.1`, that receiver moves a past one-shot notification to roughly fifteen seconds in the future after boot. That behavior is inappropriate for prayer reminders because it can replay a missed prayer after the phone is turned on.
 
@@ -208,22 +208,36 @@ The upstream `LocalNotificationRestoreReceiver` is deliberately removed from the
 - The notification belongs to the Sholatku reminder source.
 - It is a one-shot notification with a future `schedule.at`.
 
-Expired, malformed, cancelled, repeating, and unrelated records are ignored or removed without preventing other valid records from being processed. Restored records are forced to `isExactNotification = false` before they are handed back to the version-pinned Capacitor scheduler.
+Expired, malformed, cancelled, repeating, and unrelated records are ignored or removed without preventing other valid records from being processed. Restored records get `isExactNotification` set to whether exact alarms are currently allowed before they are handed back to the version-pinned Capacitor scheduler.
 
 The receiver handles `BOOT_COMPLETED` and `MY_PACKAGE_REPLACED`. It is not direct-boot aware: `LOCKED_BOOT_COMPLETED` is a safe no-op because Capacitor notification storage is credential-protected. `RECEIVE_BOOT_COMPLETED` exists solely for this recovery receiver.
 
 For `TIME_SET` and `TIMEZONE_CHANGED`, the receiver marks the reminder schedule dirty and cancels only Sholatku-owned pending alarms. It never launches the UI or reimplements prayer calculations. On the next app launch/resume, the existing JS reminder reconciliation calculates the normal 48-hour horizon from saved preferences, then clears the dirty flag only after it succeeds. The native fingerprint stores only IANA timezone ID, offset minutes, and local day key.
 
+## Exact prayer reminders
+
+Inexact alarms delivered prayer reminders two to five minutes late in Doze, so reminders now use exact alarms when the
+user allows them:
+
+- The manifest declares `SCHEDULE_EXACT_ALARM` (granted under Settings → Apps → Special access → Alarms & reminders;
+  denied by default for new installs on Android 14+, always allowed below Android 12).
+- `scheduleNativeNotifications` sets `isExactNotification` only when `checkExactNotificationSetting` reports `granted`.
+  Sending `true` without the permission makes the plugin open the system settings screen, which must never happen
+  during a background sync.
+- Settings → Notifikasi shows the state and an "Izinkan Alarm & pengingat" button (`changeExactNotificationSetting`),
+  then reschedules pending reminders.
+- Without the permission, reminders fall back to the earlier inexact `setAndAllowWhileIdle` behavior described below.
+
 API 36 Doze QA showed a normal inexact alarm remained deferred after roughly one minute of deep idle. Therefore Sholatku sends its bounded 48-hour prayer/Ramadan requests with `allowWhileIdle: true`. Capacitor v8 uses `setAndAllowWhileIdle` when exact access is unavailable because every Sholatku request sets `isExactNotification = false`. Android idle quotas can still defer or coalesce delivery; this is not an exact-delivery guarantee. Android force-stop suppresses broadcasts and alarms until the user launches the app again, and restrictive OEM power managers may delay inexact alarms. Sholatku does not request battery optimization exemptions or OEM autostart whitelisting.
 
 The final permission policy is:
 
-- `INTERNET`, `POST_NOTIFICATIONS`, `RECEIVE_BOOT_COMPLETED`, and plugin-provided `WAKE_LOCK` are expected.
-- `SCHEDULE_EXACT_ALARM`, `USE_EXACT_ALARM`, foreground-service, battery-optimization, fine-location, and background-location permissions remain excluded.
+- `INTERNET`, `POST_NOTIFICATIONS`, `RECEIVE_BOOT_COMPLETED`, `SCHEDULE_EXACT_ALARM` (user-granted), and plugin-provided `WAKE_LOCK` are expected.
+- `USE_EXACT_ALARM`, foreground-service, battery-optimization, fine-location, and background-location permissions remain excluded.
 
 ## Home-screen widgets
 
-Three widget sizes share one data source: `Sholat Berikutnya` (2x1), `Jadwal Sholat Ringkas` (4x1), and
+Three widget sizes share one data source: `Sholat Berikutnya` (2x1), `Menuju Sholat` (4x1), and
 `Jadwal Sholat Hari Ini` (4x2).
 
 - JS stays the only place that calculates prayer times. `NativeReminderBridge` calls `syncPrayerWidget`, which sends seven
