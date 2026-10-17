@@ -113,9 +113,9 @@ final class PrayerWidgetUpdater {
         views.setViewVisibility(R.id.widget_message, View.GONE);
         views.setViewVisibility(R.id.widget_schedule, View.VISIBLE);
         views.setViewVisibility(R.id.widget_countdown, View.VISIBLE);
-        // On 4x1 the countdown sits under the name, where a bare "13:49" would read as a prayer time.
+        // On 4x1 the countdown sits under the name, where a bare "01:12" would read as a prayer time.
         boolean wide = LAYOUTS[size] == R.layout.widget_prayer_wide;
-        String countdownFormat = wide ? "−%s" : null;
+        String countdownFormat = wide ? "dalam %s" : null;
         views.setChronometer(
             R.id.widget_countdown, SystemClock.elapsedRealtime() + (selection.nextAt() - now), countdownFormat, true
         );
@@ -137,7 +137,7 @@ final class PrayerWidgetUpdater {
             views.setTextViewText(LABEL_IDS[i], day.names[i]);
             views.setTextColor(LABEL_IDS[i], i == next ? text : passed ? muted : secondary);
             if (wide) {
-                int stateColor = i == next ? gold : passed ? muted : text;
+                int stateColor = i == next ? gold : passed ? muted : secondary;
                 views.setInt(ICON_IDS[i], "setColorFilter", i == next ? gold : passed ? muted : secondary);
                 views.setImageViewBitmap(TIME_IMAGE_IDS[i], WidgetTextRenderer.render(
                     context, day.times[i], R.font.plus_jakarta_sans_bold, 13f, stateColor

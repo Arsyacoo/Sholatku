@@ -104,6 +104,7 @@
     <style name="WidgetPrayerTimeImage">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">15dp</item>
+        <item name="android:layout_marginHorizontal">3dp</item>
         <item name="android:layout_marginTop">2dp</item>
         <item name="android:scaleType">fitCenter</item>
         <item name="android:importantForAccessibility">no</item>
