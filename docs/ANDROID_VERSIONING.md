@@ -2,12 +2,13 @@
 
 ## Current candidate
 
-- `versionName`: `0.2.0`
-- `versionCode`: `2`
+- `versionName`: `0.2.1`
+- `versionCode`: `3`
 - Application ID: `io.github.arsyacoo.sholatku`
 
-`versionCode 1` (`0.1.0`) shipped publicly as GitHub Pre-release `v0.1.0-preview.1`, so it is superseded and must never
-be reused. `0.2.0` / `2` is Direct Preview 2 (`v0.2.0-preview.2`); see `docs/releases/github-direct-preview-0.2.0.md`.
+Published direct previews, none of whose codes may be reused: `0.1.0` / `1` (`v0.1.0-preview.1`) and `0.2.0` / `2`
+(`v0.2.0-preview.2`). `0.2.1` / `3` is Direct Preview 3 (`v0.2.1-preview.3`); see
+`docs/releases/github-direct-preview-0.2.1.md`.
 
 ## Rules
 
