@@ -75,6 +75,41 @@
         <item name="android:textSize">12sp</item>
     </style>
 
+    <!-- 4x1 day strip: one column per prayer; the next one gets widget_pill_next as background. -->
+    <style name="WidgetPrayerColumn">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">3dp</item>
+    </style>
+    <!-- One fixed size for all five labels: per-view autosize shrank only the long names and looked uneven. -->
+    <style name="WidgetPrayerLabel" parent="WidgetSecondary">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center</item>
+        <item name="android:includeFontPadding">true</item>
+        <item name="android:letterSpacing">0.02</item>
+        <item name="android:textSize">8sp</item>
+    </style>
+    <!-- Stroke icons tinted per state by the updater (setColorFilter). -->
+    <style name="WidgetPrayerIcon">
+        <item name="android:layout_width">14dp</item>
+        <item name="android:layout_height">14dp</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+    <!-- Times are bitmaps in Plus Jakarta Sans, like the prayer name; fitCenter shrinks them on narrow screens. -->
+    <style name="WidgetPrayerTimeImage">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">15dp</item>
+        <item name="android:layout_marginHorizontal">3dp</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
     <style name="WidgetMessage" parent="WidgetSecondary">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_marginTop">6dp</item>
