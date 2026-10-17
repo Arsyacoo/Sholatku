@@ -20,6 +20,7 @@ export const NETWORK_TIMEOUTS = {
   prayerRoute: 10_000,
   prayerProvider: 8_000,
   geocoding: 7_000,
+  appUpdate: 8_000,
   quranProvider: 12_000,
   quranRoute: 15_000,
   quranSearchProvider: 10_000,
