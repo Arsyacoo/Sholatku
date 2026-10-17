@@ -8,7 +8,7 @@
         <item name="android:gravity">center_vertical</item>
     </style>
 
-    <!-- Prayer names arrive as bitmaps in the brand fonts (see WidgetTextRenderer). -->
+    <!-- Prayer names arrive as bitmaps in Plus Jakarta Sans (see WidgetTextRenderer). -->
     <style name="WidgetDisplayImage">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
@@ -35,50 +35,49 @@
         <item name="android:textColor">@color/widget_text_secondary</item>
     </style>
 
-    <style name="WidgetIcon">
-        <item name="android:layout_width">13dp</item>
-        <item name="android:layout_height">13dp</item>
+    <style name="WidgetTimelineCell">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">12dp</item>
+        <item name="android:layout_weight">1</item>
+    </style>
+    <style name="WidgetTimelineTrack">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">2dp</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
+    <style name="WidgetTimelineSegment">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">@color/widget_line_off</item>
         <item name="android:importantForAccessibility">no</item>
     </style>
-
-    <style name="WidgetColumn">
-        <item name="android:layout_width">0dp</item>
+    <style name="WidgetTimelineDot">
+        <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:src">@drawable/widget_dot_upcoming</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+    <!-- Fixed height lets autosize shrink a time instead of clipping it on narrow or large-font screens. -->
+    <style name="WidgetTimelineTime" parent="WidgetSecondary">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">16dp</item>
         <item name="android:layout_weight">1</item>
-        <item name="android:layout_marginHorizontal">1dp</item>
-        <item name="android:paddingVertical">4dp</item>
-        <item name="android:paddingHorizontal">1dp</item>
-        <item name="android:orientation">vertical</item>
-        <item name="android:gravity">center_horizontal</item>
-    </style>
-    <!-- Fixed heights let autosize shrink names and times instead of clipping them on narrow or large-font screens. -->
-    <style name="WidgetColumnName" parent="WidgetSecondary">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">13dp</item>
-        <item name="android:gravity">center</item>
-        <item name="android:autoSizeTextType">uniform</item>
-        <item name="android:autoSizeMinTextSize">7sp</item>
-        <item name="android:autoSizeMaxTextSize">10sp</item>
-        <item name="android:textSize">10sp</item>
-    </style>
-    <style name="WidgetColumnTime">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">17dp</item>
         <item name="android:gravity">center</item>
         <item name="android:autoSizeTextType">uniform</item>
         <item name="android:autoSizeMinTextSize">8sp</item>
-        <item name="android:autoSizeMaxTextSize">13sp</item>
-        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:autoSizeMaxTextSize">12sp</item>
         <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:fontFeatureSettings">tnum</item>
-        <item name="android:includeFontPadding">false</item>
-        <item name="android:maxLines">1</item>
-        <item name="android:textSize">13sp</item>
-        <item name="android:textColor">@color/widget_text</item>
+        <item name="android:text">--:--</item>
+        <item name="android:textSize">12sp</item>
     </style>
 
     <style name="WidgetMessage" parent="WidgetSecondary">
         <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_marginTop">6dp</item>
         <item name="android:maxLines">2</item>
         <item name="android:text">@string/widget_stale</item>
         <item name="android:textSize">12sp</item>

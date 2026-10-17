@@ -25,17 +25,22 @@ final class PrayerWidgetUpdater {
         R.layout.widget_prayer_wide,
         R.layout.widget_prayer_large,
     };
-    // Display sizes (sp) for the bitmap-rendered prayer names, per layout above.
-    private static final float[] NAME_SP = {15f, 20f, 26f};
-    private static final float[] ARABIC_SP = {0f, 18f, 23f};
-    private static final int[] NAME_IDS = {
-        R.id.widget_name_0, R.id.widget_name_1, R.id.widget_name_2, R.id.widget_name_3, R.id.widget_name_4,
-    };
+    // Display sizes (sp) for the bitmap-rendered prayer name, per layout above.
+    private static final float[] NAME_SP = {13f, 18f, 24f};
     private static final int[] TIME_IDS = {
         R.id.widget_time_0, R.id.widget_time_1, R.id.widget_time_2, R.id.widget_time_3, R.id.widget_time_4,
     };
-    private static final int[] COLUMN_IDS = {
-        R.id.widget_col_0, R.id.widget_col_1, R.id.widget_col_2, R.id.widget_col_3, R.id.widget_col_4,
+    private static final int[] DOT_IDS = {
+        R.id.widget_dot_0, R.id.widget_dot_1, R.id.widget_dot_2, R.id.widget_dot_3, R.id.widget_dot_4,
+    };
+    private static final int[] LEFT_SEGMENT_IDS = {
+        R.id.widget_seg_l_0, R.id.widget_seg_l_1, R.id.widget_seg_l_2, R.id.widget_seg_l_3, R.id.widget_seg_l_4,
+    };
+    private static final int[] RIGHT_SEGMENT_IDS = {
+        R.id.widget_seg_r_0, R.id.widget_seg_r_1, R.id.widget_seg_r_2, R.id.widget_seg_r_3, R.id.widget_seg_r_4,
+    };
+    private static final int[] DOT_DRAWABLES = {
+        R.drawable.widget_dot_passed, R.drawable.widget_dot_next, R.drawable.widget_dot_upcoming,
     };
 
     private PrayerWidgetUpdater() {}
@@ -70,35 +75,32 @@ final class PrayerWidgetUpdater {
         int text = context.getColor(R.color.widget_text);
 
         if (selection == null) {
-            setDisplayText(context, views, R.id.widget_next_name, "Sholatku", R.font.plus_jakarta_sans_bold, NAME_SP[size], text);
-            views.setViewVisibility(R.id.widget_next_arabic, View.GONE);
-            views.setTextViewText(R.id.widget_next_time_long, "--:--");
+            setDisplayText(context, views, R.id.widget_next_name, "Sholatku", NAME_SP[size], text);
+            setDisplayText(context, views, R.id.widget_next_label, "Sholatku", NAME_SP[size], text);
+            views.setTextViewText(R.id.widget_next_time, "");
             views.setTextViewText(R.id.widget_header, schedule == null ? "" : schedule.city);
             views.setViewVisibility(R.id.widget_countdown, View.GONE);
+            views.setViewVisibility(R.id.widget_schedule, View.GONE);
             views.setViewVisibility(R.id.widget_message, View.VISIBLE);
-            views.setViewVisibility(R.id.widget_columns, View.GONE);
             return views;
         }
 
         PrayerWidgetSchedule.Day day = selection.day;
         int next = selection.nextIndex;
-        setDisplayText(context, views, R.id.widget_next_name, day.names[next], R.font.plus_jakarta_sans_bold, NAME_SP[size], text);
-        if (ARABIC_SP[size] > 0 && !day.arabic[next].isEmpty()) {
-            setDisplayText(
-                context, views, R.id.widget_next_arabic, day.arabic[next],
-                R.font.amiri_regular, ARABIC_SP[size], context.getColor(R.color.widget_gold)
-            );
-            views.setViewVisibility(R.id.widget_next_arabic, View.VISIBLE);
-        } else {
-            views.setViewVisibility(R.id.widget_next_arabic, View.GONE);
-        }
-        views.setTextViewText(R.id.widget_next_time_long, "Masuk pukul " + day.times[next]);
+        setDisplayText(context, views, R.id.widget_next_name, day.names[next], NAME_SP[size], text);
+        views.setTextViewText(R.id.widget_next_time, day.times[next]);
+        // 2x1 is too narrow for a separate time view: draw "Dzuhur  11:38" as one bitmap that scales to fit.
+        views.setImageViewBitmap(R.id.widget_next_label, WidgetTextRenderer.render(
+            context, day.names[next], day.times[next], R.font.plus_jakarta_sans_bold, NAME_SP[size],
+            text, context.getColor(R.color.widget_text_secondary)
+        ));
+        views.setContentDescription(R.id.widget_next_label, day.names[next] + " " + day.times[next]);
         views.setTextViewText(
             R.id.widget_header,
             day.hijri.isEmpty() ? schedule.city : schedule.city + " · " + day.hijri
         );
         views.setViewVisibility(R.id.widget_message, View.GONE);
-        views.setViewVisibility(R.id.widget_columns, View.VISIBLE);
+        views.setViewVisibility(R.id.widget_schedule, View.VISIBLE);
         views.setViewVisibility(R.id.widget_countdown, View.VISIBLE);
         views.setChronometer(R.id.widget_countdown, SystemClock.elapsedRealtime() + (selection.nextAt() - now), null, true);
         views.setChronometerCountDown(R.id.widget_countdown, true);
@@ -106,20 +108,30 @@ final class PrayerWidgetUpdater {
         int secondary = context.getColor(R.color.widget_text_secondary);
         int gold = context.getColor(R.color.widget_gold_soft);
         for (int i = 0; i < PrayerWidgetSchedule.PRAYER_COUNT; i++) {
-            boolean isNext = i == next;
-            views.setTextViewText(NAME_IDS[i], day.names[i]);
+            views.setImageViewResource(DOT_IDS[i], DOT_DRAWABLES[PrayerWidgetSchedule.dotState(i, next)]);
+            views.setInt(LEFT_SEGMENT_IDS[i], "setBackgroundResource", segmentColor(i == 0, PrayerWidgetSchedule.isLeftSegmentLit(i, next)));
+            views.setInt(
+                RIGHT_SEGMENT_IDS[i], "setBackgroundResource",
+                segmentColor(i == PrayerWidgetSchedule.PRAYER_COUNT - 1, PrayerWidgetSchedule.isRightSegmentLit(i, next))
+            );
             views.setTextViewText(TIME_IDS[i], day.times[i]);
-            views.setTextColor(NAME_IDS[i], isNext ? text : secondary);
-            views.setTextColor(TIME_IDS[i], isNext ? gold : text);
-            views.setInt(COLUMN_IDS[i], "setBackgroundResource", isNext ? R.drawable.widget_highlight : 0);
+            views.setTextColor(TIME_IDS[i], i == next ? gold : secondary);
+            views.setContentDescription(DOT_IDS[i], day.names[i] + " " + day.times[i]);
         }
         return views;
     }
 
+    private static int segmentColor(boolean outerEdge, boolean lit) {
+        if (outerEdge) return R.color.widget_transparent;
+        return lit ? R.color.widget_line_on : R.color.widget_line_off;
+    }
+
     private static void setDisplayText(
-        Context context, RemoteViews views, int viewId, String value, int fontRes, float sizeSp, int color
+        Context context, RemoteViews views, int viewId, String value, float sizeSp, int color
     ) {
-        views.setImageViewBitmap(viewId, WidgetTextRenderer.render(context, value, fontRes, sizeSp, color));
+        views.setImageViewBitmap(
+            viewId, WidgetTextRenderer.render(context, value, R.font.plus_jakarta_sans_bold, sizeSp, color)
+        );
         views.setContentDescription(viewId, value);
     }
 

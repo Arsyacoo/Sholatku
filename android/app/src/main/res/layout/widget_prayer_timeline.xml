@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Five prayers as dots on one line: passed (filled), next (gold ring), upcoming (hollow). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_timeline"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+    <FrameLayout style="@style/WidgetTimelineCell">
+        <LinearLayout style="@style/WidgetTimelineTrack">
+            <ImageView android:id="@+id/widget_seg_l_0" style="@style/WidgetTimelineSegment" />
+            <ImageView android:id="@+id/widget_seg_r_0" style="@style/WidgetTimelineSegment" />
+        </LinearLayout>
+        <ImageView android:id="@+id/widget_dot_0" style="@style/WidgetTimelineDot" />
+    </FrameLayout>
+    <FrameLayout style="@style/WidgetTimelineCell">
+        <LinearLayout style="@style/WidgetTimelineTrack">
+            <ImageView android:id="@+id/widget_seg_l_1" style="@style/WidgetTimelineSegment" />
+            <ImageView android:id="@+id/widget_seg_r_1" style="@style/WidgetTimelineSegment" />
+        </LinearLayout>
+        <ImageView android:id="@+id/widget_dot_1" style="@style/WidgetTimelineDot" />
+    </FrameLayout>
+    <FrameLayout style="@style/WidgetTimelineCell">
+        <LinearLayout style="@style/WidgetTimelineTrack">
+            <ImageView android:id="@+id/widget_seg_l_2" style="@style/WidgetTimelineSegment" />
+            <ImageView android:id="@+id/widget_seg_r_2" style="@style/WidgetTimelineSegment" />
+        </LinearLayout>
+        <ImageView android:id="@+id/widget_dot_2" style="@style/WidgetTimelineDot" />
+    </FrameLayout>
+    <FrameLayout style="@style/WidgetTimelineCell">
+        <LinearLayout style="@style/WidgetTimelineTrack">
+            <ImageView android:id="@+id/widget_seg_l_3" style="@style/WidgetTimelineSegment" />
+            <ImageView android:id="@+id/widget_seg_r_3" style="@style/WidgetTimelineSegment" />
+        </LinearLayout>
+        <ImageView android:id="@+id/widget_dot_3" style="@style/WidgetTimelineDot" />
+    </FrameLayout>
+    <FrameLayout style="@style/WidgetTimelineCell">
+        <LinearLayout style="@style/WidgetTimelineTrack">
+            <ImageView android:id="@+id/widget_seg_l_4" style="@style/WidgetTimelineSegment" />
+            <ImageView android:id="@+id/widget_seg_r_4" style="@style/WidgetTimelineSegment" />
+        </LinearLayout>
+        <ImageView android:id="@+id/widget_dot_4" style="@style/WidgetTimelineDot" />
+    </FrameLayout>
+</LinearLayout>

@@ -16,20 +16,36 @@ final class WidgetTextRenderer {
     private WidgetTextRenderer() {}
 
     static Bitmap render(Context context, String text, int fontRes, float sizeSp, int color) {
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG);
-        paint.setTypeface(loadTypeface(context, fontRes));
-        paint.setTextSize(TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_SP, sizeSp, context.getResources().getDisplayMetrics()
-        ));
-        paint.setColor(color);
+        return render(context, text, "", fontRes, sizeSp, color, color);
+    }
 
-        String safeText = text.isEmpty() ? " " : text;
-        Paint.FontMetrics metrics = paint.getFontMetrics();
-        int width = Math.max(1, (int) Math.ceil(paint.measureText(safeText)));
+    /** Draws {@code primary} in the brand font, then an optional {@code secondary} label in the system face. */
+    static Bitmap render(
+        Context context, String primary, String secondary, int fontRes, float sizeSp, int primaryColor, int secondaryColor
+    ) {
+        float textSize = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_SP, sizeSp, context.getResources().getDisplayMetrics()
+        );
+        Paint primaryPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG);
+        primaryPaint.setTypeface(loadTypeface(context, fontRes));
+        primaryPaint.setTextSize(textSize);
+        primaryPaint.setColor(primaryColor);
+
+        Paint secondaryPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG);
+        secondaryPaint.setTextSize(textSize * 0.85f);
+        secondaryPaint.setColor(secondaryColor);
+
+        String safePrimary = primary.isEmpty() ? " " : primary;
+        String gap = secondary.isEmpty() ? "" : "  ";
+        float primaryWidth = primaryPaint.measureText(safePrimary + gap);
+        Paint.FontMetrics metrics = primaryPaint.getFontMetrics();
+        int width = Math.max(1, (int) Math.ceil(primaryWidth + secondaryPaint.measureText(secondary)));
         int height = Math.max(1, (int) Math.ceil(metrics.descent - metrics.ascent));
 
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        new Canvas(bitmap).drawText(safeText, 0, -metrics.ascent, paint);
+        Canvas canvas = new Canvas(bitmap);
+        canvas.drawText(safePrimary, 0, -metrics.ascent, primaryPaint);
+        if (!secondary.isEmpty()) canvas.drawText(secondary, primaryWidth, -metrics.ascent, secondaryPaint);
         return bitmap;
     }
 

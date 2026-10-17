@@ -234,5 +234,8 @@ Three widget sizes share one data source: `Sholat Berikutnya` (2x1), `Jadwal Sho
 - When the stored week runs out, widgets show "Buka Sholatku untuk memperbarui jadwal" instead of stale times.
 - The pure selection logic is covered by `PrayerWidgetScheduleTest` (`./gradlew :app:testDebugUnitTest`).
 - Launchers ignore `android:fontFamily="@font/..."` inside RemoteViews. Prayer names are therefore drawn into bitmaps in
-  Plus Jakarta Sans and Amiri by `WidgetTextRenderer`; the live countdown stays a `Chronometer` in the system
-  `sans-serif-light` face with tabular figures.
+  Plus Jakarta Sans by `WidgetTextRenderer`; the live countdown stays a `Chronometer` in the system `sans-serif-light`
+  face with tabular figures.
+- The 4x1 and 4x2 sizes show the day as a timeline (`widget_prayer_timeline.xml`): five dots on one line built from
+  plain RemoteViews, so it stays crisp at any widget width. Passed prayers are filled, the next prayer is a gold ring,
+  upcoming ones are hollow, and the line is lit up to the next prayer (`PrayerWidgetSchedule.dotState`).
