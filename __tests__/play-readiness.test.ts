@@ -69,9 +69,10 @@ describe('Play readiness guardrails', () => {
     expect(page).toContain('Direct Preview / Beta');
     expect(page).toContain('direct-preview');
     expect(page).toContain('bukan versi production atau stable');
-    expect(page).toContain('Menunggu publikasi resmi');
-    expect(page).toContain('v0.1.0-preview.1/sholatku-latest.apk');
-    expect(page).toContain('dfa487a98dead883d2ef4232c622c13bf1b8a7e55e4c21f5cb8110f35444fe13');
+    expect(page).toContain('Download APK 0.2.0');
+    expect(page).toContain('v0.2.0-preview.2/sholatku-latest.apk');
+    expect(page).not.toContain('releases/latest/download/');
+    expect(page).toContain('d8864115203c702a529be2714039d30aeb6168f5f9e8e229fd3d51a184b03ec4');
     expect(sitemap).toContain("'/download'");
     expect(docs).toContain('Future Android Developer Verification');
     expect(docs).toContain('https://developer.android.com/developer-verification');

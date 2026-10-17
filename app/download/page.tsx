@@ -5,7 +5,7 @@ import { Footer } from '@/components/layout/Footer';
 import { Navbar } from '@/components/layout/Navbar';
 
 const directPreviewAssetUrl =
-  'https://github.com/Arsyacoo/Sholatku/releases/download/v0.1.0-preview.1/sholatku-latest.apk';
+  'https://github.com/Arsyacoo/Sholatku/releases/download/v0.2.0-preview.2/sholatku-latest.apk';
 
 export const metadata: Metadata = {
   title: 'Android Preview / Beta',
@@ -40,8 +40,8 @@ export default function DownloadPage() {
               <div className="space-y-2 text-sm leading-relaxed text-amber-950 dark:text-amber-100">
                 <p className="font-bold">Status: Preview / Beta, channel direct-preview</p>
                 <p>
-                  APK preview sudah siap secara lokal. Link download publik menunggu publikasi resmi GitHub Release dan
-                  approval terpisah.
+                  Preview 2 (0.2.0) tersedia sebagai GitHub Pre-release. Pengguna Preview 1 dapat memasangnya langsung
+                  sebagai pembaruan tanpa kehilangan data.
                 </p>
                 <p>
                   Backend preview menggunakan staging Sholatku. Endpoint ini bukan backend production dan tidak boleh
@@ -54,7 +54,7 @@ export default function DownloadPage() {
           <section className="grid gap-3 sm:grid-cols-3" aria-label="Informasi preview Android">
             <div className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Versi</p>
-              <p className="mt-1 text-lg font-bold text-slate-900 dark:text-slate-100">0.1.0</p>
+              <p className="mt-1 text-lg font-bold text-slate-900 dark:text-slate-100">0.2.0</p>
             </div>
             <div className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Android minimum</p>
@@ -73,26 +73,21 @@ export default function DownloadPage() {
                 <div>
                   <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Download APK</h2>
                   <p className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                    APK ini sudah ditandatangani dan diverifikasi secara lokal. Link resmi akan aktif setelah artifact
-                    dipublikasikan dengan approval terpisah.
+                    APK ditandatangani dengan sertifikat distribusi langsung Sholatku. Cocokkan SHA-256 di bawah setelah
+                    mengunduh.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  disabled
+                <a
+                  href={directPreviewAssetUrl}
                   data-download-url={directPreviewAssetUrl}
-                  className="inline-flex min-h-11 cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-surface-200 px-4 py-2.5 text-sm font-bold text-slate-500 dark:bg-surface-800 dark:text-slate-500"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-primary-700"
                 >
                   <Download className="h-4 w-4" aria-hidden="true" />
-                  Menunggu publikasi resmi
-                </button>
-                <p className="text-xs text-slate-500 dark:text-slate-400">File: sholatku-v0.1.0.apk</p>
+                  Download APK 0.2.0
+                </a>
+                <p className="text-xs text-slate-500 dark:text-slate-400">File: sholatku-v0.2.0.apk (4,2 MB)</p>
                 <p className="break-all text-xs text-slate-500 dark:text-slate-400">
-                  SHA-256: dfa487a98dead883d2ef4232c622c13bf1b8a7e55e4c21f5cb8110f35444fe13
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Belum tersedia untuk download publik.</p>
-                <p className="break-all text-xs text-slate-500 dark:text-slate-400">
-                  Target asset setelah GitHub Pre-release: {directPreviewAssetUrl}
+                  SHA-256: d8864115203c702a529be2714039d30aeb6168f5f9e8e229fd3d51a184b03ec4
                 </p>
               </div>
             </div>
@@ -101,8 +96,8 @@ export default function DownloadPage() {
           <section className="space-y-3">
             <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Sumber resmi</h2>
             <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-              Setelah tersedia, download akan berasal dari website Sholatku dan halaman GitHub Releases resmi. Jangan
-              mengunduh APK dari mirror yang tidak tercantum di sini.
+              Download hanya dari website Sholatku dan halaman GitHub Releases resmi. Jangan mengunduh APK dari mirror
+              yang tidak tercantum di sini.
             </p>
             <Link
               href="https://github.com/Arsyacoo/Sholatku/releases"
