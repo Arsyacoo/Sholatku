@@ -16,6 +16,9 @@ Android **Direct Preview / Beta** for testing. This is not a production or stabl
 
 ## Yang baru
 
+- **Metode perhitungan Muhammadiyah.** Pilih "Muhammadiyah (Majelis Tarjih)" di Pengaturan → Metode perhitungan.
+  Mengikuti Munas Tarjih 2020: Subuh pada ketinggian matahari −18° (Kemenag −20°), Isya 18°, sehingga Subuh sekitar
+  8 menit lebih lambat. Kemenag tetap menjadi bawaan.
 - **Widget 4x1 "Menuju Sholat" didesain ulang.** Kiri: sholat berikutnya dan hitung mundur ("dalam 01:12"). Kanan: lima
   waktu sholat, masing-masing dengan ikon (fajar, matahari, awan, senja, bulan), jam dalam font Plus Jakarta Sans, dan
   namanya. Sholat berikutnya disorot emas di dalam pill; yang lain diredupkan.
@@ -42,7 +45,7 @@ disable it again after installation. Do not disable Play Protect or device secur
 
 ## Integrity
 
-SHA-256: `fce51270d7b901d60d525090ee548840c44f951e0c2d422e37546ee2f5e54481`
+SHA-256: `f215a53d27e988c2cada970ea9606127571c730ecb092cf77965bcc29dfb8db2`
 
 ## Verification
 
@@ -51,6 +54,8 @@ SHA-256: `fce51270d7b901d60d525090ee548840c44f951e0c2d422e37546ee2f5e54481`
   direct build, `REQUEST_INSTALL_PACKAGES`.
 - On an Android 16 (API 36) emulator, the published 0.2.3 build (`versionCode 5`) updated in place to this build
   (`versionCode 6`) with the original install time kept; the app launched and the 4x1 widget rendered the new layout.
+- Selecting Muhammadiyah on the emulator (Jakarta, 17 Oct 2026) changed Subuh from 04:12 to 04:21 on the home screen,
+  and the widget followed.
 - Not yet tested on physical devices.
 
 ## Notes

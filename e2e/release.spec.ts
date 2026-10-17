@@ -43,7 +43,7 @@ test('publishes truthful robots, sitemap, manifest, and route metadata', async (
     'href',
     'https://github.com/Arsyacoo/Sholatku/releases/download/v0.2.4-preview.6/sholatku-latest.apk'
   );
-  await expect(page.getByText('fce51270d7b901d60d525090ee548840c44f951e0c2d422e37546ee2f5e54481')).toBeVisible();
+  await expect(page.getByText('f215a53d27e988c2cada970ea9606127571c730ecb092cf77965bcc29dfb8db2')).toBeVisible();
   await assertNoErrors();
 });
 

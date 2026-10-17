@@ -87,7 +87,7 @@ export default function DownloadPage() {
                 </a>
                 <p className="text-xs text-slate-500 dark:text-slate-400">File: sholatku-v0.2.4.apk (4,2 MB)</p>
                 <p className="break-all text-xs text-slate-500 dark:text-slate-400">
-                  SHA-256: fce51270d7b901d60d525090ee548840c44f951e0c2d422e37546ee2f5e54481
+                  SHA-256: f215a53d27e988c2cada970ea9606127571c730ecb092cf77965bcc29dfb8db2
                 </p>
               </div>
             </div>
