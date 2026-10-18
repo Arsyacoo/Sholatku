@@ -88,7 +88,7 @@ export function useRamadan(
       active = false;
       controller.abort();
     };
-  }, [timing?.date, status?.isRamadan, preferences.showHomeCard, location.latitude, location.longitude, location.timezone, settings.method, settings.madhab, JSON.stringify(settings.adjustments)]);
+  }, [timing?.date, status?.isRamadan, preferences.showHomeCard, location.latitude, location.longitude, location.timezone, settings.method, settings.madhab, JSON.stringify(settings.adjustments), settings.ihtiyat]);
 
   const nextDayTiming = useMemo(
     () => (nextDaySchedule ? buildRamadanTiming(nextDaySchedule, preferences.imsakOffsetMinutes) : null),

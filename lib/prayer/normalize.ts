@@ -35,6 +35,21 @@ export function applyPrayerAdjustments<T extends AdjustableTimings>(timings: T, 
   };
 }
 
+export const IHTIYAT_OPTIONS = [0, 1, 2, 3, 4] as const;
+
+/** Adds the ihtiyat margin on top of the user's corrections: prayer starts later, sunrise (end of Subuh) earlier. */
+export function withIhtiyat(adjustments: PrayerAdjustment, minutes: number): PrayerAdjustment {
+  if (!minutes) return adjustments;
+  return {
+    fajr: adjustments.fajr + minutes,
+    sunrise: adjustments.sunrise - minutes,
+    dhuhr: adjustments.dhuhr + minutes,
+    asr: adjustments.asr + minutes,
+    maghrib: adjustments.maghrib + minutes,
+    isha: adjustments.isha + minutes,
+  };
+}
+
 export function applyTimeOffset(timeStr: string, offsetMinutes: number): string {
   if (!offsetMinutes) return timeStr;
   const [h, m] = timeStr.split(':').map(Number);

@@ -15,6 +15,7 @@ import { CALCULATION_METHODS, DEFAULT_LOCATION, DEFAULT_SETTINGS } from '../pray
 import { DEFAULT_IMSAK_OFFSET_MINUTES, IMSAK_OFFSET_OPTIONS } from '../ramadan/timing';
 import { isValidTimeZone, normalizeTimeZone } from '../time/timezone';
 import { parseProviderGregorianDate } from '../prayer/date';
+import { IHTIYAT_OPTIONS, withIhtiyat } from '../prayer/normalize';
 
 const KEYS = {
   LOCATION: 'sholatku_user_location_v1',
@@ -53,14 +54,15 @@ export function buildPrayerScheduleCacheContext(
     timezone: normalizeTimeZone(location.timezone),
     method: settings.method,
     madhab: settings.madhab,
-    adjustments: {
+    // Effective offsets (manual corrections plus ihtiyat), so changing either invalidates the cache.
+    adjustments: withIhtiyat({
       fajr: settings.adjustments.fajr,
       sunrise: settings.adjustments.sunrise,
       dhuhr: settings.adjustments.dhuhr,
       asr: settings.adjustments.asr,
       maghrib: settings.adjustments.maghrib,
       isha: settings.adjustments.isha,
-    },
+    }, settings.ihtiyat),
   };
 }
 
@@ -162,6 +164,7 @@ function normalizeUserSettings(value: unknown): UserSettings {
       maghrib: normalizeAdjustment(rawAdjustments.maghrib, adjustments.maghrib),
       isha: normalizeAdjustment(rawAdjustments.isha, adjustments.isha),
     },
+    ihtiyat: IHTIYAT_OPTIONS.includes(input.ihtiyat as never) ? (input.ihtiyat as number) : DEFAULT_SETTINGS.ihtiyat,
     timeFormat24h: typeof input.timeFormat24h === 'boolean' ? input.timeFormat24h : DEFAULT_SETTINGS.timeFormat24h,
     theme: input.theme === 'light' || input.theme === 'dark' || input.theme === 'system' ? input.theme : DEFAULT_SETTINGS.theme,
     enableNotifications: typeof input.enableNotifications === 'boolean' ? input.enableNotifications : DEFAULT_SETTINGS.enableNotifications,

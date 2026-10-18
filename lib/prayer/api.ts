@@ -1,5 +1,5 @@
 import { DailyPrayerSchedule, MonthlyPrayerItem, UserLocation, UserSettings } from '@/types';
-import { applyPrayerAdjustments, normalizeAlAdhanDay, normalizeAlAdhanMonth } from './normalize';
+import { applyPrayerAdjustments, normalizeAlAdhanDay, normalizeAlAdhanMonth, withIhtiyat } from './normalize';
 import { calculateOfflinePrayers } from './calculation';
 import { aladhanMethodQuery, offlineFajrAngle } from './constants';
 import { formatDateInTimeZone, formatIndonesianDateInTimeZone, getTimeZoneOffsetMinutes, normalizeTimeZone, zonedTimeToUtc } from '../time/timezone';
@@ -55,7 +55,7 @@ export async function getDailyPrayerTimes(
       headers: { Accept: 'application/json' },
     });
     if (data.code === 200 && data.data) {
-      return normalizeAlAdhanDay(data.data, settings.adjustments, 'api', timezone);
+      return normalizeAlAdhanDay(data.data, withIhtiyat(settings.adjustments, settings.ihtiyat), 'api', timezone);
     }
   } catch (e) {
     if (isNetworkRequestError(e, 'aborted')) throw e;
@@ -73,7 +73,7 @@ export async function getDailyPrayerTimes(
       }
     );
     if (data.code === 200 && data.data) {
-      return normalizeAlAdhanDay(data.data, settings.adjustments, 'api', timezone);
+      return normalizeAlAdhanDay(data.data, withIhtiyat(settings.adjustments, settings.ihtiyat), 'api', timezone);
     }
   } catch (err) {
     if (isNetworkRequestError(err, 'aborted')) throw err;
@@ -86,7 +86,7 @@ export async function getDailyPrayerTimes(
   const timezoneOffset = getTimeZoneOffsetMinutes(scheduleInstant, timezone) / 60;
   const calculated = applyPrayerAdjustments(
     calculateOfflinePrayers(scheduleInstant, location.latitude, location.longitude, timezoneOffset, offlineFajrAngle(method)),
-    settings.adjustments
+    withIhtiyat(settings.adjustments, settings.ihtiyat)
   );
   const hijri = getApproximateHijriDate(scheduleInstant);
 
@@ -144,7 +144,7 @@ export async function getMonthlyPrayerTimes(
       headers: { Accept: 'application/json' },
     });
     if (data.code === 200 && Array.isArray(data.data)) {
-      return normalizeAlAdhanMonth(data.data, settings.adjustments, timezone);
+      return normalizeAlAdhanMonth(data.data, withIhtiyat(settings.adjustments, settings.ihtiyat), timezone);
     }
   } catch (e) {
     if (isNetworkRequestError(e, 'aborted')) throw e;
@@ -162,7 +162,7 @@ export async function getMonthlyPrayerTimes(
       }
     );
     if (data.code === 200 && Array.isArray(data.data)) {
-      return normalizeAlAdhanMonth(data.data, settings.adjustments, timezone);
+      return normalizeAlAdhanMonth(data.data, withIhtiyat(settings.adjustments, settings.ihtiyat), timezone);
     }
   } catch (err) {
     if (isNetworkRequestError(err, 'aborted')) throw err;
@@ -179,7 +179,7 @@ export async function getMonthlyPrayerTimes(
     const currentDate = new Date(Date.UTC(year, month - 1, d, 12));
     const timings = applyPrayerAdjustments(
       calculateOfflinePrayers(currentDate, location.latitude, location.longitude, offset, offlineFajrAngle(method)),
-      settings.adjustments
+      withIhtiyat(settings.adjustments, settings.ihtiyat)
     );
     const hijri = getApproximateHijriDate(currentDate);
 

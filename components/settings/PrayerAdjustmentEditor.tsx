@@ -3,18 +3,29 @@
 import React from 'react';
 import { PrayerAdjustment, PrayerKey } from '@/types';
 import { PRAYER_NAMES } from '@/lib/prayer/constants';
+import { IHTIYAT_OPTIONS } from '@/lib/prayer/normalize';
+import { Select } from '../ui/Select';
 import { Plus, Minus, RotateCcw } from 'lucide-react';
 
 interface PrayerAdjustmentEditorProps {
   adjustments: PrayerAdjustment;
   onChange: (adjustments: PrayerAdjustment) => void;
+  ihtiyat: number;
+  onIhtiyatChange: (minutes: number) => void;
 }
+
+const IHTIYAT_SELECT_OPTIONS = IHTIYAT_OPTIONS.map((minutes) => ({
+  value: minutes as number,
+  label: minutes === 0 ? 'Tanpa ihtiyat' : minutes === 2 ? '+2 menit (Kemenag)' : `+${minutes} menit`,
+}));
 
 const ADJUSTABLE_KEYS: PrayerKey[] = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
 
 export const PrayerAdjustmentEditor: React.FC<PrayerAdjustmentEditorProps> = ({
   adjustments,
   onChange,
+  ihtiyat,
+  onIhtiyatChange,
 }) => {
   const handleStep = (key: PrayerKey, delta: number) => {
     const current = adjustments[key as keyof PrayerAdjustment] || 0;
@@ -33,13 +44,34 @@ export const PrayerAdjustmentEditor: React.FC<PrayerAdjustmentEditorProps> = ({
 
   return (
     <div className="space-y-4">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 space-y-0.5">
+          <label htmlFor="ihtiyat" className="block text-sm font-bold text-slate-900 dark:text-slate-100">
+            Ihtiyat (waktu kehati-hatian)
+          </label>
+          <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+            Jadwal resmi Kemenag menambahkan beberapa menit agar sholat tidak dimulai terlalu awal. Berlaku untuk semua
+            waktu sholat; waktu terbit dimajukan.
+          </p>
+        </div>
+        <Select
+          id="ihtiyat"
+          value={ihtiyat}
+          options={IHTIYAT_SELECT_OPTIONS}
+          onValueChange={onIhtiyatChange}
+          ariaLabel="Ihtiyat"
+          size="sm"
+          className="w-[170px] shrink-0"
+        />
+      </div>
+
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
           <label className="block text-sm font-bold text-slate-900 dark:text-slate-100">
-            Koreksi Menit Manual (Ihtiyat)
+            Koreksi Menit Manual
           </label>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Tambahkan atau kurangi menit pada masing-masing jadwal bila diperlukan penyesuaian lokal.
+            Tambahkan atau kurangi menit per jadwal bila masjid setempat berbeda. Ditambahkan di atas ihtiyat.
           </p>
         </div>
 

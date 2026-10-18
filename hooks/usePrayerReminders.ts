@@ -45,6 +45,7 @@ export function usePrayerReminders({
       settings.method,
       settings.madhab,
       JSON.stringify(settings.adjustments),
+      settings.ihtiyat,
     ].join('|');
 
     const start = async () => {
@@ -104,6 +105,7 @@ export function usePrayerReminders({
     settings.madhab,
     settings.enableNotifications,
     JSON.stringify(settings.adjustments),
+    settings.ihtiyat,
     JSON.stringify(reminderSettings),
     JSON.stringify(ramadanPreferences),
   ]);

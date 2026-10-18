@@ -118,6 +118,8 @@ export default function SettingsPage() {
             onChange={(adjustments: PrayerAdjustment) =>
               updateSetting((s) => ({ ...s, adjustments }))
             }
+            ihtiyat={settings.ihtiyat}
+            onIhtiyatChange={(ihtiyat) => updateSetting((s) => ({ ...s, ihtiyat }))}
           />
         </section>
 

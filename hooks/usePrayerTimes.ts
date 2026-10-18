@@ -62,7 +62,7 @@ export function usePrayerTimes(location: UserLocation, settings: UserSettings) {
         requestsRef.current?.finish(request);
       }
     },
-    [location.latitude, location.longitude, location.timezone, settings.method, settings.madhab, JSON.stringify(settings.adjustments)]
+    [location.latitude, location.longitude, location.timezone, settings.method, settings.madhab, JSON.stringify(settings.adjustments), settings.ihtiyat]
   );
 
   // Initial load or when location/settings change
