@@ -31,6 +31,15 @@ describe('persisted preference validation', () => {
     expect(getRamadanPreferences().hijriAdjustment).toBe(0);
   });
 
+  it('gives existing settings the Kemenag ihtiyat and keeps only supported values', () => {
+    storage.sholatku_user_settings_v1 = JSON.stringify({ method: '20' });
+    expect(getSavedSettings().ihtiyat).toBe(2);
+    storage.sholatku_user_settings_v1 = JSON.stringify({ method: '20', ihtiyat: 0 });
+    expect(getSavedSettings().ihtiyat).toBe(0);
+    storage.sholatku_user_settings_v1 = JSON.stringify({ method: '20', ihtiyat: 9 });
+    expect(getSavedSettings().ihtiyat).toBe(2);
+  });
+
   it('falls back safely for corrupt and invalid location/settings', () => {
     storage.sholatku_user_location_v1 = JSON.stringify({ latitude: 'hello', longitude: 999 });
     storage.sholatku_user_settings_v1 = JSON.stringify({ method: '999', madhab: 'invalid', adjustments: { fajr: NaN }, theme: 'nope' });

@@ -91,6 +91,8 @@ export const DEFAULT_LOCATION: UserLocation = {
 
 export const DEFAULT_SETTINGS: UserSettings = {
   method: '20', // Kemenag RI
+  // Bimas Islam schedules run 2-4 minutes after the raw AlAdhan times; Depag RI uses a 2-minute ihtiyat.
+  ihtiyat: 2,
   madhab: 'shafii',
   adjustments: {
     fajr: 0,

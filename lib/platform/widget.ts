@@ -78,7 +78,7 @@ export async function syncPrayerWidget(
   // The bridge syncs on every focus; only refetch when the day or a schedule input changed.
   const syncKey = JSON.stringify([
     today, location.city, location.latitude, location.longitude, timeZone,
-    settings.method, settings.madhab, settings.adjustments, hijriAdjustment,
+    settings.method, settings.madhab, settings.adjustments, settings.ihtiyat, hijriAdjustment,
   ]);
   if (syncKey === lastSyncKey) return;
 

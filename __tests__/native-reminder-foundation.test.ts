@@ -115,6 +115,7 @@ function createSnapshot(enableNotifications: boolean): {
         maghrib: 0,
         isha: 0,
       },
+      ihtiyat: 0,
       timeFormat24h: true,
       theme: 'system',
       enableNotifications,

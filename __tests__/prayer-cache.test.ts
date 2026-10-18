@@ -13,6 +13,7 @@ const location: UserLocation = {
 const settings: UserSettings = {
   method: '20', madhab: 'shafii',
   adjustments: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 },
+  ihtiyat: 0,
   timeFormat24h: true, theme: 'system', enableNotifications: false, notifyBeforeMinutes: 0, adhanSound: 'beep',
 };
 const schedule: DailyPrayerSchedule = {

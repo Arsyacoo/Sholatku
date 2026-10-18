@@ -42,6 +42,8 @@ export interface UserSettings {
   method: CalculationMethodId;
   madhab: Madhab;
   adjustments: PrayerAdjustment;
+  /** Kemenag's safety margin in minutes (0-4): prayer starts move later, sunrise earlier. */
+  ihtiyat: number;
   timeFormat24h: boolean;
   theme: 'system' | 'light' | 'dark';
   enableNotifications: boolean;
