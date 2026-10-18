@@ -7,7 +7,7 @@ import { Footer } from '@/components/layout/Footer';
 import { QiblaCompass } from '@/components/qibla/QiblaCompass';
 import { CitySearchModal } from '@/components/location/CitySearchModal';
 import { useLocation } from '@/hooks/useLocation';
-import { MapPin, ArrowLeft } from 'lucide-react';
+import { MapPin, ArrowLeft, ChevronRight, Landmark } from 'lucide-react';
 import Link from 'next/link';
 
 export default function QiblaPage() {
@@ -50,6 +50,20 @@ export default function QiblaPage() {
 
         {/* Compass Component */}
         <QiblaCompass location={location} />
+
+        <Link
+          href="/mosques"
+          className="flex min-h-16 items-center gap-3 rounded-2xl border border-surface-200 bg-white px-4 py-3 transition-colors hover:bg-surface-50 dark:border-surface-800 dark:bg-surface-900 dark:hover:bg-surface-800"
+        >
+          <Landmark className="h-5 w-5 shrink-0 text-primary-600 dark:text-primary-400" aria-hidden="true" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-slate-900 dark:text-slate-100">Masjid Terdekat</span>
+            <span className="block text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              Jarak, arah, dan rute ke masjid atau musala di sekitar Anda (perlu internet).
+            </span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+        </Link>
       </main>
 
       <Footer />

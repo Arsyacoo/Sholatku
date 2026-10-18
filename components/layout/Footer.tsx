@@ -32,6 +32,10 @@ export const Footer: React.FC = () => {
             Kompas Kiblat
           </Link>
           <span>&bull;</span>
+          <Link href="/mosques" className="hover:text-primary-600 transition-colors">
+            Masjid Terdekat
+          </Link>
+          <span>&bull;</span>
           <Link href="/settings" className="hover:text-primary-600 transition-colors">
             Pengaturan
           </Link>

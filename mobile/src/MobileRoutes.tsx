@@ -7,6 +7,7 @@ const QuranPage = lazy(() => import('@/app/quran/page'));
 const QuranOfflinePage = lazy(() => import('@/app/quran/offline/page'));
 const MonthlyPage = lazy(() => import('@/app/monthly/page'));
 const QiblaPage = lazy(() => import('@/app/qibla/page'));
+const MosquesPage = lazy(() => import('@/app/mosques/page'));
 const SettingsPage = lazy(() => import('@/app/settings/page'));
 const PrivacyPolicyPage = lazy(() => import('@/app/privacy/page'));
 const RamadanPage = lazy(() => import('@/app/ramadan/page'));
@@ -20,6 +21,7 @@ export type MobileRouteKind =
   | 'quran-surah'
   | 'monthly'
   | 'qibla'
+  | 'mosques'
   | 'settings'
   | 'privacy'
   | 'ramadan'
@@ -45,6 +47,7 @@ export function matchMobileRoute(pathname: string): MobileRouteMatch {
   if (path === '/quran/offline') return { kind: 'quran-offline' };
   if (path === '/monthly') return { kind: 'monthly' };
   if (path === '/qibla') return { kind: 'qibla' };
+  if (path === '/mosques') return { kind: 'mosques' };
   if (path === '/settings') return { kind: 'settings' };
   if (path === '/privacy') return { kind: 'privacy' };
   if (path === '/ramadan') return { kind: 'ramadan' };
@@ -140,6 +143,8 @@ function RouteRenderer() {
       return <MonthlyPage key={routeKey} />;
     case 'qibla':
       return <QiblaPage key={routeKey} />;
+    case 'mosques':
+      return <MosquesPage key={routeKey} />;
     case 'settings':
       return <SettingsPage key={routeKey} />;
     case 'privacy':

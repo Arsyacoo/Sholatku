@@ -20,7 +20,7 @@ export function PrivacyPolicyContent() {
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl">
             Kebijakan Privasi
           </h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Terakhir diperbarui: 9 September 2026</p>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Terakhir diperbarui: 18 Oktober 2026</p>
         </div>
       </div>
 
@@ -49,6 +49,8 @@ export function PrivacyPolicyContent() {
         <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
           <li>Jadwal sholat mengirim koordinat, zona waktu, metode hisab, madhab, dan tanggal ke BFF Sholatku atau layanan AlAdhan sebagai fallback.</li>
           <li>Pencarian atau deteksi wilayah dapat mengirim query pencarian atau koordinat ke Nominatim OpenStreetMap.</li>
+          <li>Masjid Terdekat mengirim area di sekitar koordinat lokasi yang dipilih langsung dari perangkat ke Nominatim OpenStreetMap, tanpa melalui server Sholatku. Hasilnya tidak disimpan.</li>
+          <li>Tombol Rute membuka Google Maps dengan koordinat masjid yang dipilih.</li>
           <li>Permintaan surat dan pencarian ayat dapat dikirim ke BFF Sholatku, yang mengambil data dari penyedia Al-Qur&apos;an yang digunakan aplikasi.</li>
           <li>Audio murottal dimuat dari URL penyedia audio yang ada pada data surat atau fallback aplikasi.</li>
           <li>Server dan penyedia internet secara alami dapat menerima alamat IP, waktu permintaan, dan metadata jaringan standar. Sholatku tidak mengaitkannya dengan akun pengguna.</li>
