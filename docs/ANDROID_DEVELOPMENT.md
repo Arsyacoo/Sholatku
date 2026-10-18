@@ -254,6 +254,5 @@ Three widget sizes share one data source: `Sholat Berikutnya` (2x1), `Menuju Sho
   icon per prayer (`widget_ic_*`, tinted with `setColorFilter`), the time as a Plus Jakarta Sans bitmap, and the name.
   Every column except the next prayer is muted; the next one is gold inside a soft pill (`widget_pill_next`). Labels use one fixed size, since
   per-view autosize shrank only the long names.
-- The 4x2 size shows the day as a timeline (`widget_prayer_timeline.xml`): five dots on one line built from
-  plain RemoteViews, so it stays crisp at any widget width. Passed prayers are filled, the next prayer is a gold ring,
-  upcoming ones are hollow, and the line is lit up to the next prayer (`PrayerWidgetSchedule.dotState`).
+- The 4x2 size uses the same day strip one size up (16dp icons, 16sp times) under the large countdown and the
+  city and Hijri date line.

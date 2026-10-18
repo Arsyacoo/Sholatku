@@ -9,6 +9,6 @@
     <string name="widget_label_large">Jadwal Sholat Hari Ini</string>
     <string name="widget_description_small">Sholat berikutnya dengan hitung mundur</string>
     <string name="widget_description_wide">Sholat berikutnya, hitung mundur, dan jadwal lima sholat hari ini</string>
-    <string name="widget_description_large">Hitung mundur, kota, tanggal Hijriah, dan garis waktu lima sholat</string>
+    <string name="widget_description_large">Hitung mundur, kota, tanggal Hijriah, dan jadwal lima sholat</string>
     <string name="widget_stale">Buka Sholatku untuk memperbarui jadwal</string>
 </resources>

@@ -19,7 +19,7 @@ export const Footer: React.FC = () => {
           <span>&bull;</span>
           <span>Akurat &bull; Tenang &bull; Presisi</span>
         </div>
-        <div className="flex items-center gap-4 text-xs">
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-xs">
           <Link href="/quran" className="hover:text-primary-600 transition-colors">
             Al-Qur&apos;an
           </Link>
