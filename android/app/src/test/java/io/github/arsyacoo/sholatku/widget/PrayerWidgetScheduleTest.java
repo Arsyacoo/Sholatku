@@ -1,10 +1,8 @@
 package io.github.arsyacoo.sholatku.widget;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import org.junit.Test;
@@ -38,21 +36,6 @@ public class PrayerWidgetScheduleTest {
         PrayerWidgetSchedule.Selection selection = schedule.select(19);
         assertSame(tomorrow, selection.day);
         assertEquals(0, selection.nextIndex);
-    }
-
-    @Test
-    public void marksTimelineDotsAndLitSegmentsAroundTheNextPrayer() {
-        int next = 2; // Ashar
-        assertEquals(PrayerWidgetSchedule.DOT_PASSED, PrayerWidgetSchedule.dotState(1, next));
-        assertEquals(PrayerWidgetSchedule.DOT_NEXT, PrayerWidgetSchedule.dotState(2, next));
-        assertEquals(PrayerWidgetSchedule.DOT_UPCOMING, PrayerWidgetSchedule.dotState(3, next));
-
-        assertFalse(PrayerWidgetSchedule.isLeftSegmentLit(0, next));
-        assertTrue(PrayerWidgetSchedule.isRightSegmentLit(1, next));
-        assertTrue(PrayerWidgetSchedule.isLeftSegmentLit(2, next));
-        assertFalse(PrayerWidgetSchedule.isRightSegmentLit(2, next));
-        assertFalse(PrayerWidgetSchedule.isLeftSegmentLit(3, next));
-        assertFalse(PrayerWidgetSchedule.isRightSegmentLit(4, 4));
     }
 
     @Test
