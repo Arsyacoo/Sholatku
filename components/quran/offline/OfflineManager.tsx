@@ -15,9 +15,12 @@ import { SURAH_LIST } from '@/lib/quran/surah-list';
 import { useQuranOfflineManager, type OfflineSurahAction } from '@/hooks/useQuranOfflineManager';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
+import { useLanguage } from '@/hooks/useLanguage';
+import { tr } from '@/lib/language';
+import type { Language } from '@/types';
 
-function formatBytes(bytes: number): string {
-  if (!Number.isFinite(bytes) || bytes <= 0) return 'Belum tersedia';
+function formatBytes(bytes: number, language: Language): string {
+  if (!Number.isFinite(bytes) || bytes <= 0) return tr(language, 'Belum tersedia', 'Not available yet');
   if (bytes < 1024) return `${Math.round(bytes)} B`;
   const units = ['KB', 'MB', 'GB'];
   let value = bytes / 1024;
@@ -52,6 +55,7 @@ export function OfflineManager() {
     cancelBulkDownload,
     clearAllOffline,
   } = useQuranOfflineManager();
+  const { t, language } = useLanguage();
   const [deleteTarget, setDeleteTarget] = useState<(typeof SURAH_LIST)[number] | null>(null);
   const [clearAllTarget, setClearAllTarget] = useState(false);
 
@@ -66,48 +70,49 @@ export function OfflineManager() {
           className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400"
         >
           <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-          Kembali ke Al-Qur&apos;an
+          {t("Kembali ke Al-Qur'an", 'Back to the Quran')}
         </Link>
       </div>
 
       <section className="space-y-2">
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-600 dark:text-primary-400">
-          Quran Offline
+          {t('Quran Offline', 'Offline Quran')}
         </p>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">
-          Kelola bacaan offline
+          {t('Kelola bacaan offline', 'Manage offline reading')}
         </h1>
           <p className="max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-            Simpan teks Al-Qur&apos;an di perangkat agar tetap dapat dibaca meskipun tidak
-            terhubung ke internet. Indeks pencarian ayat offline dibentuk dari Surah yang
-            tersimpan. Audio tidak disimpan dalam pengelola offline ini.
+            {t(
+              "Simpan teks Al-Qur'an di perangkat agar tetap dapat dibaca meskipun tidak terhubung ke internet. Indeks pencarian ayat offline dibentuk dari Surah yang tersimpan. Audio tidak disimpan dalam pengelola offline ini.",
+              'Save the Quran text on your device so you can keep reading without an internet connection. The offline ayah search index is built from the saved surahs. Audio is not saved by this offline manager.'
+            )}
         </p>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-3" aria-label="Ringkasan penyimpanan offline">
+      <section className="grid gap-3 sm:grid-cols-3" aria-label={t('Ringkasan penyimpanan offline', 'Offline storage summary')}>
         <div className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900">
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Surah tersimpan</p>
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">{t('Surah tersimpan', 'Saved surahs')}</p>
           <p className="mt-1 text-2xl font-extrabold text-slate-900 dark:text-slate-100">
             {isLoading ? '—' : cachedCount}
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">dari {SURAH_LIST.length} Surah</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{t(`dari ${SURAH_LIST.length} Surah`, `of ${SURAH_LIST.length} surahs`)}</p>
         </div>
         <div className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900">
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Perkiraan Quran</p>
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">{t('Perkiraan Quran', 'Estimated Quran size')}</p>
           <p className="mt-1 text-2xl font-extrabold text-slate-900 dark:text-slate-100">
-            {isLoading ? '—' : formatBytes(estimatedSize)}
+            {isLoading ? '—' : formatBytes(estimatedSize, language)}
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">berdasarkan metadata cache</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{t('berdasarkan metadata cache', 'based on cache metadata')}</p>
         </div>
         <div className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900">
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Storage browser</p>
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">{t('Storage browser', 'Browser storage')}</p>
           <p className="mt-1 text-2xl font-extrabold text-slate-900 dark:text-slate-100">
-            {storageEstimate ? formatBytes(storageEstimate.usage) : 'Tidak tersedia'}
+            {storageEstimate ? formatBytes(storageEstimate.usage, language) : t('Tidak tersedia', 'Not available')}
           </p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             {storageEstimate?.percentage !== null && storageEstimate?.percentage !== undefined
-              ? `${storageEstimate.percentage.toFixed(1)}% dari kuota`
-              : 'perkiraan browser tidak tersedia'}
+              ? t(`${storageEstimate.percentage.toFixed(1)}% dari kuota`, `${storageEstimate.percentage.toFixed(1)}% of quota`)
+              : t('perkiraan browser tidak tersedia', 'browser estimate not available')}
           </p>
         </div>
       </section>
@@ -117,9 +122,9 @@ export function OfflineManager() {
           <div className="flex items-start gap-3">
             <HardDriveDownload className="mt-0.5 h-5 w-5 shrink-0 text-primary-700 dark:text-primary-300" aria-hidden="true" />
             <div>
-              <h2 className="font-bold text-slate-900 dark:text-slate-100">Simpan semua teks Quran</h2>
+              <h2 className="font-bold text-slate-900 dark:text-slate-100">{t('Simpan semua teks Quran', 'Save the full Quran text')}</h2>
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                Surah yang sudah tersimpan akan dilewati.
+                {t('Surah yang sudah tersimpan akan dilewati.', 'Surahs already saved will be skipped.')}
               </p>
             </div>
           </div>
@@ -130,7 +135,7 @@ export function OfflineManager() {
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-300 bg-white px-4 py-2.5 text-sm font-bold text-red-700 transition hover:bg-red-50 dark:border-red-800 dark:bg-surface-900 dark:text-red-300 dark:hover:bg-red-950/30"
             >
               <XCircle className="h-4 w-4" aria-hidden="true" />
-              Batal
+              {t('Batal', 'Cancel')}
             </button>
           ) : bulkStatus === 'paused' ? (
             <button
@@ -139,7 +144,7 @@ export function OfflineManager() {
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-primary-700"
             >
               <Download className="h-4 w-4" aria-hidden="true" />
-              Lanjutkan Download
+              {t('Lanjutkan Download', 'Resume download')}
             </button>
           ) : failedBulkIds.length > 0 ? (
             <button
@@ -148,7 +153,7 @@ export function OfflineManager() {
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-primary-700"
             >
               <Download className="h-4 w-4" aria-hidden="true" />
-              Coba Lagi ({failedBulkIds.length})
+              {t('Coba Lagi', 'Try again')} ({failedBulkIds.length})
             </button>
           ) : (
             <button
@@ -157,7 +162,7 @@ export function OfflineManager() {
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-primary-700"
             >
               <Download className="h-4 w-4" aria-hidden="true" />
-              Download Semua Al-Qur&apos;an
+              {t("Download Semua Al-Qur'an", 'Download the entire Quran')}
             </button>
           )}
         </div>
@@ -165,22 +170,25 @@ export function OfflineManager() {
           <div className="mt-4 space-y-2" aria-live="polite">
             {bulkStatus === 'downloading' && (
               <p className="text-sm font-semibold text-primary-700 dark:text-primary-300">
-                Sedang mengunduh teks Quran dengan maksimal 3 koneksi bersamaan.
+                {t('Sedang mengunduh teks Quran dengan maksimal 3 koneksi bersamaan.', 'Downloading the Quran text with up to 3 connections at a time.')}
               </p>
             )}
             {bulkStatus === 'paused' && (
               <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
-                Download dijeda. Surah yang sudah selesai tetap tersimpan dan dapat dilanjutkan.
+                {t('Download dijeda. Surah yang sudah selesai tetap tersimpan dan dapat dilanjutkan.', 'Download paused. Finished surahs stay saved, and you can resume later.')}
               </p>
             )}
             {bulkStatus === 'completed' && failedBulkIds.length === 0 && (
               <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
-                Semua teks Surah sudah tersedia offline.
+                {t('Semua teks Surah sudah tersedia offline.', 'All surah texts are available offline.')}
               </p>
             )}
             {failedBulkIds.length > 0 && (
               <p className="text-sm font-semibold text-red-700 dark:text-red-300">
-                {failedBulkIds.length} Surah gagal diunduh. Gunakan tombol coba lagi untuk mengulangi yang gagal.
+                {t(
+                  `${failedBulkIds.length} Surah gagal diunduh. Gunakan tombol coba lagi untuk mengulangi yang gagal.`,
+                  `${failedBulkIds.length} surahs failed to download. Use the try again button to retry them.`
+                )}
               </p>
             )}
             {bulkError && <p className="text-sm text-red-600 dark:text-red-400">{bulkError}</p>}
@@ -190,7 +198,10 @@ export function OfflineManager() {
                 className="h-2 flex-1 accent-primary-600"
                 value={bulkProgress.completed}
                 max={bulkProgress.total}
-                aria-label={`Progress download Quran: ${bulkProgress.completed} dari ${bulkProgress.total} Surah`}
+                aria-label={t(
+                  `Progress download Quran: ${bulkProgress.completed} dari ${bulkProgress.total} Surah`,
+                  `Quran download progress: ${bulkProgress.completed} of ${bulkProgress.total} surahs`
+                )}
               />
               <span className="shrink-0 text-xs font-bold text-slate-600 dark:text-slate-300">
                 {bulkProgress.completed} / {bulkProgress.total}
@@ -207,7 +218,7 @@ export function OfflineManager() {
               className="inline-flex items-center gap-1.5 text-xs font-bold text-red-600 transition hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50 dark:text-red-400"
             >
               <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-              Hapus semua Surah offline
+              {t('Hapus semua Surah offline', 'Delete all offline surahs')}
             </button>
           </div>
         )}
@@ -217,11 +228,11 @@ export function OfflineManager() {
         <div className="flex items-end justify-between gap-3">
           <div>
             <h2 id="offline-surah-heading" className="text-lg font-bold text-slate-900 dark:text-slate-100">
-              Daftar Surah
+              {t('Daftar Surah', 'Surah list')}
             </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Pilih Surah yang ingin tersedia offline.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{t('Pilih Surah yang ingin tersedia offline.', 'Choose the surahs you want available offline.')}</p>
           </div>
-          {isLoading && <Loader2 className="h-4 w-4 animate-spin text-primary-600" aria-label="Memuat status cache" />}
+          {isLoading && <Loader2 className="h-4 w-4 animate-spin text-primary-600" aria-label={t('Memuat status cache', 'Loading cache status')} />}
         </div>
 
         <div className="grid gap-2 md:grid-cols-2">
@@ -247,15 +258,15 @@ export function OfflineManager() {
                     <div className="flex flex-col items-end gap-1">
                       <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 dark:text-emerald-300">
                         <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                        <span>Tersedia Offline</span>
+                        <span>{t('Tersedia Offline', 'Available offline')}</span>
                       </span>
                       <button
                         type="button"
                         onClick={() => setDeleteTarget(surah)}
                         className="inline-flex items-center gap-1 text-[11px] font-bold text-red-600 hover:text-red-700 dark:text-red-400"
-                        aria-label={`Hapus ${surah.name} dari penyimpanan offline`}
+                        aria-label={t(`Hapus ${surah.name} dari penyimpanan offline`, `Delete ${surah.name} from offline storage`)}
                       >
-                        <Trash2 className="h-3 w-3" aria-hidden="true" /> Hapus
+                        <Trash2 className="h-3 w-3" aria-hidden="true" /> {t('Hapus', 'Delete')}
                       </button>
                     </div>
                   )}
@@ -265,52 +276,52 @@ export function OfflineManager() {
                       disabled={bulkStatus === 'downloading'}
                       onClick={() => void downloadSurah(surah.number)}
                       className="inline-flex scroll-mb-24 items-center gap-1.5 rounded-lg border border-primary-300 px-2.5 py-1.5 text-xs font-bold text-primary-700 transition hover:bg-primary-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-primary-800 dark:text-primary-300 dark:hover:bg-primary-950/50"
-                      aria-label={`Download ${surah.name} untuk offline`}
+                      aria-label={t(`Download ${surah.name} untuk offline`, `Download ${surah.name} for offline use`)}
                     >
                       <Download className="h-3.5 w-3.5" aria-hidden="true" /> Download
                     </button>
                   )}
                   {getAction(surah.number, isCached) === 'downloading' && (
                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary-700 dark:text-primary-300" role="status">
-                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Mengunduh...
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> {t('Mengunduh...', 'Downloading...')}
                     </span>
                   )}
                   {getAction(surah.number, isCached) === 'deleting' && (
                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500" role="status">
-                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Menghapus...
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> {t('Menghapus...', 'Deleting...')}
                     </span>
                   )}
                   {getAction(surah.number, isCached) === 'failed' && (
                     <div className="flex flex-col items-end gap-1">
                       <span className="inline-flex items-center gap-1 text-xs font-bold text-red-600 dark:text-red-400" role="status">
-                        <XCircle className="h-4 w-4" aria-hidden="true" /> Gagal mengunduh
+                        <XCircle className="h-4 w-4" aria-hidden="true" /> {t('Gagal mengunduh', 'Download failed')}
                       </span>
                       <button
                         type="button"
                         onClick={() => void downloadSurah(surah.number)}
                         className="text-[11px] font-bold text-primary-700 hover:underline dark:text-primary-300"
-                        aria-label={`Coba lagi download ${surah.name}`}
+                        aria-label={t(`Coba lagi download ${surah.name}`, `Retry downloading ${surah.name}`)}
                       >
-                        Coba Lagi
+                        {t('Coba Lagi', 'Try again')}
                       </button>
                     </div>
                   )}
                   {getAction(surah.number, isCached) === 'delete-failed' && (
                     <div className="flex flex-col items-end gap-1">
                       <span className="inline-flex items-center gap-1 text-xs font-bold text-red-600 dark:text-red-400" role="status">
-                        <XCircle className="h-4 w-4" aria-hidden="true" /> Gagal menghapus
+                        <XCircle className="h-4 w-4" aria-hidden="true" /> {t('Gagal menghapus', 'Delete failed')}
                       </span>
                       <button
                         type="button"
                         onClick={() => void removeSurah(surah.number)}
                         className="text-[11px] font-bold text-primary-700 hover:underline dark:text-primary-300"
-                        aria-label={`Coba lagi menghapus ${surah.name}`}
+                        aria-label={t(`Coba lagi menghapus ${surah.name}`, `Retry deleting ${surah.name}`)}
                       >
-                        Coba Lagi
+                        {t('Coba Lagi', 'Try again')}
                       </button>
                     </div>
                   )}
-                  {info && <p className="mt-0.5 text-[10px] text-slate-400">{formatBytes(info.estimatedSize)}</p>}
+                  {info && <p className="mt-0.5 text-[10px] text-slate-400">{formatBytes(info.estimatedSize, language)}</p>}
                   {errorById[surah.number] && ['failed', 'delete-failed'].includes(getAction(surah.number, isCached)) && (
                     <p className="mt-0.5 max-w-[150px] text-[10px] text-red-500">{errorById[surah.number]}</p>
                   )}
@@ -324,16 +335,18 @@ export function OfflineManager() {
       <Modal
         isOpen={Boolean(deleteTarget)}
         onClose={() => setDeleteTarget(null)}
-        title={deleteTarget ? `Hapus ${deleteTarget.name}?` : 'Hapus Surah?'}
+        title={deleteTarget ? t(`Hapus ${deleteTarget.name}?`, `Delete ${deleteTarget.name}?`) : t('Hapus Surah?', 'Delete surah?')}
         maxWidth="sm"
       >
         <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-          Surah ini tidak lagi tersedia ketika perangkat offline. Bookmark, favorit, terakhir dibaca,
-          dan pengaturan Quran tidak akan dihapus.
+          {t(
+            'Surah ini tidak lagi tersedia ketika perangkat offline. Bookmark, favorit, terakhir dibaca, dan pengaturan Quran tidak akan dihapus.',
+            'This surah will no longer be available while your device is offline. Bookmarks, favorites, last read and Quran settings will not be deleted.'
+          )}
         </p>
         <div className="mt-6 flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={() => setDeleteTarget(null)}>
-            Batal
+            {t('Batal', 'Cancel')}
           </Button>
           <Button
             type="button"
@@ -345,7 +358,7 @@ export function OfflineManager() {
               if (removed) setDeleteTarget(null);
             }}
           >
-            Hapus
+            {t('Hapus', 'Delete')}
           </Button>
         </div>
       </Modal>
@@ -353,16 +366,18 @@ export function OfflineManager() {
       <Modal
         isOpen={clearAllTarget}
         onClose={() => setClearAllTarget(false)}
-        title="Hapus semua Surah offline?"
+        title={t('Hapus semua Surah offline?', 'Delete all offline surahs?')}
         maxWidth="sm"
       >
         <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-          Seluruh teks Surah dan indeks pencarian ayat offline yang tersimpan akan dihapus dari perangkat.
-          Bookmark, favorit, terakhir dibaca, dan pengaturan Quran tetap aman.
+          {t(
+            'Seluruh teks Surah dan indeks pencarian ayat offline yang tersimpan akan dihapus dari perangkat. Bookmark, favorit, terakhir dibaca, dan pengaturan Quran tetap aman.',
+            'All saved surah texts and the offline ayah search index will be deleted from this device. Bookmarks, favorites, last read and Quran settings stay safe.'
+          )}
         </p>
         <div className="mt-6 flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={() => setClearAllTarget(false)}>
-            Batal
+            {t('Batal', 'Cancel')}
           </Button>
           <Button
             type="button"
@@ -372,7 +387,7 @@ export function OfflineManager() {
               if (cleared) setClearAllTarget(false);
             }}
           >
-            Hapus Semua
+            {t('Hapus Semua', 'Delete all')}
           </Button>
         </div>
       </Modal>

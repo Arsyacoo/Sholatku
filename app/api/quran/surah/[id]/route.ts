@@ -19,8 +19,29 @@ function audioSources(value: unknown): Record<string, string> {
   );
 }
 
+/** English translation (Saheeh International via Tanzil/AlQuran.cloud, non-commercial use), by ayah number. */
+const ENGLISH_EDITION = 'en.sahih';
+
+async function fetchEnglishTranslation(surahNumber: number): Promise<Map<number, string>> {
+  const response = await fetchWithTimeout(`https://api.alquran.cloud/v1/surah/${surahNumber}/${ENGLISH_EDITION}`, {
+    timeoutMs: NETWORK_TIMEOUTS.quranProvider,
+    next: { revalidate: 86400 },
+    headers: { Accept: 'application/json' },
+  });
+  const payload = await readJsonResponse<unknown>(response);
+  const ayahs = isObject(payload) && isObject(payload.data) && Array.isArray(payload.data.ayahs) ? payload.data.ayahs : [];
+  const translations = new Map<number, string>();
+  for (const ayah of ayahs) {
+    const translation = isObject(ayah) ? text(ayah.text) : null;
+    if (isObject(ayah) && Number.isInteger(ayah.numberInSurah) && translation) {
+      translations.set(ayah.numberInSurah as number, translation);
+    }
+  }
+  return translations;
+}
+
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   let surahNumber: number;
@@ -36,7 +57,11 @@ export async function GET(
   const surahMeta = SURAH_LIST.find((surah) => surah.number === surahNumber);
   if (!surahMeta) return apiError('SURAH_NOT_FOUND', 'Surat tidak ditemukan.', 404);
 
+  // Arabic, Latin and audio always come from equran.id; only the translation text depends on the language.
+  const language = request.nextUrl.searchParams.get('lang') === 'en' ? 'en' : 'id';
+
   try {
+    const englishRequest = language === 'en' ? fetchEnglishTranslation(surahNumber) : null;
     const response = await fetchWithTimeout(`https://equran.id/api/v2/surat/${surahNumber}`, {
       timeoutMs: NETWORK_TIMEOUTS.quranProvider,
       rejectHttpErrors: false,
@@ -53,13 +78,14 @@ export async function GET(
       return apiError('QURAN_PROVIDER_INVALID_RESPONSE', 'Data surat belum dapat dimuat.', 502);
     }
 
+    const english = englishRequest ? await englishRequest : null;
     const rawAyahs = Array.isArray(payload.data.ayat) ? payload.data.ayat : [];
     const ayahs: Ayah[] = rawAyahs.flatMap((value) => {
       if (!isObject(value)) return [];
       const number = value.nomorAyat;
       const arabText = text(value.teksArab);
       const latinText = text(value.teksLatin);
-      const translation = text(value.teksIndonesia);
+      const translation = english ? english.get(value.nomorAyat as number) ?? null : text(value.teksIndonesia);
       if (
         !Number.isInteger(number) ||
         (number as number) < 1 ||
@@ -91,7 +117,9 @@ export async function GET(
     const description = text(payload.data.deskripsi);
     const detail: SurahDetail = {
       ...surahMeta,
-      description: description?.replace(/<[^>]*>?/gm, '') || '',
+      translationLanguage: language,
+      // equran.id descriptions are Indonesian prose only.
+      description: language === 'en' ? '' : description?.replace(/<[^>]*>?/gm, '') || '',
       audioFull: fullAudio['05'] || fullAudio['01'] || '',
       ayahs,
     };

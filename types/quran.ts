@@ -3,6 +3,7 @@ export interface SurahInfo {
   name: string; // Latin name e.g. "Al-Fatihah"
   arabicName: string; // e.g. "الفاتحة"
   translation: string; // Indonesian meaning e.g. "Pembukaan"
+  translationEn?: string; // English meaning e.g. "The Opening"
   numberOfAyahs: number;
   revelation: 'Makkiyah' | 'Madaniyah';
   description?: string;
@@ -14,7 +15,7 @@ export interface Ayah {
   numberInQuran: number;
   arabText: string;
   latinText: string;
-  translation: string; // Indonesian Kemenag
+  translation: string; // Kemenag (Indonesian) or Saheeh International (English), see SurahDetail.translationLanguage
   tafsir?: QuranTafsir | null;
   juz: number | null;
   page?: number;
@@ -29,6 +30,8 @@ export interface QuranTafsir {
 }
 
 export interface SurahDetail extends SurahInfo {
+  /** Language of every `ayah.translation`; absent on data cached before English existed (Indonesian). */
+  translationLanguage?: 'id' | 'en';
   bismillah?: {
     arab: string;
     translation: string;

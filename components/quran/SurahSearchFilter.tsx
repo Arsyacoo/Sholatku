@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Search, X, BookOpen, Layers, Star, Bookmark } from 'lucide-react';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export type QuranTab = 'surah' | 'juz' | 'favorites' | 'bookmarks';
 
@@ -24,6 +25,7 @@ export const SurahSearchFilter: React.FC<SurahSearchFilterProps> = ({
   favoriteCount,
   bookmarkCount = 0,
 }) => {
+  const { t } = useLanguage();
   return (
     <div className="space-y-4">
       {/* Search bar */}
@@ -33,8 +35,8 @@ export const SurahSearchFilter: React.FC<SurahSearchFilterProps> = ({
             type="text"
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
-            placeholder="Cari ayat, surat, atau terjemahan..."
-            aria-label="Cari ayat, surat, atau terjemahan Al-Qur'an"
+            placeholder={t('Cari ayat, surat, atau terjemahan...', 'Search ayahs, surahs, or translations...')}
+            aria-label={t("Cari ayat, surat, atau terjemahan Al-Qur'an", "Search Quran ayahs, surahs, or translations")}
           className="w-full pl-11 pr-10 py-3 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 shadow-2xs"
         />
         {query && (
@@ -42,7 +44,7 @@ export const SurahSearchFilter: React.FC<SurahSearchFilterProps> = ({
             type="button"
             onClick={() => onQueryChange('')}
             className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"
-            aria-label="Bersihkan pencarian Quran"
+            aria-label={t('Bersihkan pencarian Quran', 'Clear Quran search')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -54,7 +56,7 @@ export const SurahSearchFilter: React.FC<SurahSearchFilterProps> = ({
         <button
           type="button"
           onClick={() => onTabChange('surah')}
-          aria-label={`Semua Surat (${surahCount})`}
+          aria-label={t(`Semua Surat (${surahCount})`, `All surahs (${surahCount})`)}
           className={`flex min-h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1.5 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 ${
             activeTab === 'surah'
               ? 'bg-white dark:bg-surface-900 text-primary-700 dark:text-primary-300 shadow-2xs font-bold'
@@ -63,7 +65,7 @@ export const SurahSearchFilter: React.FC<SurahSearchFilterProps> = ({
         >
           <span className="flex items-center justify-center gap-1 whitespace-nowrap text-[11px] leading-4">
             <BookOpen className="h-3.5 w-3.5 shrink-0" />
-            <span>Semua</span>
+            <span>{t('Semua', 'All')}</span>
           </span>
           <span className="text-[10px] font-medium leading-3 text-slate-500 dark:text-slate-400">{surahCount}</span>
         </button>
@@ -88,7 +90,7 @@ export const SurahSearchFilter: React.FC<SurahSearchFilterProps> = ({
         <button
           type="button"
           onClick={() => onTabChange('favorites')}
-          aria-label={`Surat Favorit (${favoriteCount})`}
+          aria-label={t(`Surat Favorit (${favoriteCount})`, `Favorite surahs (${favoriteCount})`)}
           className={`flex min-h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1.5 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 ${
             activeTab === 'favorites'
               ? 'bg-white dark:bg-surface-900 text-primary-700 dark:text-primary-300 shadow-2xs font-bold'
@@ -97,7 +99,7 @@ export const SurahSearchFilter: React.FC<SurahSearchFilterProps> = ({
         >
           <span className="flex items-center justify-center gap-1 whitespace-nowrap text-[11px] leading-4">
             <Star className="h-3.5 w-3.5 shrink-0" />
-            <span>Favorit</span>
+            <span>{t('Favorit', 'Favorites')}</span>
           </span>
           <span className="text-[10px] font-medium leading-3 text-slate-500 dark:text-slate-400">{favoriteCount}</span>
         </button>
@@ -105,7 +107,7 @@ export const SurahSearchFilter: React.FC<SurahSearchFilterProps> = ({
         <button
           type="button"
           onClick={() => onTabChange('bookmarks')}
-          aria-label={`Ayat Disimpan (${bookmarkCount})`}
+          aria-label={t(`Ayat Disimpan (${bookmarkCount})`, `Saved ayahs (${bookmarkCount})`)}
           className={`flex min-h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1.5 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 ${
             activeTab === 'bookmarks'
               ? 'bg-white dark:bg-surface-900 text-primary-700 dark:text-primary-300 shadow-2xs font-bold'
@@ -114,7 +116,7 @@ export const SurahSearchFilter: React.FC<SurahSearchFilterProps> = ({
         >
           <span className="flex items-center justify-center gap-1 whitespace-nowrap text-[11px] leading-4">
             <Bookmark className="h-3.5 w-3.5 shrink-0" />
-            <span>Simpan</span>
+            <span>{t('Simpan', 'Saved')}</span>
           </span>
           <span className="text-[10px] font-medium leading-3 text-slate-500 dark:text-slate-400">{bookmarkCount}</span>
         </button>

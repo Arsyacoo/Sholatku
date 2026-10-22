@@ -17,6 +17,11 @@ import {
   runQuranDownloadQueue,
 } from '@/lib/quran/offline-queue';
 import { SURAH_LIST } from '@/lib/quran/surah-list';
+import { tr } from '@/lib/language';
+import { getSavedSettings } from '@/lib/storage/preferences';
+
+/** Messages are built while downloading, outside render, so they read the saved language directly. */
+const say = (indonesian: string, english: string) => tr(getSavedSettings().language, indonesian, english);
 
 export type OfflineSurahAction =
   | 'idle'
@@ -98,7 +103,7 @@ export function useQuranOfflineManager() {
         if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') {
           return false;
         }
-        const message = error instanceof Error ? error.message : 'Gagal mengunduh Surah.';
+        const message = error instanceof Error ? error.message : say('Gagal mengunduh Surah.', 'Could not download the surah.');
         setErrorById((current) => ({ ...current, [surahNumber]: message }));
         setActionById((current) => ({ ...current, [surahNumber]: 'failed' }));
         return false;
@@ -121,7 +126,7 @@ export function useQuranOfflineManager() {
       setActionById((current) => ({ ...current, [surahNumber]: 'deleting' }));
       try {
         const removed = await deleteCachedSurah(surahNumber);
-        if (!removed) throw new Error('Surah tidak dapat dihapus dari perangkat.');
+        if (!removed) throw new Error(say('Surah tidak dapat dihapus dari perangkat.', 'Could not remove the surah from this device.'));
         setActionById((current) => {
           const next = { ...current };
           delete next[surahNumber];
@@ -132,7 +137,7 @@ export function useQuranOfflineManager() {
       } catch (error) {
         setErrorById((current) => ({
           ...current,
-          [surahNumber]: error instanceof Error ? error.message : 'Gagal menghapus Surah.',
+          [surahNumber]: error instanceof Error ? error.message : say('Gagal menghapus Surah.', 'Could not remove the surah.'),
         }));
         setActionById((current) => ({ ...current, [surahNumber]: 'delete-failed' }));
         return false;
@@ -155,7 +160,7 @@ export function useQuranOfflineManager() {
       setFailedBulkIds([]);
       setStorageWarning(
         storageEstimate?.percentage !== null && storageEstimate?.percentage !== undefined && storageEstimate.percentage >= 90
-          ? 'Penyimpanan hampir penuh. Download dapat berhenti jika kuota perangkat tidak mencukupi.'
+          ? say('Penyimpanan hampir penuh. Download dapat berhenti jika kuota perangkat tidak mencukupi.', 'Storage is almost full. Downloads may stop if the device runs out of space.')
           : null
       );
 
@@ -180,7 +185,7 @@ export function useQuranOfflineManager() {
               setActionById((current) => ({ ...current, [surahNumber]: 'available' }));
             } catch (error) {
               if (!(error && typeof error === 'object' && 'name' in error && error.name === 'AbortError')) {
-                const message = error instanceof Error ? error.message : 'Gagal mengunduh Surah.';
+                const message = error instanceof Error ? error.message : say('Gagal mengunduh Surah.', 'Could not download the surah.');
                 setErrorById((current) => ({ ...current, [surahNumber]: message }));
                 setActionById((current) => ({ ...current, [surahNumber]: 'failed' }));
               }
@@ -206,7 +211,7 @@ export function useQuranOfflineManager() {
         return result.failedIds.length === 0 && result.remainingIds.length === 0;
       } catch (error) {
         setBulkStatus('error');
-        setBulkError(error instanceof Error ? error.message : 'Download Quran gagal.');
+        setBulkError(error instanceof Error ? error.message : say('Download Quran gagal.', 'Quran download failed.'));
         return false;
       } finally {
         bulkController.current = null;

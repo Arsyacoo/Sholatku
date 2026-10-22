@@ -23,6 +23,7 @@ import { BookOpen, HardDriveDownload } from 'lucide-react';
 import { getCachedSurahCount } from '@/lib/storage/quran-offline';
 import { useQuranSearch } from '@/hooks/useQuranSearch';
 import { QuranSearchResults } from '@/components/quran/QuranSearchResults';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export default function QuranPage() {
   const [query, setQuery] = useState('');
@@ -32,6 +33,7 @@ export default function QuranPage() {
   const [bookmarkedAyahs, setBookmarkedAyahs] = useState<SavedAyah[]>([]);
   const [cachedSurahCount, setCachedSurahCount] = useState(0);
   const quranSearch = useQuranSearch(query);
+  const { t } = useLanguage();
 
   useEffect(() => {
     void migrateLegacySurahCache().catch(() => {
@@ -92,14 +94,14 @@ export default function QuranPage() {
             <HardDriveDownload className="mt-0.5 h-5 w-5 shrink-0 text-primary-700 dark:text-primary-300" aria-hidden="true" />
             <div>
               <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Quran Offline</p>
-              <p className="text-xs text-slate-600 dark:text-slate-400">{cachedSurahCount} Surah tersimpan di perangkat</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400">{t(`${cachedSurahCount} Surah tersimpan di perangkat`, `${cachedSurahCount} surahs saved on this device`)}</p>
             </div>
           </div>
           <Link
             href="/quran/offline"
             className="inline-flex items-center justify-center rounded-xl border border-primary-300 px-3 py-2 text-xs font-bold text-primary-700 transition hover:bg-white dark:border-primary-800 dark:text-primary-300 dark:hover:bg-surface-900"
           >
-            Kelola Offline
+            {t('Kelola Offline', 'Manage offline')}
           </Link>
         </section>
 
@@ -139,8 +141,8 @@ export default function QuranPage() {
                 <BookOpen className="w-8 h-8 mx-auto text-slate-400 mb-2 opacity-50" />
                 <p className="text-sm">
                   {activeTab === 'favorites'
-                    ? 'Belum ada surat favorit yang ditandai.'
-                    : `Tidak ditemukan surat dengan kata kunci "${query}".`}
+                    ? t('Belum ada surat favorit yang ditandai.', 'No favorite surahs yet.')
+                    : t(`Tidak ditemukan surat dengan kata kunci "${query}".`, `No surahs found for "${query}".`)}
                 </p>
               </div>
             ) : (

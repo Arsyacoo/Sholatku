@@ -79,7 +79,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const url = `${SEARCH_SOURCE}/${encodeURIComponent(query)}/all/id.indonesian`;
+    const edition = request.nextUrl.searchParams.get('lang') === 'en' ? 'en.sahih' : 'id.indonesian';
+    const url = `${SEARCH_SOURCE}/${encodeURIComponent(query)}/all/${edition}`;
     const response = await fetchWithTimeout(url, {
       timeoutMs: NETWORK_TIMEOUTS.quranSearchProvider,
       rejectHttpErrors: false,

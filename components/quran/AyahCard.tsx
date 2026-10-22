@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Play, Pause, Bookmark, Check, Copy, Share2, BookOpen, Volume2 } from 'lucide-react';
 import { Ayah } from '@/types';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface AyahCardProps {
   ayah: Ayah;
@@ -33,6 +34,7 @@ export const AyahCard: React.FC<AyahCardProps> = ({
   onBookmark,
   onOpenTafsir,
 }) => {
+  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -44,8 +46,8 @@ export const AyahCard: React.FC<AyahCardProps> = ({
 
   const handleShare = async () => {
     const shareData = {
-      title: `QS. ${surahName} : Ayat ${ayah.numberInSurah}`,
-      text: `${ayah.arabText}\n\n"${ayah.translation}"\n(QS. ${surahName}: ${ayah.numberInSurah}) - Baca di Sholatku`,
+      title: t(`QS. ${surahName} : Ayat ${ayah.numberInSurah}`, `QS. ${surahName} : Ayah ${ayah.numberInSurah}`),
+      text: `${ayah.arabText}\n\n"${ayah.translation}"\n(QS. ${surahName}: ${ayah.numberInSurah}) - ${t('Baca di Sholatku', 'Read on Sholatku')}`,
       url: typeof window !== 'undefined' ? `${window.location.origin}/quran/${surahNumber}#ayah-${ayah.numberInSurah}` : '',
     };
 
@@ -82,7 +84,7 @@ export const AyahCard: React.FC<AyahCardProps> = ({
           </div>
           {isLastRead && (
             <span className="text-[10px] font-bold uppercase tracking-wider bg-gold-100 text-gold-800 dark:bg-gold-950 dark:text-gold-300 px-2 py-0.5 rounded-full">
-              Terakhir Dibaca
+              {t('Terakhir Dibaca', 'Last read')}
             </span>
           )}
         </div>
@@ -98,8 +100,8 @@ export const AyahCard: React.FC<AyahCardProps> = ({
                 ? 'bg-primary-600 text-white'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-surface-100 dark:hover:bg-surface-800'
             }`}
-            title={isPlaying ? 'Jeda Audio' : 'Dengarkan Ayat'}
-            aria-label={isPlaying ? 'Jeda Audio' : 'Dengarkan Ayat'}
+            title={isPlaying ? t('Jeda Audio', 'Pause audio') : t('Dengarkan Ayat', 'Listen to ayah')}
+            aria-label={isPlaying ? t('Jeda Audio', 'Pause audio') : t('Dengarkan Ayat', 'Listen to ayah')}
           >
             {isPlaying ? (
               <Pause className="w-4 h-4" />
@@ -115,8 +117,8 @@ export const AyahCard: React.FC<AyahCardProps> = ({
             className={`p-2 rounded-xl text-slate-500 hover:text-gold-500 dark:text-slate-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors ${
               isLastRead ? 'text-gold-500 dark:text-gold-400' : ''
             }`}
-            title="Tandai Terakhir Dibaca"
-            aria-label="Tandai Terakhir Dibaca"
+            title={t('Tandai Terakhir Dibaca', 'Bookmark as last read')}
+            aria-label={t('Tandai Terakhir Dibaca', 'Bookmark as last read')}
           >
             <Bookmark className={`w-4 h-4 ${isLastRead ? 'fill-gold-400' : ''}`} />
           </button>
@@ -126,8 +128,8 @@ export const AyahCard: React.FC<AyahCardProps> = ({
             type="button"
             onClick={onOpenTafsir}
             className="p-2 rounded-xl text-slate-500 hover:text-primary-600 dark:text-slate-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
-            title="Buka Tafsir"
-            aria-label="Buka Tafsir"
+            title={t('Buka Tafsir', 'Open Tafsir')}
+            aria-label={t('Buka Tafsir', 'Open Tafsir')}
           >
             <BookOpen className="w-4 h-4" />
           </button>
@@ -137,8 +139,8 @@ export const AyahCard: React.FC<AyahCardProps> = ({
             type="button"
             onClick={handleCopy}
             className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
-            title={copied ? 'Tersalin!' : 'Salin Ayat'}
-            aria-label="Salin Ayat"
+            title={copied ? t('Tersalin!', 'Copied!') : t('Salin Ayat', 'Copy ayah')}
+            aria-label={t('Salin Ayat', 'Copy ayah')}
           >
             {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
           </button>
@@ -148,8 +150,8 @@ export const AyahCard: React.FC<AyahCardProps> = ({
             type="button"
             onClick={handleShare}
             className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
-            title="Bagikan Ayat"
-            aria-label="Bagikan Ayat"
+            title={t('Bagikan Ayat', 'Share ayah')}
+            aria-label={t('Bagikan Ayat', 'Share ayah')}
           >
             <Share2 className="w-4 h-4" />
           </button>

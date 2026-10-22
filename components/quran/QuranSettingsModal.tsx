@@ -9,6 +9,7 @@ import {
 } from '@/types';
 import { QARI_OPTIONS } from '@/hooks/useQuranAudio';
 import { Type, Volume2, VolumeX, Gauge, Globe, Eye } from 'lucide-react';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface QuranSettingsModalProps {
   isOpen: boolean;
@@ -23,6 +24,8 @@ export const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
   settings,
   onChange,
 }) => {
+  const { t, language } = useLanguage();
+  const formatRate = (rate: number) => (language === 'en' ? String(rate) : String(rate).replace('.', ','));
   const update = (partial: Partial<QuranDisplaySettings>) => {
     onChange({ ...settings, ...partial });
   };
@@ -44,14 +47,14 @@ export const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Pengaturan Al-Qur'an" maxWidth="md">
+    <Modal isOpen={isOpen} onClose={onClose} title={t("Pengaturan Al-Qur'an", 'Quran settings')} maxWidth="md">
       <div className="space-y-6">
         {/* Arabic Font Size Slider */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <Type className="w-4 h-4 text-primary-600" />
-              <span>Ukuran Teks Arab ({settings.arabicFontSize}px)</span>
+              <span>{t('Ukuran Teks Arab', 'Arabic text size')} ({settings.arabicFontSize}px)</span>
             </label>
             <span className="font-arabic text-lg font-bold text-slate-800 dark:text-slate-200">
               بِسْمِ اللَّهِ
@@ -67,16 +70,16 @@ export const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
             className="w-full h-2 bg-surface-200 dark:bg-surface-700 rounded-lg appearance-none cursor-pointer accent-primary-600"
           />
           <div className="flex justify-between text-[11px] text-slate-400 font-medium">
-            <span>Kecil (20px)</span>
-            <span>Standar (28px)</span>
-            <span>Besar (44px)</span>
+            <span>{t('Kecil', 'Small')} (20px)</span>
+            <span>{t('Standar', 'Standard')} (28px)</span>
+            <span>{t('Besar', 'Large')} (44px)</span>
           </div>
         </div>
 
         {/* Visibility Toggles */}
         <div className="space-y-3 pt-4 border-t border-surface-200 dark:border-surface-800">
           <label className="text-sm font-bold text-slate-900 dark:text-slate-100 block">
-            Pilihan Konten
+            {t('Pilihan Konten', 'Content options')}
           </label>
 
           {/* Toggle Translation */}
@@ -85,9 +88,9 @@ export const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
               <Globe className="w-4 h-4 text-primary-600" />
               <div>
                 <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                  Terjemahan Kemenag RI
+                  {t('Terjemahan Kemenag RI', 'English translation (Saheeh International)')}
                 </div>
-                <div className="text-[11px] text-slate-500">Tampilkan arti bahasa Indonesia</div>
+                <div className="text-[11px] text-slate-500">{t('Tampilkan arti bahasa Indonesia', 'Show the English meaning')}</div>
               </div>
             </div>
             <button
@@ -96,7 +99,7 @@ export const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                 settings.showTranslation ? 'bg-primary-600' : 'bg-surface-300 dark:bg-surface-700'
               }`}
-              aria-label="Tampilkan terjemahan Kemenag RI"
+              aria-label={t('Tampilkan terjemahan Kemenag RI', 'Show English translation')}
               aria-pressed={settings.showTranslation}
             >
               <span
@@ -113,9 +116,9 @@ export const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
               <Eye className="w-4 h-4 text-primary-600" />
               <div>
                 <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                  Transliterasi Latin
+                  {t('Transliterasi Latin', 'Latin transliteration')}
                 </div>
-                <div className="text-[11px] text-slate-500">Teks panduan bacaan latin</div>
+                <div className="text-[11px] text-slate-500">{t('Teks panduan bacaan latin', 'Pronunciation guide in Latin script')}</div>
               </div>
             </div>
             <button
@@ -124,7 +127,7 @@ export const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                 settings.showLatin ? 'bg-primary-600' : 'bg-surface-300 dark:bg-surface-700'
               }`}
-              aria-label="Tampilkan transliterasi Latin"
+              aria-label={t('Tampilkan transliterasi Latin', 'Show Latin transliteration')}
               aria-pressed={settings.showLatin}
             >
               <span
@@ -140,7 +143,7 @@ export const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
         <div className="space-y-3 pt-4 border-t border-surface-200 dark:border-surface-800">
           <label className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <Volume2 className="w-4 h-4 text-primary-600" />
-            <span>Pilihan Qari Murottal</span>
+            <span>{t('Pilihan Qari Murottal', 'Recitation reciter')}</span>
           </label>
 
           <div className="grid grid-cols-1 gap-2">
@@ -160,10 +163,10 @@ export const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
                 >
                   <div>
                     <div className="text-xs text-slate-900 dark:text-slate-100">{qari.name}</div>
-                    <div className="text-[10px] text-slate-500">{qari.subname}</div>
+                    <div className="text-[10px] text-slate-500">{t(qari.subname, qari.subnameEn)}</div>
                   </div>
                   {isSelected && (
-                    <span className="text-primary-600 text-xs font-bold">Terpilih</span>
+                    <span className="text-primary-600 text-xs font-bold">{t('Terpilih', 'Selected')}</span>
                   )}
                 </button>
               );
@@ -176,10 +179,13 @@ export const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-100">
               <Gauge className="w-4 h-4 text-primary-600" aria-hidden="true" />
-              <span>Audio Murottal</span>
+              <span>{t('Audio Murottal', 'Recitation audio')}</span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Volume dan kecepatan ini berlaku untuk semua surat dan tersimpan di perangkat ini.
+              {t(
+                'Volume dan kecepatan ini berlaku untuk semua surat dan tersimpan di perangkat ini.',
+                'This volume and speed apply to every surah and are saved on this device.'
+              )}
             </p>
           </div>
 
@@ -189,7 +195,7 @@ export const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
                 Volume
               </label>
               <span className="text-xs font-semibold tabular-nums text-slate-500 dark:text-slate-400">
-                {isMuted ? 'Bisu' : `${settings.audioVolume}%`}
+                {isMuted ? t('Bisu', 'Muted') : `${settings.audioVolume}%`}
               </span>
             </div>
 
@@ -202,7 +208,7 @@ export const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
                     ? 'bg-surface-200 dark:bg-surface-700 text-slate-600 dark:text-slate-300'
                     : 'bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300'
                 }`}
-                aria-label={isMuted ? 'Aktifkan suara' : 'Bisukan audio'}
+                aria-label={isMuted ? t('Aktifkan suara', 'Unmute') : t('Bisukan audio', 'Mute audio')}
                 aria-pressed={isMuted}
               >
                 {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
@@ -218,8 +224,8 @@ export const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
                 className="w-full h-2 rounded-full cursor-pointer accent-primary-600 bg-surface-200 dark:bg-surface-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                 aria-valuetext={
                   isMuted
-                    ? `Bisu, volume tersimpan ${settings.audioVolume} persen`
-                    : `${settings.audioVolume} persen`
+                    ? t(`Bisu, volume tersimpan ${settings.audioVolume} persen`, `Muted, saved volume ${settings.audioVolume} percent`)
+                    : t(`${settings.audioVolume} persen`, `${settings.audioVolume} percent`)
                 }
               />
             </div>
@@ -227,12 +233,12 @@ export const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
 
           <fieldset className="space-y-2">
             <legend className="text-xs font-bold text-slate-800 dark:text-slate-200">
-              Kecepatan bacaan
+              {t('Kecepatan bacaan', 'Playback speed')}
             </legend>
             <div className="grid grid-cols-4 gap-2">
               {QURAN_PLAYBACK_RATES.map((rate) => {
                 const isSelected = settings.playbackRate === rate;
-                const label = `${String(rate).replace('.', ',')}×`;
+                const label = `${formatRate(rate)}×`;
 
                 return (
                   <button
@@ -245,7 +251,7 @@ export const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
                         : 'bg-surface-100 dark:bg-surface-800 text-slate-700 dark:text-slate-300 hover:bg-surface-200 dark:hover:bg-surface-700'
                     }`}
                     aria-pressed={isSelected}
-                    aria-label={`Kecepatan ${String(rate).replace('.', ',')} kali`}
+                    aria-label={t(`Kecepatan ${formatRate(rate)} kali`, `Speed ${formatRate(rate)} times`)}
                   >
                     {label}
                   </button>

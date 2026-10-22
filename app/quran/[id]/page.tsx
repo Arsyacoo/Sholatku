@@ -35,6 +35,9 @@ import { BookOpen, Check, WifiOff } from 'lucide-react';
 import { getAyahPage, parseAyahQuery } from '@/lib/quran/reader-deep-link';
 import { fetchWithTimeout, isNetworkRequestError, NETWORK_TIMEOUTS, readJsonResponse } from '@/lib/network/fetch';
 import { resolveApiUrl } from '@/lib/platform/api';
+import { useLanguage } from '@/hooks/useLanguage';
+import { tr } from '@/lib/language';
+import { getSavedSettings } from '@/lib/storage/preferences';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -43,6 +46,7 @@ interface PageProps {
 export default function SurahDetailPage({ params }: PageProps) {
   const resolvedParams = use(params);
   const surahId = parseInt(resolvedParams.id, 10);
+  const { t, language } = useLanguage();
 
   const [surah, setSurah] = useState<SurahDetail | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -85,6 +89,9 @@ export default function SurahDetailPage({ params }: PageProps) {
     setIsOfflineSource(false);
     const abortController = new AbortController();
 
+    const lang = getSavedSettings().language;
+    const offlineMessage = tr(lang, 'Surat ini belum tersedia untuk dibaca offline.', 'This surah is not available offline yet.');
+
     const fetchSurah = async () => {
       // Migration is lazy and idempotent. It is intentionally best-effort;
       // getCachedSurah still reads a legacy entry if IndexedDB is unavailable.
@@ -94,15 +101,23 @@ export default function SurahDetailPage({ params }: PageProps) {
       const cachedCandidate = await getCachedSurah(surahId);
       const cached = cachedCandidate && isCompleteSurahData(cachedCandidate) ? cachedCandidate : null;
       if (!active) return;
+      // A cache in the other language is only a fallback for when the network fails.
+      const cachedMatches = Boolean(cached && (cached.translationLanguage ?? 'id') === lang);
+      const showCachedFallback = () => {
+        if (!cached || cachedMatches || !active) return false;
+        setSurah(cached);
+        setIsOfflineSource(true);
+        return true;
+      };
 
-      if (cached) {
+      if (cached && cachedMatches) {
         setSurah(cached);
         setIsLoading(false);
         setIsOfflineSource(true);
       }
 
       try {
-        const res = await fetchWithTimeout(resolveApiUrl(`/api/quran/surah/${surahId}`), {
+        const res = await fetchWithTimeout(resolveApiUrl(`/api/quran/surah/${surahId}?lang=${lang}`), {
           timeoutMs: NETWORK_TIMEOUTS.quranRoute,
           rejectHttpErrors: false,
           signal: abortController.signal,
@@ -117,19 +132,19 @@ export default function SurahDetailPage({ params }: PageProps) {
           if (active && json.data && json.data.ayahs && json.data.ayahs.length > 0) {
             setSurah(json.data);
             setIsOfflineSource(false);
-          } else if (!cached && active) {
+          } else if (!cachedMatches && active && !showCachedFallback()) {
             setError(
               typeof navigator !== 'undefined' && !navigator.onLine
-                ? 'Surat ini belum tersedia untuk dibaca offline.'
-                : 'Gagal memuat surat. Data surat tidak tersedia.'
+                ? offlineMessage
+                : tr(lang, 'Gagal memuat surat. Data surat tidak tersedia.', 'Failed to load the surah. Surah data is unavailable.')
             );
           }
         } else {
-          if (!cached && active) {
+          if (!cachedMatches && active && !showCachedFallback()) {
             setError(
               typeof navigator !== 'undefined' && !navigator.onLine
-                ? 'Surat ini belum tersedia untuk dibaca offline.'
-                : 'Gagal memuat surat. Periksa koneksi internet Anda.'
+                ? offlineMessage
+                : tr(lang, 'Gagal memuat surat. Periksa koneksi internet Anda.', 'Failed to load the surah. Check your internet connection.')
             );
           }
         }
@@ -140,11 +155,11 @@ export default function SurahDetailPage({ params }: PageProps) {
         ) {
           return;
         }
-        if (!cached && active) {
+        if (!cachedMatches && active && !showCachedFallback()) {
           setError(
             typeof navigator !== 'undefined' && !navigator.onLine
-              ? 'Surat ini belum tersedia untuk dibaca offline.'
-              : 'Terjadi kendala saat memuat data surat.'
+              ? offlineMessage
+              : tr(lang, 'Terjadi kendala saat memuat data surat.', 'Something went wrong while loading the surah.')
           );
         }
       } finally {
@@ -157,7 +172,7 @@ export default function SurahDetailPage({ params }: PageProps) {
       active = false;
       abortController.abort();
     };
-  }, [surahId]);
+  }, [surahId, language]);
 
   useEffect(() => {
     if (!surah) return;
@@ -285,8 +300,8 @@ export default function SurahDetailPage({ params }: PageProps) {
 
     showToast(
       isBookmarked
-        ? `Ayat ${ayah.numberInSurah} disimpan ke koleksi ayat`
-        : `Ayat ${ayah.numberInSurah} dihapus dari koleksi`
+        ? t(`Ayat ${ayah.numberInSurah} disimpan ke koleksi ayat`, `Ayah ${ayah.numberInSurah} saved to your collection`)
+        : t(`Ayat ${ayah.numberInSurah} dihapus dari koleksi`, `Ayah ${ayah.numberInSurah} removed from your collection`)
     );
   };
 
@@ -312,7 +327,7 @@ export default function SurahDetailPage({ params }: PageProps) {
         {isOfflineSource && (
           <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 rounded-xl text-xs text-amber-800 dark:text-amber-300 font-medium">
             <WifiOff className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>Mode Offline: Membaca dari penyimpanan lokal perangkat.</span>
+            <span>{t('Mode Offline: Membaca dari penyimpanan lokal perangkat.', 'Offline mode: reading from local device storage.')}</span>
           </div>
         )}
 
@@ -329,14 +344,14 @@ export default function SurahDetailPage({ params }: PageProps) {
           <div className="text-center py-16 space-y-3">
             <BookOpen className="w-10 h-10 mx-auto text-slate-400 opacity-60" />
             <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">
-              {error || 'Surat tidak ditemukan'}
+              {error || t('Surat tidak ditemukan', 'Surah not found')}
             </h2>
-            {error === 'Surat ini belum tersedia untuk dibaca offline.' && (
+            {(error === 'Surat ini belum tersedia untuk dibaca offline.' || error === 'This surah is not available offline yet.') && (
               <Link
                 href="/quran/offline"
                 className="inline-flex rounded-xl border border-primary-300 px-3 py-2 text-xs font-bold text-primary-700 dark:border-primary-800 dark:text-primary-300"
               >
-                Kelola Quran Offline
+                {t('Kelola Quran Offline', 'Manage offline Quran')}
               </Link>
             )}
           </div>
@@ -379,7 +394,7 @@ export default function SurahDetailPage({ params }: PageProps) {
             <div className="space-y-3 pt-1">
               {paginatedAyahs.length === 0 ? (
                 <div className="text-center py-12 text-slate-500 text-sm">
-                  Tidak ditemukan ayat dengan kata kunci &ldquo;{searchQuery}&rdquo;.
+                  {t('Tidak ditemukan ayat dengan kata kunci', 'No ayahs found for')} &ldquo;{searchQuery}&rdquo;.
                 </div>
               ) : (
                 paginatedAyahs.map((ayah) => {
@@ -423,6 +438,15 @@ export default function SurahDetailPage({ params }: PageProps) {
                 })
               )}
             </div>
+
+            {surah.translationLanguage === 'en' && (
+              <p className="text-center text-[11px] text-slate-400 dark:text-slate-500">
+                English translation: Saheeh International · Text via{' '}
+                <a href="https://tanzil.net" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-600 dark:hover:text-slate-300">
+                  Tanzil.net
+                </a>
+              </p>
+            )}
 
             {/* Bottom Pagination Bar */}
             <AyahPagination
@@ -487,15 +511,15 @@ export default function SurahDetailPage({ params }: PageProps) {
         <Modal
           isOpen={isInfoOpen}
           onClose={() => setIsInfoOpen(false)}
-          title={`Tentang Surat ${surah.name}`}
+          title={t(`Tentang Surat ${surah.name}`, `About Surah ${surah.name}`)}
           maxWidth="md"
         >
           <div className="space-y-4 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
             <div className="p-3 bg-surface-50 dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 flex items-center justify-between text-xs font-semibold">
-              <span>Golongan: {surah.revelation}</span>
-              <span>Jumlah: {surah.numberOfAyahs} Ayat</span>
+              <span>{t('Golongan', 'Revelation')}: {t(surah.revelation, surah.revelation === 'Makkiyah' ? 'Meccan' : 'Medinan')}</span>
+              <span>{t(`Jumlah: ${surah.numberOfAyahs} Ayat`, `${surah.numberOfAyahs} Ayahs`)}</span>
             </div>
-            <p>{surah.description || 'Surat ini diturunkan oleh Allah SWT sebagai petunjuk bagi seluruh umat manusia.'}</p>
+            <p>{surah.description || t('Surat ini diturunkan oleh Allah SWT sebagai petunjuk bagi seluruh umat manusia.', 'This surah was revealed by Allah SWT as guidance for all of mankind.')}</p>
           </div>
         </Modal>
       )}

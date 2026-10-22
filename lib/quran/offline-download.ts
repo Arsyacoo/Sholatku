@@ -1,4 +1,4 @@
-import type { SurahDetail } from '@/types';
+import type { Language, SurahDetail } from '@/types';
 import {
   getCachedSurah,
   isCompleteSurahData,
@@ -11,6 +11,8 @@ import {
   readJsonResponse,
 } from '@/lib/network/fetch';
 import { resolveApiUrl } from '@/lib/platform/api';
+import { tr } from '../language';
+import { getSavedSettings } from '../storage/preferences';
 
 export type QuranDownloadErrorCode = 'invalid-number' | 'network' | 'http' | 'invalid-data' | 'storage';
 
@@ -31,36 +33,39 @@ function isAbortError(error: unknown): boolean {
 /** Fetches one complete Surah and stores only validated text data in IndexedDB. */
 export async function downloadSurahText(
   surahNumber: number,
-  options: { signal?: AbortSignal } = {}
+  options: { signal?: AbortSignal; language?: Language } = {}
 ): Promise<SurahDetail> {
+  // Offline copies hold one translation language; switching language re-downloads in the new one.
+  const language = options.language ?? getSavedSettings().language;
+  const say = (indonesian: string, english: string) => tr(language, indonesian, english);
   if (!Number.isInteger(surahNumber) || surahNumber < 1 || surahNumber > 114) {
-    throw new QuranDownloadError('invalid-number', 'Nomor Surah tidak valid.');
+    throw new QuranDownloadError('invalid-number', say('Nomor Surah tidak valid.', 'Invalid surah number.'));
   }
 
   const existing = await getCachedSurah(surahNumber);
-  if (existing && isCompleteSurahData(existing)) return existing;
+  if (existing && isCompleteSurahData(existing) && (existing.translationLanguage ?? 'id') === language) return existing;
 
   let response: Response;
   try {
-    response = await fetchWithTimeout(resolveApiUrl(`/api/quran/surah/${surahNumber}`), {
+    response = await fetchWithTimeout(resolveApiUrl(`/api/quran/surah/${surahNumber}?lang=${language}`), {
       timeoutMs: NETWORK_TIMEOUTS.quranRoute,
       rejectHttpErrors: false,
       signal: options.signal,
     });
   } catch (error) {
     if (isAbortError(error) || isNetworkRequestError(error, 'aborted')) throw error;
-    throw new QuranDownloadError('network', 'Koneksi internet tidak tersedia.');
+    throw new QuranDownloadError('network', say('Koneksi internet tidak tersedia.', 'No internet connection.'));
   }
 
   if (!response.ok) {
-    throw new QuranDownloadError('http', 'Data Surah gagal dimuat.');
+    throw new QuranDownloadError('http', say('Data Surah gagal dimuat.', 'Could not load the surah.'));
   }
 
   let payload: unknown;
   try {
     payload = await readJsonResponse(response);
   } catch {
-    throw new QuranDownloadError('invalid-data', 'Data Surah tidak dapat dibaca.');
+    throw new QuranDownloadError('invalid-data', say('Data Surah tidak dapat dibaca.', 'Could not read the surah data.'));
   }
 
   const data =
@@ -68,11 +73,11 @@ export async function downloadSurahText(
       ? (payload as { data?: unknown }).data
       : undefined;
   if (!isCompleteSurahData(data) || data.number !== surahNumber) {
-    throw new QuranDownloadError('invalid-data', 'Data Surah tidak lengkap.');
+    throw new QuranDownloadError('invalid-data', say('Data Surah tidak lengkap.', 'The surah data is incomplete.'));
   }
 
   if (!(await saveCachedSurah(data))) {
-    throw new QuranDownloadError('storage', 'Surah tidak dapat disimpan di perangkat.');
+    throw new QuranDownloadError('storage', say('Surah tidak dapat disimpan di perangkat.', 'Could not save the surah on this device.'));
   }
 
   return data;

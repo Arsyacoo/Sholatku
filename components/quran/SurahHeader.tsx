@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ChevronLeft, ChevronRight, BookOpen, Info, Sliders } from 'lucide-react';
 import { SurahDetail } from '@/types';
 import { Button } from '../ui/Button';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface SurahHeaderProps {
   surah: SurahDetail;
@@ -17,6 +18,7 @@ export const SurahHeader: React.FC<SurahHeaderProps> = ({
   onOpenSettings,
   onOpenInfo,
 }) => {
+  const { t, language } = useLanguage();
   const prevNumber = surah.number > 1 ? surah.number - 1 : null;
   const nextNumber = surah.number < 114 ? surah.number + 1 : null;
 
@@ -29,30 +31,29 @@ export const SurahHeader: React.FC<SurahHeaderProps> = ({
           className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-white px-3 text-xs font-semibold text-slate-700 shadow-2xs transition-colors hover:bg-surface-50 dark:bg-surface-900 dark:text-slate-200 border border-surface-200 dark:border-surface-800"
         >
           <ChevronLeft className="w-4 h-4" />
-          <span>Daftar Surat</span>
+          <span>{t('Daftar Surat', 'Surah list')}</span>
         </Link>
 
         <div className="flex items-center gap-2">
-          {surah.description && (
-            <button
-              onClick={onOpenInfo}
-              className="p-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-slate-600 dark:text-slate-300 hover:bg-surface-50 transition-colors shadow-2xs text-xs font-semibold flex items-center gap-1.5"
-              title="Tentang Surat"
-              aria-label="Tentang Surat"
-            >
-              <Info className="w-4 h-4" />
-              <span className="hidden sm:inline">Tentang Surat</span>
-            </button>
-          )}
+          {/* Always shown: the info modal falls back to generic text when there is no description (English has none). */}
+          <button
+            onClick={onOpenInfo}
+            className="p-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-slate-600 dark:text-slate-300 hover:bg-surface-50 transition-colors shadow-2xs text-xs font-semibold flex items-center gap-1.5"
+            title={t('Tentang Surat', 'About this surah')}
+            aria-label={t('Tentang Surat', 'About this surah')}
+          >
+            <Info className="w-4 h-4" />
+            <span className="hidden sm:inline">{t('Tentang Surat', 'About this surah')}</span>
+          </button>
 
           <button
             onClick={onOpenSettings}
             className="p-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-slate-600 dark:text-slate-300 hover:bg-surface-50 transition-colors shadow-2xs text-xs font-semibold flex items-center gap-1.5"
-            title="Pengaturan Tampilan"
-            aria-label="Pengaturan Tampilan"
+            title={t('Pengaturan Tampilan', 'Display settings')}
+            aria-label={t('Pengaturan Tampilan', 'Display settings')}
           >
             <Sliders className="w-4 h-4 text-primary-600" />
-            <span className="hidden sm:inline">Tampilan</span>
+            <span className="hidden sm:inline">{t('Tampilan', 'Display')}</span>
           </button>
         </div>
       </div>
@@ -71,11 +72,11 @@ export const SurahHeader: React.FC<SurahHeaderProps> = ({
         <div className="relative z-10 flex flex-col items-center justify-center space-y-3">
           {/* Badge */}
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-semibold text-teal-100 uppercase tracking-wider">
-            <span>Surat ke-{surah.number}</span>
+            <span>{t(`Surat ke-${surah.number}`, `Surah ${surah.number}`)}</span>
             <span>&bull;</span>
-            <span>{surah.revelation}</span>
+            <span>{t(surah.revelation, surah.revelation === 'Makkiyah' ? 'Meccan' : 'Medinan')}</span>
             <span>&bull;</span>
-            <span>{surah.numberOfAyahs} Ayat</span>
+            <span>{surah.numberOfAyahs} {t('Ayat', 'Ayahs')}</span>
           </div>
 
           {/* Surah Names */}
@@ -86,7 +87,7 @@ export const SurahHeader: React.FC<SurahHeaderProps> = ({
             {surah.arabicName}
           </span>
           <p className="text-sm text-teal-100/90 font-medium">
-            Arti: &ldquo;{surah.translation}&rdquo;
+            {t('Arti', 'Meaning')}: &ldquo;{language === 'en' ? surah.translationEn ?? surah.translation : surah.translation}&rdquo;
           </p>
 
           {/* Prev / Next Surah Quick Navigator */}
@@ -97,7 +98,7 @@ export const SurahHeader: React.FC<SurahHeaderProps> = ({
                 className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-white font-medium backdrop-blur-sm"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
-                <span>Surat Sebelumnya</span>
+                <span>{t('Surat Sebelumnya', 'Previous surah')}</span>
               </Link>
             ) : null}
 
@@ -106,7 +107,7 @@ export const SurahHeader: React.FC<SurahHeaderProps> = ({
                 href={`/quran/${nextNumber}`}
                 className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-white font-medium backdrop-blur-sm"
               >
-                <span>Surat Berikutnya</span>
+                <span>{t('Surat Berikutnya', 'Next surah')}</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </Link>
             ) : null}
@@ -121,7 +122,7 @@ export const SurahHeader: React.FC<SurahHeaderProps> = ({
             بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-            Dengan nama Allah Yang Maha Pengasih, Maha Penyayang.
+            {t('Dengan nama Allah Yang Maha Pengasih, Maha Penyayang.', 'In the name of Allah, the Entirely Merciful, the Especially Merciful.')}
           </p>
         </div>
       )}

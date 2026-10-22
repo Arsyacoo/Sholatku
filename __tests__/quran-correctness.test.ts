@@ -89,6 +89,29 @@ describe('Quran content correctness', () => {
     expect(response.status).toBe(502);
   });
 
+  it('swaps in the Saheeh International translation for lang=en and drops the Indonesian description', async () => {
+    const english = new Response(JSON.stringify({
+      code: 200,
+      data: { ayahs: Array.from({ length: 7 }, (_, index) => ({ numberInSurah: index + 1, text: `english ${index + 1}` })) },
+    }), { status: 200 });
+    const fetchMock = vi.fn((url: string) => Promise.resolve(
+      url.includes('alquran.cloud')
+        ? english
+        : providerResponse(Array.from({ length: 7 }, (_, index) => ayah(index + 1)), { deskripsi: 'Surat Makkiyah' })
+    ));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const response = await getSurahDetail(new NextRequest('http://localhost/api/quran/surah/1?lang=en'), {
+      params: Promise.resolve({ id: '1' }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(fetchMock.mock.calls.map(([url]) => url)).toContain('https://api.alquran.cloud/v1/surah/1/en.sahih');
+    expect(body.data).toMatchObject({ translationLanguage: 'en', description: '', translationEn: 'The Opening' });
+    expect(body.data.ayahs[0]).toMatchObject({ arabText: 'arab 1', latinText: 'latin 1', translation: 'english 1' });
+  });
+
   it('keeps canonical metadata independent from downloaded Reader content', () => {
     expect(SURAH_LIST).toHaveLength(114);
     expect(getJuzForAyah(114, 6)).toBe(30);

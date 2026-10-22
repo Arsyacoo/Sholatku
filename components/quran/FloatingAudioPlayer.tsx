@@ -18,6 +18,7 @@ import {
 import { RepeatMode } from '@/hooks/useQuranAudio';
 import { QuranPlaybackRate, QURAN_PLAYBACK_RATES } from '@/types';
 import { Select } from '../ui/Select';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface FloatingAudioPlayerProps {
   surahName: string;
@@ -41,10 +42,8 @@ interface FloatingAudioPlayerProps {
   onClose: () => void;
 }
 
-const PLAYBACK_RATE_OPTIONS = QURAN_PLAYBACK_RATES.map((rate) => ({
-  value: rate,
-  label: `${String(rate).replace('.', ',')}×`,
-}));
+const formatRate = (rate: number, language: 'id' | 'en') =>
+  language === 'en' ? String(rate) : String(rate).replace('.', ',');
 
 export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
   surahName,
@@ -67,6 +66,11 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
   onPlaybackRateChange,
   onClose,
 }) => {
+  const { t, language } = useLanguage();
+  const playbackRateOptions = QURAN_PLAYBACK_RATES.map((rate) => ({
+    value: rate,
+    label: `${formatRate(rate, language)}×`,
+  }));
   const formatSec = (sec: number) => {
     if (isNaN(sec) || sec < 0) return '00:00';
     const m = Math.floor(sec / 60);
@@ -91,7 +95,7 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
                 QS. {surahName}
               </span>
               <span className="text-[11px] text-teal-200">
-                Ayat {currentAyahNumber} dari {totalAyahs}
+                {t(`Ayat ${currentAyahNumber} dari ${totalAyahs}`, `Ayah ${currentAyahNumber} of ${totalAyahs}`)}
               </span>
             </div>
           </div>
@@ -106,12 +110,12 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
                   ? 'bg-primary-600 text-white'
                   : 'text-slate-400 hover:text-white bg-white/5'
               }`}
-              title={`Mode Ulang: ${
+              title={`${t('Mode Ulang', 'Repeat mode')}: ${
                 repeatMode === 'ayah'
-                  ? 'Ulang Ayat Ini'
+                  ? t('Ulang Ayat Ini', 'Repeat this ayah')
                   : repeatMode === 'surah'
-                  ? 'Ulang Satu Surat'
-                  : 'Tanpa Pengulangan'
+                  ? t('Ulang Satu Surat', 'Repeat whole surah')
+                  : t('Tanpa Pengulangan', 'No repeat')
               }`}
             >
               {repeatMode === 'ayah' ? (
@@ -126,8 +130,8 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
               type="button"
               onClick={onClose}
               className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors"
-              title="Tutup Pemutar Audio"
-              aria-label="Tutup Pemutar Audio"
+              title={t('Tutup Pemutar Audio', 'Close audio player')}
+              aria-label={t('Tutup Pemutar Audio', 'Close audio player')}
             >
               <X className="w-4 h-4" />
             </button>
@@ -138,7 +142,7 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
         <div
           className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden"
           role="progressbar"
-          aria-label="Progres audio"
+          aria-label={t('Progres audio', 'Audio progress')}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(progressPercent)}
@@ -161,8 +165,8 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
               onClick={onPlayPrev}
               disabled={currentAyahNumber <= 1}
               className="p-2 text-slate-300 hover:text-white disabled:opacity-30 transition-colors"
-              title="Ayat Sebelumnya"
-              aria-label="Ayat Sebelumnya"
+              title={t('Ayat Sebelumnya', 'Previous ayah')}
+              aria-label={t('Ayat Sebelumnya', 'Previous ayah')}
             >
               <SkipBack className="w-4 h-4" />
             </button>
@@ -171,8 +175,8 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
               type="button"
               onClick={onTogglePlay}
               className="w-10 h-10 rounded-full bg-primary-500 hover:bg-primary-400 text-white flex items-center justify-center shadow-md transition-transform active:scale-95"
-              title={isPlaying ? 'Jeda' : 'Putar'}
-              aria-label={isPlaying ? 'Jeda' : 'Putar'}
+              title={isPlaying ? t('Jeda', 'Pause') : t('Putar', 'Play')}
+              aria-label={isPlaying ? t('Jeda', 'Pause') : t('Putar', 'Play')}
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -188,8 +192,8 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
               onClick={onPlayNext}
               disabled={currentAyahNumber >= totalAyahs}
               className="p-2 text-slate-300 hover:text-white disabled:opacity-30 transition-colors"
-              title="Ayat Berikutnya"
-              aria-label="Ayat Berikutnya"
+              title={t('Ayat Berikutnya', 'Next ayah')}
+              aria-label={t('Ayat Berikutnya', 'Next ayah')}
             >
               <SkipForward className="w-4 h-4" />
             </button>
@@ -210,16 +214,16 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
                 ? 'bg-white/10 text-slate-300 hover:bg-white/15 hover:text-white'
                 : 'bg-primary-500/20 text-primary-200 hover:bg-primary-500/30'
             }`}
-            aria-label={isMuted ? 'Aktifkan suara' : 'Bisukan audio'}
+            aria-label={isMuted ? t('Aktifkan suara', 'Unmute') : t('Bisukan audio', 'Mute audio')}
             aria-pressed={isMuted}
-            title={isMuted ? 'Aktifkan suara' : 'Bisukan audio'}
+            title={isMuted ? t('Aktifkan suara', 'Unmute') : t('Bisukan audio', 'Mute audio')}
           >
             <VolumeIcon className="w-4 h-4" />
           </button>
 
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <label htmlFor="quran-player-volume" className="sr-only">
-              Volume audio
+              {t('Volume audio', 'Audio volume')}
             </label>
             <input
               id="quran-player-volume"
@@ -231,25 +235,30 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
               onChange={(event) => onVolumeChange(Number(event.target.value))}
               className="w-full min-w-20 h-1.5 rounded-full cursor-pointer accent-primary-400 bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
               aria-valuetext={
-                isMuted ? `Bisu, volume tersimpan ${volume} persen` : `${volume} persen`
+                isMuted
+                  ? t(`Bisu, volume tersimpan ${volume} persen`, `Muted, saved volume ${volume} percent`)
+                  : t(`${volume} persen`, `${volume} percent`)
               }
             />
             <span className="hidden sm:block w-10 text-right text-[10px] font-semibold tabular-nums text-slate-300">
-              {isMuted ? 'Bisu' : `${volume}%`}
+              {isMuted ? t('Bisu', 'Muted') : `${volume}%`}
             </span>
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
             <Gauge className="hidden sm:block w-3.5 h-3.5 text-slate-400" aria-hidden="true" />
             <label htmlFor="quran-player-speed" className="sr-only">
-              Kecepatan audio
+              {t('Kecepatan audio', 'Playback speed')}
             </label>
             <Select
               id="quran-player-speed"
               value={playbackRate}
-              options={PLAYBACK_RATE_OPTIONS}
+              options={playbackRateOptions}
               onValueChange={onPlaybackRateChange}
-              ariaLabel={`Kecepatan audio ${String(playbackRate).replace('.', ',')} kali`}
+              ariaLabel={t(
+                `Kecepatan audio ${formatRate(playbackRate, language)} kali`,
+                `Playback speed ${formatRate(playbackRate, language)} times`
+              )}
               tone="dark"
               size="sm"
               className="w-[76px]"
