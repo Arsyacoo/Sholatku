@@ -51,4 +51,11 @@ describe('Android prayer widget payload', () => {
     expect(buildPrayerWidgetPayload(location, [item('2026-02-18')], 0, now).days[0].hijri).toBe('1 Ramadhan 1447 H');
     expect(buildPrayerWidgetPayload(location, [item('2026-02-18')], -1, now).days[0].hijri).toBe('29 Syaban 1447 H');
   });
+
+  it('uses English prayer names and Hijri months when the app is in English', () => {
+    const payload = buildPrayerWidgetPayload(location, [item('2026-02-18')], 0, new Date('2026-02-18T10:00:00+07:00'), 'en');
+    expect(payload.language).toBe('en');
+    expect(payload.days[0].prayers.map((prayer) => prayer.name)).toEqual(['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha']);
+    expect(payload.days[0].hijri).toBe('1 Ramadan 1447 AH');
+  });
 });

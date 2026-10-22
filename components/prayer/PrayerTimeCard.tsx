@@ -3,6 +3,7 @@
 import React from 'react';
 import { Sun, Moon, Sunrise, Sunset, CloudSun, Clock, CheckCircle2 } from 'lucide-react';
 import { PrayerKey } from '@/types';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface PrayerTimeCardProps {
   id: PrayerKey;
@@ -27,6 +28,7 @@ export const PrayerTimeCard: React.FC<PrayerTimeCardProps> = ({
   isPrayer,
   timezoneLabel,
 }) => {
+  const { t } = useLanguage();
   const getIcon = () => {
     switch (id) {
       case 'fajr':
@@ -63,13 +65,13 @@ export const PrayerTimeCard: React.FC<PrayerTimeCardProps> = ({
       {/* Active marker pill */}
       {isNext && (
         <div className="absolute -top-2.5 right-4 bg-primary-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs">
-          Berikutnya
+          {t('Berikutnya', 'Next')}
         </div>
       )}
 
       {isCurrent && !isNext && (
         <div className="absolute -top-2.5 right-4 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs">
-          Sedang Aktif
+          {t('Sedang Aktif', 'Current')}
         </div>
       )}
 
@@ -105,7 +107,7 @@ export const PrayerTimeCard: React.FC<PrayerTimeCardProps> = ({
             </h3>
             {!isPrayer && (
               <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">
-                (Syuruq)
+                {t('(Syuruq)', '(Shuruq)')}
               </span>
             )}
           </div>

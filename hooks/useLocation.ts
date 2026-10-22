@@ -7,10 +7,12 @@ import { getSavedLocation, saveLocation } from '@/lib/storage/preferences';
 import { reverseGeocode } from '@/lib/location/geocoding';
 import { isNetworkRequestError } from '@/lib/network/fetch';
 import { LatestRequestController } from '@/lib/network/latest-request';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export type GeolocationStatus = 'idle' | 'prompt' | 'requesting' | 'granted' | 'denied' | 'error';
 
 export function useLocation() {
+  const { t, language } = useLanguage();
   const [location, setLocationState] = useState<UserLocation>(DEFAULT_LOCATION);
   const [status, setStatus] = useState<GeolocationStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -61,7 +63,7 @@ export function useLocation() {
   const detectLocation = useCallback(() => {
     if (typeof window === 'undefined' || !navigator.geolocation) {
       setStatus('error');
-      setErrorMessage('Perangkat Anda tidak mendukung geolokasi otomatis.');
+      setErrorMessage(t('Perangkat Anda tidak mendukung geolokasi otomatis.', 'Your device does not support automatic location.'));
       return;
     }
 
@@ -72,7 +74,7 @@ export function useLocation() {
     const handlePosition = async (pos: GeolocationPosition) => {
       try {
         const { latitude, longitude } = pos.coords;
-        const detectedLoc = await reverseGeocode(latitude, longitude, { signal: request.signal });
+        const detectedLoc = await reverseGeocode(latitude, longitude, { signal: request.signal, language });
         if (!request.isCurrent()) return;
         updateLocation(detectedLoc);
         setStatus('granted');
@@ -80,7 +82,7 @@ export function useLocation() {
         if (!request.isCurrent() || isNetworkRequestError(err, 'aborted')) return;
         console.error('Error reverse geocoding:', err);
         setStatus('error');
-        setErrorMessage('Gagal mengenali nama wilayah koordinat Anda.');
+        setErrorMessage(t('Gagal mengenali nama wilayah koordinat Anda.', 'Could not identify the area for your coordinates.'));
       } finally {
         reverseRequestsRef.current?.finish(request);
       }
@@ -90,16 +92,16 @@ export function useLocation() {
       if (!request.isCurrent()) return;
       if (error.code === error.PERMISSION_DENIED) {
         setStatus('denied');
-        setErrorMessage('Izin lokasi ditolak. Anda dapat memilih kota secara manual.');
+        setErrorMessage(t('Izin lokasi ditolak. Anda dapat memilih kota secara manual.', 'Location permission denied. You can choose a city manually.'));
       } else if (error.code === error.POSITION_UNAVAILABLE) {
         setStatus('error');
-        setErrorMessage('Sinyal lokasi tidak tersedia saat ini.');
+        setErrorMessage(t('Sinyal lokasi tidak tersedia saat ini.', 'Location signal is unavailable right now.'));
       } else if (error.code === error.TIMEOUT) {
         setStatus('error');
-        setErrorMessage('Permintaan lokasi melebihi batas waktu (timeout).');
+        setErrorMessage(t('Permintaan lokasi melebihi batas waktu (timeout).', 'The location request timed out.'));
       } else {
         setStatus('error');
-        setErrorMessage('Terjadi kendala saat membaca lokasi perangkat.');
+        setErrorMessage(t('Terjadi kendala saat membaca lokasi perangkat.', 'There was a problem reading the device location.'));
       }
       reverseRequestsRef.current?.finish(request);
     };
@@ -125,7 +127,7 @@ export function useLocation() {
       );
     };
     attempt(false);
-  }, [updateLocation]);
+  }, [updateLocation, t, language]);
 
   useEffect(() => () => reverseRequestsRef.current?.cancel(), []);
 

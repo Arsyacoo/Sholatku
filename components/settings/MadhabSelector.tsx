@@ -3,6 +3,7 @@
 import React from 'react';
 import { Madhab } from '@/types';
 import { Check } from 'lucide-react';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface MadhabSelectorProps {
   value: Madhab;
@@ -10,16 +11,23 @@ interface MadhabSelectorProps {
 }
 
 export const MadhabSelector: React.FC<MadhabSelectorProps> = ({ value, onChange }) => {
+  const { t } = useLanguage();
   const options = [
     {
       id: 'shafii' as Madhab,
-      title: 'Syafi\'i, Maliki, Hanbali (Standar)',
-      desc: 'Waktu Ashar dimulai saat panjang bayangan benda sama dengan tinggi aslinya (1x).',
+      title: t('Syafi\'i, Maliki, Hanbali (Standar)', 'Shafi\'i, Maliki, Hanbali (Standard)'),
+      desc: t(
+        'Waktu Ashar dimulai saat panjang bayangan benda sama dengan tinggi aslinya (1x).',
+        'Asr begins when an object\'s shadow equals its height (1x).',
+      ),
     },
     {
       id: 'hanafi' as Madhab,
       title: 'Hanafi',
-      desc: 'Waktu Ashar dimulai saat panjang bayangan benda dua kali tinggi aslinya (2x).',
+      desc: t(
+        'Waktu Ashar dimulai saat panjang bayangan benda dua kali tinggi aslinya (2x).',
+        'Asr begins when an object\'s shadow is twice its height (2x).',
+      ),
     },
   ];
 
@@ -27,10 +35,13 @@ export const MadhabSelector: React.FC<MadhabSelectorProps> = ({ value, onChange 
     <div className="space-y-3">
       <div className="space-y-1">
         <label className="block text-sm font-bold text-slate-900 dark:text-slate-100">
-          Metode Waktu Ashar (Madhab)
+          {t('Metode Waktu Ashar (Madhab)', 'Asr calculation (madhab)')}
         </label>
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          Mempengaruhi waktu masuknya sholat Ashar berdasarkan rasio panjang bayangan.
+          {t(
+            'Mempengaruhi waktu masuknya sholat Ashar berdasarkan rasio panjang bayangan.',
+            'Affects when Asr begins, based on the shadow length ratio.',
+          )}
         </p>
       </div>
 

@@ -9,9 +9,11 @@ import { Footer } from '@/components/layout/Footer';
 import { CitySearchModal } from '@/components/location/CitySearchModal';
 import { NearbyMosqueList } from '@/components/mosques/NearbyMosqueList';
 import { useLocation } from '@/hooks/useLocation';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export default function MosquesPage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { t } = useLanguage();
   const { location, isHydrated, selectCity, detectLocation, status } = useLocation();
 
   return (
@@ -24,14 +26,14 @@ export default function MosquesPage() {
             <Link
               href="/qibla"
               className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl bg-surface-100 text-slate-600 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-slate-300"
-              aria-label="Kembali ke Kiblat"
+              aria-label={t('Kembali ke Kiblat', 'Back to Qibla')}
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">Masjid Terdekat</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">{t('Masjid Terdekat', 'Nearby mosques')}</h1>
               <p className="text-xs text-slate-600 dark:text-slate-400">
-                Masjid dan musala di sekitar Anda dari OpenStreetMap
+                {t('Masjid dan musala di sekitar Anda dari OpenStreetMap', 'Mosques and prayer rooms near you from OpenStreetMap')}
               </p>
             </div>
           </div>

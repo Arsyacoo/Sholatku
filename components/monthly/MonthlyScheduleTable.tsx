@@ -8,20 +8,20 @@ import { Button } from '../ui/Button';
 import { Skeleton } from '../ui/Skeleton';
 import { isNetworkRequestError } from '@/lib/network/fetch';
 import { LatestRequestController } from '@/lib/network/latest-request';
+import { useLanguage } from '@/hooks/useLanguage';
+import { prayerName } from '@/lib/prayer/constants';
+import { formatCanonicalDate } from '@/lib/time/timezone';
 
 interface MonthlyScheduleTableProps {
   location: UserLocation;
   settings: UserSettings;
 }
 
-const MONTH_NAMES = [
-  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-];
-
 type MonthlyLoadState = 'hydrating' | 'loading' | 'success' | 'empty' | 'error';
 
-export const MonthlyScheduleRow: React.FC<{ item: MonthlyPrayerItem }> = ({ item }) => (
+export const MonthlyScheduleRow: React.FC<{ item: MonthlyPrayerItem }> = ({ item }) => {
+  const { t, locale } = useLanguage();
+  return (
   <tr
     className={`transition-colors ${
       item.isToday
@@ -32,10 +32,10 @@ export const MonthlyScheduleRow: React.FC<{ item: MonthlyPrayerItem }> = ({ item
     <td className="py-3 px-4">
       <div className="flex min-w-max items-center gap-2">
         <span className="font-mono font-bold w-6">{item.dayNumber}</span>
-        <span className="whitespace-nowrap text-xs text-slate-500 dark:text-slate-400">{item.dayName}</span>
+        <span className="whitespace-nowrap text-xs text-slate-500 dark:text-slate-400">{formatCanonicalDate(item.date, locale, { weekday: 'long' })}</span>
         {item.isToday && (
           <span className="inline-flex items-center whitespace-nowrap rounded-full bg-primary-600 px-2 py-0.5 text-[10px] font-bold leading-4 text-white">
-            Hari ini
+            {t('Hari ini', 'Today')}
           </span>
         )}
       </div>
@@ -47,7 +47,8 @@ export const MonthlyScheduleRow: React.FC<{ item: MonthlyPrayerItem }> = ({ item
     <td className="py-3 px-3 font-mono">{item.timings.maghrib}</td>
     <td className="py-3 px-3 font-mono">{item.timings.isha}</td>
   </tr>
-);
+  );
+};
 
 export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ location, settings }) => {
   const [currentYear, setCurrentYear] = useState<number | null>(null);
@@ -56,6 +57,7 @@ export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ loca
   const [loadState, setLoadState] = useState<MonthlyLoadState>('hydrating');
   const [error, setError] = useState<string | null>(null);
   const [retryToken, setRetryToken] = useState(0);
+  const { t, language, locale } = useLanguage();
   const requestsRef = React.useRef<LatestRequestController | null>(null);
   if (!requestsRef.current) requestsRef.current = new LatestRequestController();
 
@@ -92,6 +94,7 @@ export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ loca
       isha: settings.adjustments.isha,
     },
     ihtiyat: settings.ihtiyat,
+    language: settings.language,
     timeFormat24h: settings.timeFormat24h,
     theme: settings.theme,
     enableNotifications: settings.enableNotifications,
@@ -107,6 +110,7 @@ export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ loca
     settings.adjustments.maghrib,
     settings.adjustments.isha,
     settings.ihtiyat,
+    settings.language,
     settings.timeFormat24h,
     settings.theme,
     settings.enableNotifications,
@@ -138,7 +142,7 @@ export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ loca
         if (!request.isCurrent() || isNetworkRequestError(e, 'aborted')) return;
         console.error('Failed to fetch monthly prayer schedule:', e);
         setSchedule([]);
-        setError('Jadwal bulanan belum dapat dimuat. Silakan coba lagi.');
+        setError('load-failed');
         setLoadState('error');
       } finally {
         if (request.isCurrent()) requestsRef.current?.finish(request);
@@ -187,18 +191,18 @@ export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ loca
       {/* Month & Year Controls */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-white dark:bg-surface-900 rounded-2xl border border-surface-200 dark:border-surface-800 shadow-2xs">
         <div className="flex items-center gap-3">
-          <Button variant="secondary" size="icon" onClick={handlePrevMonth} aria-label="Bulan sebelumnya">
+          <Button variant="secondary" size="icon" onClick={handlePrevMonth} aria-label={t('Bulan sebelumnya', 'Previous month')}>
             <ChevronLeft className="w-5 h-5" />
           </Button>
           <div className="text-center min-w-[160px]">
             <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
               {currentMonth !== null && currentYear !== null
-                ? `${MONTH_NAMES[currentMonth - 1]} ${currentYear}`
-                : 'Memuat kalender…'}
+                ? formatCanonicalDate(`${currentYear}-${String(currentMonth).padStart(2, '0')}-01`, locale, { month: 'long', year: 'numeric' })
+                : t('Memuat kalender…', 'Loading calendar…')}
             </h2>
             <span className="text-xs text-slate-600 dark:text-slate-400">{location.displayName}</span>
           </div>
-          <Button variant="secondary" size="icon" onClick={handleNextMonth} aria-label="Bulan berikutnya">
+          <Button variant="secondary" size="icon" onClick={handleNextMonth} aria-label={t('Bulan berikutnya', 'Next month')}>
             <ChevronRight className="w-5 h-5" />
           </Button>
         </div>
@@ -206,7 +210,7 @@ export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ loca
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handlePrint} className="no-print text-xs">
             <Printer className="w-3.5 h-3.5 mr-1.5" />
-            Cetak Jadwal
+            {t('Cetak Jadwal', 'Print schedule')}
           </Button>
         </div>
       </div>
@@ -214,21 +218,23 @@ export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ loca
       {/* Schedule Table Container */}
       {loadState === 'error' ? (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-rose-900 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-100" role="alert">
-          <h2 className="font-semibold">Jadwal bulanan belum dapat dimuat.</h2>
+          <h2 className="font-semibold">{t('Jadwal bulanan belum dapat dimuat.', 'The monthly schedule could not be loaded.')}</h2>
           <p className="mt-1 text-sm text-rose-800/80 dark:text-rose-200/80">
-            {error || 'Periksa koneksi internet atau coba kembali.'}
+            {error
+              ? t('Jadwal bulanan belum dapat dimuat. Silakan coba lagi.', 'The monthly schedule could not be loaded. Please try again.')
+              : t('Periksa koneksi internet atau coba kembali.', 'Check your internet connection or try again.')}
           </p>
           <button
             type="button"
             onClick={() => setRetryToken((value) => value + 1)}
             className="mt-4 rounded-xl bg-rose-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-rose-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
           >
-            Coba Lagi
+            {t('Coba Lagi', 'Try again')}
           </button>
         </div>
       ) : loadState === 'empty' ? (
         <div className="rounded-2xl border border-surface-200 bg-white p-6 text-center text-sm text-slate-600 dark:border-surface-800 dark:bg-surface-900 dark:text-slate-300">
-          Jadwal untuk bulan ini belum tersedia.
+          {t('Jadwal untuk bulan ini belum tersedia.', 'The schedule for this month is not available yet.')}
         </div>
       ) : (
       <div className="bg-white dark:bg-surface-900 rounded-2xl border border-surface-200 dark:border-surface-800 overflow-hidden shadow-xs">
@@ -236,13 +242,13 @@ export const MonthlyScheduleTable: React.FC<MonthlyScheduleTableProps> = ({ loca
           <table className="w-full text-left text-sm border-collapse">
             <thead>
               <tr className="bg-surface-50 dark:bg-surface-800/80 border-b border-surface-200 dark:border-surface-700 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                <th className="py-3.5 px-4">Tanggal</th>
-                <th className="py-3.5 px-3">Subuh</th>
-                <th className="py-3.5 px-3">Terbit</th>
-                <th className="py-3.5 px-3">Dzuhur</th>
-                <th className="py-3.5 px-3">Ashar</th>
-                <th className="py-3.5 px-3">Maghrib</th>
-                <th className="py-3.5 px-3">Isya</th>
+                <th className="py-3.5 px-4">{t('Tanggal', 'Date')}</th>
+                <th className="py-3.5 px-3">{prayerName('fajr', language)}</th>
+                <th className="py-3.5 px-3">{prayerName('sunrise', language)}</th>
+                <th className="py-3.5 px-3">{prayerName('dhuhr', language)}</th>
+                <th className="py-3.5 px-3">{prayerName('asr', language)}</th>
+                <th className="py-3.5 px-3">{prayerName('maghrib', language)}</th>
+                <th className="py-3.5 px-3">{prayerName('isha', language)}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-100 dark:divide-surface-800">

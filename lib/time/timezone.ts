@@ -11,6 +11,13 @@ export const ISLAMIC_MONTHS = [
   'Ramadhan', 'Syawal', 'Dzulqa’dah', 'Dzulhijjah'
 ];
 
+/** English Hijri month names, same order as ISLAMIC_MONTHS. */
+export const ISLAMIC_MONTHS_EN = [
+  'Muharram', 'Safar', 'Rabi al-Awwal', 'Rabi al-Thani',
+  'Jumada al-Ula', 'Jumada al-Akhirah', 'Rajab', 'Shaban',
+  'Ramadan', 'Shawwal', 'Dhu al-Qadah', 'Dhu al-Hijjah'
+];
+
 export const DEFAULT_TIMEZONE = 'Asia/Jakarta';
 
 export function isValidTimeZone(value: unknown): value is string {
@@ -107,6 +114,18 @@ export function formatIndonesianDateInTimeZone(date: Date, timeZone: string): st
     month: 'long',
     year: 'numeric',
   }).format(date);
+}
+
+/** "Rabu, 26 Agustus 2026" / "Wednesday, 26 August 2026" for a canonical YYYY-MM-DD date. */
+export function formatCanonicalDate(
+  canonicalDate: string,
+  locale: string,
+  options: Intl.DateTimeFormatOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }
+): string {
+  const [year, month, day] = canonicalDate.split('-').map(Number);
+  return new Intl.DateTimeFormat(locale, { ...options, timeZone: 'UTC' }).format(
+    new Date(Date.UTC(year, month - 1, day, 12))
+  );
 }
 
 export function getTimeZoneLabel(timeZone: string): string {

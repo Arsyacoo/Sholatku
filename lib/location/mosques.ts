@@ -1,5 +1,6 @@
 import { fetchJsonWithTimeout, NETWORK_TIMEOUTS } from '../network/fetch';
 import { NOMINATIM_MIN_INTERVAL_MS } from './geocoding';
+import type { Language } from '@/types';
 
 /**
  * Nearby mosques from OpenStreetMap via Nominatim (the public Overpass servers are often at capacity). Called
@@ -11,17 +12,17 @@ const MIN_RESULTS = 5;
 const METERS_PER_DEGREE = 111_320;
 const MUSALA_PATTERN = /\b(mus(h)?[ao]ll?a|surau|langgar)\b/i;
 const MOSQUE_NAME_PATTERN = /\b(masjid|mesjid)\b/i;
-const DIRECTIONS = ['utara', 'timur laut', 'timur', 'tenggara', 'selatan', 'barat daya', 'barat', 'barat laut'];
 
 export interface NearbyMosque {
   id: string;
+  /** Empty when OpenStreetMap has no name; the UI shows "unnamed mosque" in the user's language. */
   name: string;
-  kind: 'Masjid' | 'Musala';
+  kind: 'mosque' | 'musala';
   latitude: number;
   longitude: number;
   distanceMeters: number;
-  /** Compass direction from the user, e.g. "timur laut". */
-  direction: string;
+  /** Compass direction from the user as an eighth of the circle: 0 = north, 1 = northeast, ... 7 = northwest. */
+  direction: number;
   street?: string;
 }
 
@@ -81,12 +82,12 @@ export function parseNearbyMosques(data: unknown, latitude: number, longitude: n
     const bearing = (Math.atan2(east, north) * 180) / Math.PI;
     mosques.push({
       id: `${place.osm_type}/${place.osm_id}`,
-      name: name || 'Masjid tanpa nama',
-      kind: isMusala ? 'Musala' : 'Masjid',
+      name,
+      kind: isMusala ? 'musala' : 'mosque',
       latitude: lat,
       longitude: lon,
       distanceMeters: Math.hypot(north, east),
-      direction: DIRECTIONS[Math.round(((bearing + 360) % 360) / 45) % 8],
+      direction: Math.round(((bearing + 360) % 360) / 45) % 8,
       street: place.address?.road || undefined,
     });
   }
@@ -123,9 +124,10 @@ export async function fetchNearbyMosques(
   return mosques;
 }
 
-export function formatDistance(meters: number): string {
+export function formatDistance(meters: number, language: Language = 'id'): string {
   if (meters < 1_000) return `${Math.max(10, Math.round(meters / 10) * 10)} m`;
-  return `${(meters / 1_000).toFixed(1).replace('.', ',')} km`;
+  const km = (meters / 1_000).toFixed(1);
+  return `${language === 'en' ? km : km.replace('.', ',')} km`;
 }
 
 /** Google Maps directions; on Android the link opens the Maps app. */

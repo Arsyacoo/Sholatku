@@ -5,6 +5,7 @@ import { Compass, Navigation2, CheckCircle, ShieldAlert, Sparkles, MapPin } from
 import { useQibla } from '@/hooks/useQibla';
 import { UserLocation } from '@/types';
 import { Button } from '../ui/Button';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface QiblaCompassProps {
   location: UserLocation;
@@ -21,6 +22,7 @@ export const QiblaCompass: React.FC<QiblaCompassProps> = ({ location }) => {
     isAligned,
     requestSensorPermission,
   } = useQibla(location);
+  const { t, locale } = useLanguage();
 
   return (
     <div className="space-y-6">
@@ -31,9 +33,9 @@ export const QiblaCompass: React.FC<QiblaCompassProps> = ({ location }) => {
             <Compass className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-xs text-slate-500 font-medium uppercase tracking-wider">Arah Kiblat</div>
+            <div className="text-xs text-slate-500 font-medium uppercase tracking-wider">{t('Arah Kiblat', 'Qibla direction')}</div>
             <div className="text-xl font-extrabold text-slate-900 dark:text-slate-100 font-mono">
-              {bearing}° <span className="text-xs font-sans text-slate-500 font-normal">dari Utara Sejati</span>
+              {bearing}° <span className="text-xs font-sans text-slate-500 font-normal">{t('dari Utara Sejati', 'from true north')}</span>
             </div>
           </div>
         </div>
@@ -43,9 +45,9 @@ export const QiblaCompass: React.FC<QiblaCompassProps> = ({ location }) => {
             <MapPin className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-xs text-slate-500 font-medium uppercase tracking-wider">Jarak ke Ka&apos;bah</div>
+            <div className="text-xs text-slate-500 font-medium uppercase tracking-wider">{t("Jarak ke Ka'bah", 'Distance to the Kaaba')}</div>
             <div className="text-xl font-extrabold text-slate-900 dark:text-slate-100 font-mono">
-              {distanceKm.toLocaleString('id-ID')}{' '}
+              {distanceKm.toLocaleString(locale)}{' '}
               <span className="text-xs font-sans text-slate-500 font-normal">km (Makkah)</span>
             </div>
           </div>
@@ -57,10 +59,10 @@ export const QiblaCompass: React.FC<QiblaCompassProps> = ({ location }) => {
         <div className="p-4 bg-primary-50 dark:bg-primary-950/50 border border-primary-200 dark:border-primary-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
           <div className="flex items-center gap-2.5 text-primary-900 dark:text-primary-200">
             <Sparkles className="w-4 h-4 text-primary-600 shrink-0" />
-            <span>Aktifkan sensor kompas perangkat untuk putaran otomatis.</span>
+            <span>{t('Aktifkan sensor kompas perangkat untuk putaran otomatis.', "Enable your device's compass sensor for automatic rotation.")}</span>
           </div>
           <Button size="sm" onClick={requestSensorPermission}>
-            Izinkan Sensor Kompas
+            {t('Izinkan Sensor Kompas', 'Allow compass sensor')}
           </Button>
         </div>
       )}
@@ -78,10 +80,10 @@ export const QiblaCompass: React.FC<QiblaCompassProps> = ({ location }) => {
           <div className="absolute inset-2 rounded-full border border-dashed border-surface-300 dark:border-surface-700 pointer-events-none" />
 
           {/* Cardinal Directions */}
-          <span className="absolute top-3 font-bold text-xs text-red-500 font-mono">U (0°)</span>
-          <span className="absolute right-3 font-bold text-xs text-slate-400 font-mono">T (90°)</span>
-          <span className="absolute bottom-3 font-bold text-xs text-slate-400 font-mono">S (180°)</span>
-          <span className="absolute left-3 font-bold text-xs text-slate-400 font-mono">B (270°)</span>
+          <span className="absolute top-3 font-bold text-xs text-red-500 font-mono">{t('U', 'N')} (0°)</span>
+          <span className="absolute right-3 font-bold text-xs text-slate-400 font-mono">{t('T', 'E')} (90°)</span>
+          <span className="absolute bottom-3 font-bold text-xs text-slate-400 font-mono">{t('S', 'S')} (180°)</span>
+          <span className="absolute left-3 font-bold text-xs text-slate-400 font-mono">{t('B', 'W')} (270°)</span>
 
           {/* Rotating Compass Disc / Pointer */}
           <div
@@ -107,7 +109,7 @@ export const QiblaCompass: React.FC<QiblaCompassProps> = ({ location }) => {
                   <Navigation2 className="w-5 h-5 fill-current" />
                 </div>
                 <span className="text-[10px] font-bold mt-1 bg-slate-900 text-white px-1.5 py-0.5 rounded shadow-xs">
-                  Kiblat
+                  {t('Kiblat', 'Qibla')}
                 </span>
               </div>
             </div>
@@ -130,13 +132,13 @@ export const QiblaCompass: React.FC<QiblaCompassProps> = ({ location }) => {
           {isAligned ? (
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold text-sm border border-emerald-300 dark:border-emerald-800 animate-pulse">
               <CheckCircle className="w-4 h-4" />
-              <span>Arah Perangkat Sudah Tepat Menghadap Kiblat</span>
+              <span>{t('Arah Perangkat Sudah Tepat Menghadap Kiblat', 'Your device is facing the Qibla')}</span>
             </div>
           ) : (
             <p className="text-xs text-slate-500 dark:text-slate-400">
               {hasSensor
-                ? 'Putar ponsel hingga panah hijau menghadap tepat ke atas'
-                : `Arahkan kompas fisik Anda pada sudut ${bearing}° dari arah Utara`}
+                ? t('Putar ponsel hingga panah hijau menghadap tepat ke atas', 'Turn your phone until the green arrow points straight up')
+                : t(`Arahkan kompas fisik Anda pada sudut ${bearing}° dari arah Utara`, `Point your physical compass at ${bearing}° from north`)}
             </p>
           )}
         </div>

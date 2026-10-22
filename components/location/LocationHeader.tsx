@@ -4,6 +4,7 @@ import React from 'react';
 import { MapPin, Navigation, RefreshCw, ChevronDown } from 'lucide-react';
 import { UserLocation } from '@/types';
 import { Badge } from '../ui/Badge';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface LocationHeaderProps {
   location: UserLocation;
@@ -18,20 +19,22 @@ export const LocationHeader: React.FC<LocationHeaderProps> = ({
   onRefresh,
   isRefreshing = false,
 }) => {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
       {/* Location selector button */}
       <button
         onClick={onOpenSearch}
         className="group flex min-h-11 min-w-0 flex-1 items-center gap-2.5 rounded-2xl p-0 -ml-1.5 text-left transition-all hover:bg-surface-100 dark:hover:bg-surface-800/80 cursor-pointer"
-        aria-label="Ubah lokasi saat ini"
+        aria-label={t('Ubah lokasi saat ini', 'Change current location')}
+        data-location-trigger
       >
         <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-950/80 text-primary-700 dark:text-primary-300 flex items-center justify-center shrink-0 border border-primary-200/60 dark:border-primary-800/60 group-hover:scale-105 transition-transform">
           <MapPin className="w-5 h-5" />
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Jadwal Sholat Untuk</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('Jadwal Sholat Untuk', 'Prayer times for')}</span>
             {location.isAutoDetected && (
               <Badge variant="primary" className="text-[10px] py-0 px-1.5">
                 GPS
@@ -56,8 +59,8 @@ export const LocationHeader: React.FC<LocationHeaderProps> = ({
             onClick={onRefresh}
             disabled={isRefreshing}
             className="flex h-11 w-11 items-center justify-center rounded-xl p-2 text-slate-400 transition-colors hover:bg-surface-100 hover:text-slate-600 dark:hover:bg-surface-800 dark:hover:text-slate-200 disabled:opacity-50"
-            title="Muat ulang jadwal"
-            aria-label="Muat ulang jadwal"
+            title={t('Muat ulang jadwal', 'Reload schedule')}
+            aria-label={t('Muat ulang jadwal', 'Reload schedule')}
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-primary-600' : ''}`} />
           </button>

@@ -7,6 +7,7 @@ import { buildPrayerScheduleCacheContext, getCachedSchedule, saveCachedSchedule 
 import { formatDateInTimeZone, normalizeTimeZone } from '@/lib/time/timezone';
 import { isNetworkRequestError } from '@/lib/network/fetch';
 import { LatestRequestController } from '@/lib/network/latest-request';
+import { tr } from '@/lib/language';
 
 export function usePrayerTimes(location: UserLocation, settings: UserSettings) {
   const [schedule, setSchedule] = useState<DailyPrayerSchedule | null>(null);
@@ -50,9 +51,9 @@ export function usePrayerTimes(location: UserLocation, settings: UserSettings) {
         if (cached) {
           setSchedule(cached);
           setIsStale(true);
-          setError('Menggunakan jadwal tersimpan (offline).');
+          setError(tr(settings.language, 'Menggunakan jadwal tersimpan (offline).', 'Showing saved prayer times (offline).'));
         } else {
-          setError('Gagal memuat jadwal sholat. Silakan periksa koneksi internet.');
+          setError(tr(settings.language, 'Gagal memuat jadwal sholat. Silakan periksa koneksi internet.', 'Could not load prayer times. Please check your internet connection.'));
         }
       } finally {
         if (request.isCurrent()) {
@@ -62,7 +63,7 @@ export function usePrayerTimes(location: UserLocation, settings: UserSettings) {
         requestsRef.current?.finish(request);
       }
     },
-    [location.latitude, location.longitude, location.timezone, settings.method, settings.madhab, JSON.stringify(settings.adjustments), settings.ihtiyat]
+    [location.latitude, location.longitude, location.timezone, settings.method, settings.madhab, JSON.stringify(settings.adjustments), settings.ihtiyat, settings.language]
   );
 
   // Initial load or when location/settings change

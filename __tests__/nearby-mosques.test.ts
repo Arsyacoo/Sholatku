@@ -30,10 +30,10 @@ describe('nearby mosques', () => {
     );
 
     expect(mosques.map((m) => m.id)).toEqual(['way/2', 'node/1', 'node/3']);
-    expect(mosques[0]).toMatchObject({ kind: 'Musala', direction: 'utara', street: 'Jl. Melati' });
+    expect(mosques[0]).toMatchObject({ kind: 'musala', direction: 0, street: 'Jl. Melati' });
     expect(Math.round(mosques[0].distanceMeters)).toBe(111);
-    expect(mosques[1]).toMatchObject({ kind: 'Masjid', direction: 'timur' });
-    expect(mosques[2]).toMatchObject({ name: 'Masjid An-Nur', direction: 'selatan' });
+    expect(mosques[1]).toMatchObject({ kind: 'mosque', direction: 2 });
+    expect(mosques[2]).toMatchObject({ name: 'Masjid An-Nur', direction: 4 });
   });
 
   it('returns nothing for an unexpected response', () => {
@@ -45,5 +45,6 @@ describe('nearby mosques', () => {
     expect(formatDistance(4)).toBe('10 m');
     expect(formatDistance(347)).toBe('350 m');
     expect(formatDistance(1_250)).toBe('1,3 km');
+    expect(formatDistance(1_250, 'en')).toBe('1.3 km');
   });
 });

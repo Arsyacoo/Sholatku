@@ -1,5 +1,5 @@
-import type { HijriDateParts, RamadanDateRange, RamadanModePreference, RamadanStatus } from '@/types';
-import { ISLAMIC_MONTHS } from '@/lib/time/timezone';
+import type { HijriDateParts, Language, RamadanDateRange, RamadanModePreference, RamadanStatus } from '@/types';
+import { ISLAMIC_MONTHS, ISLAMIC_MONTHS_EN } from '@/lib/time/timezone';
 
 const RAMADAN_MONTH = 9;
 const DEFAULT_HIJRI_YEAR = 1448;
@@ -171,9 +171,10 @@ export const RAMADAN_HIJRI_MONTH = RAMADAN_MONTH;
  * Month names come from a fixed list: Android WebView ICU knows the Umm al-Qura calendar
  * but lacks Indonesian Hijri month names and silently prints Gregorian ones ("5 Mei 1448 H").
  */
-export function formatHijriDate(date: Date, timeZone = 'UTC', adjustment = 0): string {
+export function formatHijriDate(date: Date, timeZone = 'UTC', adjustment = 0, language: Language = 'id'): string {
   const hijri = getHijriDate(date, timeZone, adjustment);
-  return `${hijri.day} ${ISLAMIC_MONTHS[hijri.month - 1] ?? hijri.month} ${hijri.year} H`;
+  const months = language === 'en' ? ISLAMIC_MONTHS_EN : ISLAMIC_MONTHS;
+  return `${hijri.day} ${months[hijri.month - 1] ?? hijri.month} ${hijri.year} ${language === 'en' ? 'AH' : 'H'}`;
 }
 
 /** Offline Hijri label for a schedule date, in the runtime timezone. */

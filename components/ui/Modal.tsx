@@ -3,6 +3,7 @@
 import React, { useEffect, useId, useRef } from 'react';
 import { X } from 'lucide-react';
 import { useBackAction } from '@/lib/platform/back';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -44,6 +45,7 @@ export const Modal: React.FC<ModalProps> = ({
   initialFocus,
   returnFocusSelector,
 }) => {
+  const { t } = useLanguage();
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const previousFocusDescriptorRef = useRef<{ id?: string; ariaLabel?: string }>({});
@@ -205,7 +207,7 @@ export const Modal: React.FC<ModalProps> = ({
           <button
             onClick={onClose}
             className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-surface-100 hover:text-slate-600 dark:hover:bg-surface-800 dark:hover:text-slate-200"
-            aria-label="Tutup"
+            aria-label={t('Tutup', 'Close')}
           >
             <X className="w-5 h-5" />
           </button>

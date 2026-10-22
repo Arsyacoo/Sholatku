@@ -6,10 +6,12 @@ import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.SystemClock;
 import android.view.View;
 import android.widget.RemoteViews;
 import io.github.arsyacoo.sholatku.R;
+import java.util.Locale;
 
 /** Renders every placed Sholatku widget and schedules the next roll-over to the following prayer. */
 final class PrayerWidgetUpdater {
@@ -79,6 +81,8 @@ final class PrayerWidgetUpdater {
             views.setViewVisibility(R.id.widget_countdown, View.GONE);
             views.setViewVisibility(R.id.widget_schedule, View.GONE);
             views.setViewVisibility(R.id.widget_message, View.VISIBLE);
+            // Follow the app's language rather than the device's once JS has told us which one it is.
+            if (schedule != null) views.setTextViewText(R.id.widget_message, localized(context, schedule.language).getString(R.string.widget_stale));
             return views;
         }
 
@@ -100,7 +104,8 @@ final class PrayerWidgetUpdater {
         views.setViewVisibility(R.id.widget_countdown, View.VISIBLE);
         // On 4x1 the countdown sits under the name, where a bare "01:12" would read as a prayer time.
         boolean wide = LAYOUTS[size] == R.layout.widget_prayer_wide;
-        String countdownFormat = wide ? "dalam %s" : null;
+        boolean english = "en".equals(schedule.language);
+        String countdownFormat = wide ? (english ? "in %s" : "dalam %s") : null;
         // 4x1 and 4x2 share the icon/time/name day strip; 2x1 has no schedule.
         boolean dayStrip = wide || LAYOUTS[size] == R.layout.widget_prayer_large;
         views.setChronometer(
@@ -128,6 +133,12 @@ final class PrayerWidgetUpdater {
             views.setContentDescription(COLUMN_IDS[i], day.names[i] + " " + day.times[i]);
         }
         return views;
+    }
+
+    private static Context localized(Context context, String language) {
+        Configuration configuration = new Configuration(context.getResources().getConfiguration());
+        configuration.setLocale(new Locale(language));
+        return context.createConfigurationContext(configuration);
     }
 
     private static void setDisplayText(

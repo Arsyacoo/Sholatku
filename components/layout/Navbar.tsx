@@ -7,6 +7,7 @@ import { Compass, Calendar, Settings, Sparkles, BookOpen } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { UserLocation } from '@/types';
 import { isRouteActive } from '@/lib/platform/navigation';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface NavbarProps {
   location?: UserLocation;
@@ -15,13 +16,14 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ location, onOpenLocationModal }) => {
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   const navLinks = [
-    { href: '/', label: 'Hari Ini', icon: Sparkles },
+    { href: '/', label: t('Hari Ini', 'Today'), icon: Sparkles },
     { href: '/quran', label: 'Al-Qur\'an', icon: BookOpen },
-    { href: '/monthly', label: 'Bulanan', icon: Calendar },
-    { href: '/qibla', label: 'Arah Kiblat', icon: Compass },
-    { href: '/settings', label: 'Pengaturan', icon: Settings },
+    { href: '/monthly', label: t('Bulanan', 'Monthly'), icon: Calendar },
+    { href: '/qibla', label: t('Arah Kiblat', 'Qibla'), icon: Compass },
+    { href: '/settings', label: t('Pengaturan', 'Settings'), icon: Settings },
   ];
 
   return (
@@ -37,7 +39,7 @@ export const Navbar: React.FC<NavbarProps> = ({ location, onOpenLocationModal })
               Sholat<span className="text-primary-600 dark:text-primary-400">ku</span>
             </span>
             <span className="hidden md:block text-[10px] leading-tight text-slate-500 dark:text-slate-400 font-medium tracking-wider uppercase">
-              Waktu Sholat &amp; Kiblat
+              {t('Waktu Sholat & Kiblat', 'Prayer times & Qibla')}
             </span>
           </div>
         </Link>

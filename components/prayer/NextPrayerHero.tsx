@@ -5,6 +5,8 @@ import { Clock, Sparkles, Moon, Sun, ArrowRight } from 'lucide-react';
 import { NextPrayerInfo } from '@/types';
 import { CountdownTimer } from './CountdownTimer';
 import { Skeleton } from '../ui/Skeleton';
+import { prayerName } from '@/lib/prayer/constants';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface NextPrayerHeroProps {
   prayerInfo: NextPrayerInfo | null;
@@ -12,6 +14,7 @@ interface NextPrayerHeroProps {
 }
 
 export const NextPrayerHero: React.FC<NextPrayerHeroProps> = ({ prayerInfo, isLoading = false }) => {
+  const { t, language } = useLanguage();
   if (isLoading) {
     return (
       <div className="w-full h-56 rounded-3xl bg-surface-200 dark:bg-surface-800 animate-pulse" />
@@ -22,6 +25,7 @@ export const NextPrayerHero: React.FC<NextPrayerHeroProps> = ({ prayerInfo, isLo
 
   const { currentPrayer, nextPrayer, formattedCountdown, remainingSeconds, isTomorrowFajr, progressPercent } =
     prayerInfo;
+  const nextName = prayerName(nextPrayer.id, language);
 
   return (
     <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-800 via-primary-700 to-teal-900 text-white p-6 sm:p-8 shadow-xl shadow-primary-950/20 border border-primary-600/40">
@@ -46,15 +50,15 @@ export const NextPrayerHero: React.FC<NextPrayerHeroProps> = ({ prayerInfo, isLo
             <Sparkles className="w-3.5 h-3.5 text-gold-300 animate-pulse" />
             <span>
               {isTomorrowFajr
-                ? 'Sholat Subuh Esok Hari'
-                : `Menuju Waktu Sholat ${nextPrayer.name}`}
+                ? t('Sholat Subuh Esok Hari', "Tomorrow's Fajr prayer")
+                : t(`Menuju Waktu Sholat ${nextName}`, `Up next: ${nextName}`)}
             </span>
           </div>
 
           {/* Main Title & Arabic */}
           <div className="flex items-baseline gap-4">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
-              {nextPrayer.name}
+              {nextName}
             </h1>
             <span className="font-arabic text-2xl sm:text-3xl text-gold-200/90 select-none">
               {nextPrayer.arabicName}
@@ -65,13 +69,13 @@ export const NextPrayerHero: React.FC<NextPrayerHeroProps> = ({ prayerInfo, isLo
           <div className="flex items-center gap-2 text-sm text-teal-100/90 font-medium">
             <Clock className="w-4 h-4 text-gold-300" />
             <span>
-              Masuk pukul <strong className="text-white text-base">{nextPrayer.time}</strong>
+              {t('Masuk pukul', 'Starts at')} <strong className="text-white text-base">{nextPrayer.time}</strong>
             </span>
             {currentPrayer && (
               <>
                 <span className="text-white/40">&bull;</span>
                 <span className="text-teal-200/80 text-xs">
-                  Sebelumnya: {currentPrayer.name} ({currentPrayer.time})
+                  {t('Sebelumnya', 'Previous')}: {prayerName(currentPrayer.id, language)} ({currentPrayer.time})
                 </span>
               </>
             )}
@@ -81,7 +85,7 @@ export const NextPrayerHero: React.FC<NextPrayerHeroProps> = ({ prayerInfo, isLo
         {/* Right column: Countdown timer block */}
         <div className="flex flex-col items-start md:items-end gap-2 bg-black/15 dark:bg-black/30 p-4 sm:p-5 rounded-2xl border border-white/10 backdrop-blur-sm self-stretch md:self-auto">
           <span className="text-xs font-medium uppercase tracking-wider text-teal-100/80">
-            Hitung Mundur Adzan
+            {t('Hitung Mundur Adzan', 'Adhan countdown')}
           </span>
           <CountdownTimer
             countdownStr={formattedCountdown}
@@ -93,7 +97,7 @@ export const NextPrayerHero: React.FC<NextPrayerHeroProps> = ({ prayerInfo, isLo
       {/* Bottom Progress Bar */}
       <div className="relative z-10 mt-6 pt-4 border-t border-white/10">
         <div className="flex items-center justify-between text-xs text-teal-100/80 mb-1.5 font-medium">
-          <span>Perjalanan Waktu</span>
+          <span>{t('Perjalanan Waktu', 'Time elapsed')}</span>
           <span>{progressPercent}%</span>
         </div>
         <div className="w-full h-1.5 bg-black/20 rounded-full overflow-hidden">

@@ -58,7 +58,7 @@ final class PrayerWidgetStore {
             }
             days.add(new PrayerWidgetSchedule.Day(rawDay.optString("hijri", ""), names, arabic, times, at));
         }
-        return new PrayerWidgetSchedule(root.optString("city", ""), days);
+        return new PrayerWidgetSchedule(root.optString("city", ""), root.optString("language", "id"), days);
     }
 
     private static SharedPreferences prefs(Context context) {

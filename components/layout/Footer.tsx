@@ -3,8 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Heart } from 'lucide-react';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export const Footer: React.FC = () => {
+  const { t } = useLanguage();
   const [year, setYear] = useState<number | null>(null);
 
   useEffect(() => {
@@ -17,7 +19,7 @@ export const Footer: React.FC = () => {
         <div className="flex items-center gap-1.5 font-medium">
           <span>Sholatku &copy; {year ?? ''}</span>
           <span>&bull;</span>
-          <span>Akurat &bull; Tenang &bull; Presisi</span>
+          <span>{t('Akurat • Tenang • Presisi', 'Accurate • Calm • Precise')}</span>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-xs">
           <Link href="/quran" className="hover:text-primary-600 transition-colors">
@@ -25,19 +27,19 @@ export const Footer: React.FC = () => {
           </Link>
           <span>&bull;</span>
           <Link href="/monthly" className="hover:text-primary-600 transition-colors">
-            Jadwal Bulanan
+            {t('Jadwal Bulanan', 'Monthly schedule')}
           </Link>
           <span>&bull;</span>
           <Link href="/qibla" className="hover:text-primary-600 transition-colors">
-            Kompas Kiblat
+            {t('Kompas Kiblat', 'Qibla compass')}
           </Link>
           <span>&bull;</span>
           <Link href="/mosques" className="hover:text-primary-600 transition-colors">
-            Masjid Terdekat
+            {t('Masjid Terdekat', 'Nearby mosques')}
           </Link>
           <span>&bull;</span>
           <Link href="/settings" className="hover:text-primary-600 transition-colors">
-            Pengaturan
+            {t('Pengaturan', 'Settings')}
           </Link>
           <span>&bull;</span>
           <Link href="/download" className="hover:text-primary-600 transition-colors">
@@ -45,7 +47,7 @@ export const Footer: React.FC = () => {
           </Link>
           <span>&bull;</span>
           <Link href="/privacy" className="hover:text-primary-600 transition-colors">
-            Kebijakan Privasi
+            {t('Kebijakan Privasi', 'Privacy policy')}
           </Link>
         </div>
       </div>

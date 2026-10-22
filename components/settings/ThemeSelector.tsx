@@ -3,14 +3,16 @@
 import React from 'react';
 import { Sun, Moon, Laptop } from 'lucide-react';
 import { useTheme, Theme } from '@/hooks/useTheme';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export const ThemeSelector: React.FC = () => {
   const { theme, setTheme, mounted } = useTheme();
+  const { t } = useLanguage();
 
   const options: { id: Theme; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-    { id: 'light', label: 'Terang', icon: Sun },
-    { id: 'dark', label: 'Gelap', icon: Moon },
-    { id: 'system', label: 'Sistem', icon: Laptop },
+    { id: 'light', label: t('Terang', 'Light'), icon: Sun },
+    { id: 'dark', label: t('Gelap', 'Dark'), icon: Moon },
+    { id: 'system', label: t('Sistem', 'System'), icon: Laptop },
   ];
 
   if (!mounted) return null;
@@ -19,7 +21,8 @@ export const ThemeSelector: React.FC = () => {
     <div className="space-y-3">
       <label className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
         <Sun className="w-4 h-4 text-primary-600 dark:text-primary-400" />
-        <span>Tema Tampilan</span>
+        <span>{t('Tema Tampilan', 'Theme')}</span>
+
       </label>
 
       <div className="grid grid-cols-3 gap-2.5">

@@ -14,6 +14,7 @@ import {
   type ExactAlarmPermissionState,
 } from '@/lib/platform/notifications';
 import { isNativeRuntime } from '@/lib/platform/runtime';
+import { useLanguage } from '@/hooks/useLanguage';
 import {
   getPrayerReminderSettings,
   getSavedSettings,
@@ -70,6 +71,7 @@ export const AndroidOnboarding: React.FC<AndroidOnboardingProps> = ({
   onDetectLocation,
   onPreferencesChanged,
 }) => {
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [remindersOn, setRemindersOn] = useState(false);
   const [exactAlarm, setExactAlarm] = useState<ExactAlarmPermissionState>('unsupported');
@@ -122,50 +124,59 @@ export const AndroidOnboarding: React.FC<AndroidOnboardingProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={close} title="Siapkan Sholatku" maxWidth="md">
+    <Modal isOpen={isOpen} onClose={close} title={t('Siapkan Sholatku', 'Set up Sholatku')} maxWidth="md">
       <div className="space-y-4">
         <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-          Tiga izin ini membuat jadwal sesuai kota Anda dan adzan berbunyi tepat waktu. Semuanya bisa diubah nanti di
-          Pengaturan.
+          {t(
+            'Tiga izin ini membuat jadwal sesuai kota Anda dan adzan berbunyi tepat waktu. Semuanya bisa diubah nanti di Pengaturan.',
+            'These three permissions match the schedule to your city and make the adhan play on time. You can change them later in Settings.'
+          )}
         </p>
         <ol className="space-y-2.5">
           <Step
             icon={<MapPin className="h-4 w-4" aria-hidden="true" />}
-            title="Lokasi"
+            title={t('Lokasi', 'Location')}
             description={
               locationStatus === 'denied'
-                ? 'Izin ditolak. Anda tetap bisa memilih kota secara manual di Beranda.'
-                : 'Dipakai sekali untuk menentukan kota. Lokasi perkiraan sudah cukup.'
+                ? t('Izin ditolak. Anda tetap bisa memilih kota secara manual di Beranda.', 'Permission denied. You can still choose your city manually on Home.')
+                : t('Dipakai sekali untuk menentukan kota. Lokasi perkiraan sudah cukup.', 'Used once to find your city. Approximate location is enough.')
             }
             done={locationStatus === 'granted'}
-            doneLabel="Kota terdeteksi"
-            actionLabel={locationStatus === 'requesting' ? 'Mendeteksi...' : 'Izinkan lokasi'}
+            doneLabel={t('Kota terdeteksi', 'City detected')}
+            actionLabel={locationStatus === 'requesting' ? t('Mendeteksi...', 'Detecting...') : t('Izinkan lokasi', 'Allow location')}
             onAction={onDetectLocation}
             isBusy={locationStatus === 'requesting'}
           />
           <Step
             icon={<BellRing className="h-4 w-4" aria-hidden="true" />}
-            title="Pengingat adzan"
-            description="Notifikasi saat masuk waktu Subuh, Dzuhur, Ashar, Maghrib, dan Isya."
+            title={t('Pengingat adzan', 'Adhan reminders')}
+            description={t(
+              'Notifikasi saat masuk waktu Subuh, Dzuhur, Ashar, Maghrib, dan Isya.',
+              'A notification when Fajr, Dhuhr, Asr, Maghrib and Isha begin.'
+            )}
             done={remindersOn}
-            doneLabel="Pengingat aktif"
-            actionLabel="Aktifkan pengingat"
+            doneLabel={t('Pengingat aktif', 'Reminders on')}
+            actionLabel={t('Aktifkan pengingat', 'Turn on reminders')}
             onAction={enableReminders}
             isBusy={busy === 'reminders'}
           />
           <Step
             icon={<AlarmClock className="h-4 w-4" aria-hidden="true" />}
-            title="Adzan tepat waktu"
-            description="Izinkan Alarm & pengingat agar notifikasi tidak tertunda saat ponsel menghemat baterai."
+            title={t('Adzan tepat waktu', 'On-time adhan')}
+            description={t(
+              'Izinkan Alarm & pengingat agar notifikasi tidak tertunda saat ponsel menghemat baterai.',
+              'Allow Alarms & reminders so notifications are not delayed while the phone saves battery.'
+            )}
             done={exactAlarm === 'granted'}
-            doneLabel="Tepat waktu aktif"
-            actionLabel="Izinkan Alarm & pengingat"
+            doneLabel={t('Tepat waktu aktif', 'On-time delivery on')}
+            actionLabel={t('Izinkan Alarm & pengingat', 'Allow Alarms & reminders')}
             onAction={enableExactAlarm}
             isBusy={busy === 'exact'}
           />
         </ol>
         <Button className="w-full" onClick={close}>
-          Selesai
+          {t('Selesai', 'Done')}
+
         </Button>
       </div>
     </Modal>

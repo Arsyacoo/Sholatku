@@ -1,8 +1,8 @@
 import { registerPlugin } from '@capacitor/core';
 
-import type { MonthlyPrayerItem, RamadanPreferences, UserLocation, UserSettings } from '@/types';
+import type { Language, MonthlyPrayerItem, RamadanPreferences, UserLocation, UserSettings } from '@/types';
 import { getMonthlyPrayerTimes } from '@/lib/prayer/api';
-import { PRAYER_NAMES } from '@/lib/prayer/constants';
+import { PRAYER_NAMES, prayerName } from '@/lib/prayer/constants';
 import { addDaysToCanonicalDate } from '@/lib/prayer/date';
 import { parsePrayerDateTime } from '@/lib/prayer/reminders/schedule';
 import { formatHijriDate } from '@/lib/ramadan/calendar';
@@ -18,6 +18,8 @@ const WIDGET_PRAYERS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
 export interface PrayerWidgetPayload {
   version: 1;
   city: string;
+  /** App language; the widget picks its countdown and stale-message wording from it. */
+  language: Language;
   days: Array<{
     date: string;
     hijri: string;
@@ -36,7 +38,8 @@ export function buildPrayerWidgetPayload(
   location: UserLocation,
   items: MonthlyPrayerItem[],
   hijriAdjustment: number,
-  now: Date
+  now: Date,
+  language: Language = 'id'
 ): PrayerWidgetPayload {
   const timeZone = normalizeTimeZone(location.timezone);
   const today = formatDateInTimeZone(now, timeZone);
@@ -49,16 +52,16 @@ export function buildPrayerWidgetPayload(
     .sort((a, b) => a.date.localeCompare(b.date))
     .map((item) => ({
       date: item.date,
-      hijri: formatHijriDate(zonedTimeToUtc(item.date, '12:00', timeZone), timeZone, hijriAdjustment),
+      hijri: formatHijriDate(zonedTimeToUtc(item.date, '12:00', timeZone), timeZone, hijriAdjustment, language),
       prayers: WIDGET_PRAYERS.map((key) => ({
-        name: PRAYER_NAMES[key].id,
+        name: prayerName(key, language),
         arabic: PRAYER_NAMES[key].ar,
         time: item.timings[key],
         at: parsePrayerDateTime(item.date, item.timings[key], timeZone).getTime(),
       })),
     }));
 
-  return { version: 1, city: location.city, days };
+  return { version: 1, city: location.city, language, days };
 }
 
 let lastSyncKey: string | null = null;
@@ -78,7 +81,7 @@ export async function syncPrayerWidget(
   // The bridge syncs on every focus; only refetch when the day or a schedule input changed.
   const syncKey = JSON.stringify([
     today, location.city, location.latitude, location.longitude, timeZone,
-    settings.method, settings.madhab, settings.adjustments, settings.ihtiyat, hijriAdjustment,
+    settings.method, settings.madhab, settings.adjustments, settings.ihtiyat, settings.language, hijriAdjustment,
   ]);
   if (syncKey === lastSyncKey) return;
 
@@ -88,6 +91,6 @@ export async function syncPrayerWidget(
     months.map((month) => getMonthlyPrayerTimes(location, settings, Number(month.slice(0, 4)), Number(month.slice(5, 7))))
   );
 
-  await widgetPlugin.updateSchedule(buildPrayerWidgetPayload(location, monthItems.flat(), hijriAdjustment, now));
+  await widgetPlugin.updateSchedule(buildPrayerWidgetPayload(location, monthItems.flat(), hijriAdjustment, now, settings.language));
   lastSyncKey = syncKey;
 }

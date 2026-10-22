@@ -15,6 +15,7 @@ import {
 import { POPULAR_CITIES, searchLocalCities } from '@/lib/location/cities-id';
 import { isNetworkRequestError } from '@/lib/network/fetch';
 import { LatestRequestController } from '@/lib/network/latest-request';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface CitySearchModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ export const CitySearchModal: React.FC<CitySearchModalProps> = ({
   onDetectLocation,
   isDetecting,
 }) => {
+  const { t } = useLanguage();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<CitySearchResult[]>(POPULAR_CITIES.slice(0, 10));
   const [isSearching, setIsSearching] = useState(false);
@@ -108,7 +110,7 @@ export const CitySearchModal: React.FC<CitySearchModalProps> = ({
   const handleModalClose = () => {
     onClose();
     window.setTimeout(() => {
-      document.querySelector<HTMLElement>('[aria-label="Ubah lokasi saat ini"]')?.focus();
+      document.querySelector<HTMLElement>('[data-location-trigger]')?.focus();
     }, 0);
   };
 
@@ -116,9 +118,9 @@ export const CitySearchModal: React.FC<CitySearchModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={handleModalClose}
-      title="Pilih Lokasi Wilayah"
+      title={t('Pilih Lokasi Wilayah', 'Choose location')}
       maxWidth="md"
-      returnFocusSelector='[aria-label="Ubah lokasi saat ini"]'
+      returnFocusSelector="[data-location-trigger]"
     >
       <div className="space-y-4">
         {/* GPS Auto-detect Button */}
@@ -129,12 +131,12 @@ export const CitySearchModal: React.FC<CitySearchModalProps> = ({
           className="w-full flex items-center justify-center gap-2 py-3 bg-primary-50 dark:bg-primary-950/50 hover:bg-primary-100 dark:hover:bg-primary-900/60 text-primary-800 dark:text-primary-200 border border-primary-200 dark:border-primary-800"
         >
           <Navigation className="w-4 h-4 text-primary-600 dark:text-primary-400" />
-          <span>Gunakan Lokasi Otomatis (GPS)</span>
+          <span>{t('Gunakan Lokasi Otomatis (GPS)', 'Use automatic location (GPS)')}</span>
         </Button>
 
         <div className="relative flex items-center">
           <div className="flex-grow border-t border-surface-200 dark:border-surface-800" />
-          <span className="flex-shrink mx-3 text-xs text-slate-400 font-medium">atau cari kota / daerah</span>
+          <span className="flex-shrink mx-3 text-xs text-slate-400 font-medium">{t('atau cari kota / daerah', 'or search for a city / area')}</span>
           <div className="flex-grow border-t border-surface-200 dark:border-surface-800" />
         </div>
 
@@ -152,7 +154,7 @@ export const CitySearchModal: React.FC<CitySearchModalProps> = ({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ketik nama kota, kabupaten, atau provinsi..."
+            placeholder={t('Ketik nama kota, kabupaten, atau provinsi...', 'Type a city, regency or province...')}
             className="w-full pl-10 pr-10 py-2.5 bg-surface-50 dark:bg-surface-800/80 border border-surface-200 dark:border-surface-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
             autoFocus
           />
@@ -165,28 +167,34 @@ export const CitySearchModal: React.FC<CitySearchModalProps> = ({
         <div className="max-h-72 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
           {isSearching ? (
             <div className="text-center py-8 text-sm text-slate-500" aria-live="polite">
-              Mencari lokasi...
+              {t('Mencari lokasi...', 'Searching for locations...')}
             </div>
           ) : normalizeCityQuery(query).length > 0 && normalizeCityQuery(query).length < CITY_SEARCH_MIN_LENGTH ? (
             <div className="text-center py-8 text-sm text-slate-500">
-              Ketik minimal {CITY_SEARCH_MIN_LENGTH} karakter untuk mencari lokasi.
+              {t(
+                `Ketik minimal ${CITY_SEARCH_MIN_LENGTH} karakter untuk mencari lokasi.`,
+                `Type at least ${CITY_SEARCH_MIN_LENGTH} characters to search.`
+              )}
             </div>
           ) : searchError ? (
             <div className="space-y-3 py-8 text-center text-sm text-slate-500" role="status">
               <p>
                 {searchError === 'timeout'
-                  ? 'Pencarian lokasi terlalu lama. Silakan coba lagi.'
-                  : 'Layanan pencarian lokasi sedang tidak tersedia.'}
+                  ? t('Pencarian lokasi terlalu lama. Silakan coba lagi.', 'Location search took too long. Please try again.')
+                  : t('Layanan pencarian lokasi sedang tidak tersedia.', 'The location search service is unavailable right now.')}
               </p>
               <Button variant="outline" size="sm" onClick={() => void handleOnlineSearch()}>
-                Coba Lagi
+                {t('Coba Lagi', 'Try again')}
               </Button>
             </div>
           ) : results.length === 0 ? (
             <div className="text-center py-8 text-sm text-slate-500">
               {isOnlineResult
-                ? <>Tidak ditemukan kota dengan kata kunci &ldquo;{query}&rdquo;</>
-                : <>&ldquo;{query}&rdquo; tidak ada di daftar kota. Tekan Enter untuk mencari secara online.</>}
+                ? t(`Tidak ditemukan kota dengan kata kunci “${query}”`, `No cities found for “${query}”`)
+                : t(
+                    `“${query}” tidak ada di daftar kota. Tekan Enter untuk mencari secara online.`,
+                    `“${query}” is not in the city list. Press Enter to search online.`
+                  )}
             </div>
           ) : (
             results.map((city) => {
@@ -230,12 +238,12 @@ export const CitySearchModal: React.FC<CitySearchModalProps> = ({
         {canSearchOnline && !isSearching && !isOnlineResult && (
           <Button variant="outline" size="sm" className="w-full" onClick={() => void handleOnlineSearch()}>
             <Search className="h-3.5 w-3.5" />
-            Cari &ldquo;{query.trim()}&rdquo; secara online
+            {t(`Cari “${query.trim()}” secara online`, `Search “${query.trim()}” online`)}
           </Button>
         )}
         {isOnlineResult && (
           <p className="text-center text-[11px] text-slate-500 dark:text-slate-400">
-            Data lokasi ©{' '}
+            {t('Data lokasi', 'Location data')} ©{' '}
             <a href={OSM_ATTRIBUTION_URL} target="_blank" rel="noopener noreferrer" className="underline">
               OpenStreetMap contributors
             </a>

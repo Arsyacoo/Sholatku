@@ -1,15 +1,10 @@
-import type { MonthlyPrayerItem, PrayerReminderSettings, RamadanReminderSettings, UserLocation } from '@/types';
+import type { Language, MonthlyPrayerItem, PrayerReminderSettings, RamadanReminderSettings, UserLocation } from '@/types';
 import type { RamadanImsakiyahRow } from '@/lib/ramadan/imsakiyah';
 import { PRAYER_REMINDER_PRAYERS } from '@/types';
 import { formatTimeInTimeZone } from '@/lib/time/timezone';
-
-const PRAYER_LABELS: Record<(typeof PRAYER_REMINDER_PRAYERS)[number], string> = {
-  fajr: 'Subuh',
-  dhuhr: 'Dzuhur',
-  asr: 'Ashar',
-  maghrib: 'Maghrib',
-  isha: 'Isya',
-};
+import { prayerName } from '@/lib/prayer/constants';
+import { tr } from '@/lib/language';
+import { getSavedSettings } from '@/lib/storage/preferences';
 
 function escapeIcsText(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/([;,])/g, '\\$1').replace(/\r?\n/g, '\\n');
@@ -50,7 +45,8 @@ export function generatePrayerCalendarIcs(
   schedule: readonly MonthlyPrayerItem[],
   location: UserLocation,
   reminderSettings: PrayerReminderSettings,
-  generatedAt: Date = new Date()
+  generatedAt: Date = new Date(),
+  language: Language = getSavedSettings().language
 ): string {
   const timezone = safeTimezoneId(location.timezone);
   const lines = [
@@ -59,7 +55,7 @@ export function generatePrayerCalendarIcs(
     'PRODID:-//Sholatku//Prayer Schedule//ID',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
-    `X-WR-CALNAME:${escapeIcsText(`Jadwal Sholat Sholatku - ${location.displayName}`)}`,
+    `X-WR-CALNAME:${escapeIcsText(tr(language, `Jadwal Sholat Sholatku - ${location.displayName}`, `Sholatku prayer times - ${location.displayName}`))}`,
     ...(timezone ? [`X-WR-TIMEZONE:${timezone}`] : []),
   ];
 
@@ -67,7 +63,7 @@ export function generatePrayerCalendarIcs(
     for (const prayer of PRAYER_REMINDER_PRAYERS) {
       const time = day.timings[prayer];
       if (!time) continue;
-      const label = PRAYER_LABELS[prayer];
+      const label = prayerName(prayer, language);
       const start = toIcsDateTime(day.date, time);
       const end = addMinutes(day.date, time, 10);
       const dateTimePrefix = timezone ? `;TZID=${timezone}` : '';
@@ -80,20 +76,11 @@ export function generatePrayerCalendarIcs(
         `DTSTART${dateTimePrefix}:${start}`,
         `DTEND${dateTimePrefix}:${end}`,
         `SUMMARY:${escapeIcsText(`Sholatku - ${label}`)}`,
-        `DESCRIPTION:${escapeIcsText(`Waktu ${label} berdasarkan pengaturan Sholatku di ${location.displayName}.`)}`,
+        `DESCRIPTION:${escapeIcsText(tr(language, `Waktu ${label} berdasarkan pengaturan Sholatku di ${location.displayName}.`, `${label} time based on your Sholatku settings in ${location.displayName}.`))}`,
         `LOCATION:${escapeIcsText(location.displayName)}`
       );
 
-      if (preference?.enabled) {
-        const trigger = preference.offsetMinutes === 0 ? 'PT0M' : `-PT${preference.offsetMinutes}M`;
-        lines.push(
-          'BEGIN:VALARM',
-          'ACTION:DISPLAY',
-          `DESCRIPTION:${escapeIcsText(`Pengingat ${label}`)}`,
-          `TRIGGER:${trigger}`,
-          'END:VALARM'
-        );
-      }
+      appendAlarm(lines, label, preference, language);
       lines.push('END:VEVENT');
     }
   }
@@ -102,13 +89,18 @@ export function generatePrayerCalendarIcs(
   return `${lines.join('\r\n')}\r\n`;
 }
 
-function appendAlarm(lines: string[], label: string, preference?: { enabled: boolean; offsetMinutes: number }) {
+function appendAlarm(
+  lines: string[],
+  label: string,
+  preference: { enabled: boolean; offsetMinutes: number } | undefined,
+  language: Language
+) {
   if (!preference?.enabled) return;
   const trigger = preference.offsetMinutes === 0 ? 'PT0M' : `-PT${preference.offsetMinutes}M`;
   lines.push(
     'BEGIN:VALARM',
     'ACTION:DISPLAY',
-    `DESCRIPTION:${escapeIcsText(`Pengingat ${label}`)}`,
+    `DESCRIPTION:${escapeIcsText(tr(language, `Pengingat ${label}`, `${label} reminder`))}`,
     `TRIGGER:${trigger}`,
     'END:VALARM'
   );
@@ -125,10 +117,11 @@ export function generateRamadanCalendarIcs(
   prayerReminderSettings: PrayerReminderSettings,
   ramadanReminderSettings?: RamadanReminderSettings,
   hijriYear?: number,
-  generatedAt: Date = new Date()
+  generatedAt: Date = new Date(),
+  language: Language = getSavedSettings().language
 ): string {
   const timezone = safeTimezoneId(location.timezone);
-  const name = hijriYear ? `Sholatku - Ramadan ${hijriYear} H` : 'Sholatku - Ramadan';
+  const name = hijriYear ? `Sholatku - Ramadan ${hijriYear} ${tr(language, 'H', 'AH')}` : 'Sholatku - Ramadan';
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
@@ -141,7 +134,7 @@ export function generateRamadanCalendarIcs(
 
   const events = [
     { key: 'imsak' as const, label: 'Imsak', preference: ramadanReminderSettings?.imsak },
-    { key: 'fajr' as const, label: 'Subuh', preference: prayerReminderSettings.fajr },
+    { key: 'fajr' as const, label: prayerName('fajr', language), preference: prayerReminderSettings.fajr },
     { key: 'maghrib' as const, label: 'Maghrib', preference: ramadanReminderSettings?.maghrib ?? prayerReminderSettings.maghrib },
   ];
 
@@ -159,10 +152,10 @@ export function generateRamadanCalendarIcs(
         `DTSTART${dateTimePrefix}:${start}`,
         `DTEND${dateTimePrefix}:${end}`,
         `SUMMARY:${escapeIcsText(`Sholatku - ${event.label}`)}`,
-        `DESCRIPTION:${escapeIcsText(`${event.label} Ramadan berdasarkan jadwal Sholatku di ${location.displayName}.`)}`,
+        `DESCRIPTION:${escapeIcsText(tr(language, `${event.label} Ramadan berdasarkan jadwal Sholatku di ${location.displayName}.`, `Ramadan ${event.label} based on the Sholatku schedule in ${location.displayName}.`))}`,
         `LOCATION:${escapeIcsText(location.displayName)}`
       );
-      appendAlarm(lines, event.label, event.preference);
+      appendAlarm(lines, event.label, event.preference, language);
       lines.push('END:VEVENT');
     }
   }

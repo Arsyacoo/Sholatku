@@ -1,5 +1,7 @@
 import type { ReminderEvent } from './types';
 import { buildReminderNotificationCopy } from './copy';
+import { tr } from '@/lib/language';
+import { getSavedSettings } from '@/lib/storage/preferences';
 
 export const TEST_NOTIFICATION_TAG = 'sholatku-notification-test';
 
@@ -68,7 +70,7 @@ async function displayNotification(title: string, body: string, tag: string): Pr
 export function sendTestNotification(): Promise<boolean> {
   return displayNotification(
     'Sholatku',
-    'Notifikasi pengingat berhasil diaktifkan.',
+    tr(getSavedSettings().language, 'Notifikasi pengingat berhasil diaktifkan.', 'Reminder notifications are on.'),
     TEST_NOTIFICATION_TAG
   );
 }

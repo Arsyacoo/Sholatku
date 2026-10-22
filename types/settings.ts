@@ -14,9 +14,14 @@ export interface CalculationMethod {
   name: string;
   description: string;
   region: string;
+  nameEn?: string;
+  descriptionEn?: string;
+  regionEn?: string;
 }
 
 export type Madhab = 'shafii' | 'hanafi';
+
+export type Language = 'id' | 'en';
 
 export const PRAYER_REMINDER_PRAYERS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
 export type PrayerReminderPrayer = (typeof PRAYER_REMINDER_PRAYERS)[number];
@@ -49,4 +54,6 @@ export interface UserSettings {
   enableNotifications: boolean;
   notifyBeforeMinutes: number; // e.g. 0, 5, 10
   adhanSound: 'none' | 'beep' | 'adhan_short';
+  /** UI, notification and widget language. */
+  language: Language;
 }

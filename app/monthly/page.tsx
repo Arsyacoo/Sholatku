@@ -12,10 +12,12 @@ import { DEFAULT_SETTINGS } from '@/lib/prayer/constants';
 import type { UserSettings } from '@/types';
 import { MapPin, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export default function MonthlyPage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
+  const { t } = useLanguage();
   const { location, selectCity, detectLocation, status } = useLocation();
 
   React.useEffect(() => {
@@ -39,16 +41,16 @@ export default function MonthlyPage() {
             <Link
               href="/"
               className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl bg-surface-100 text-slate-600 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-slate-300"
-              aria-label="Kembali ke Beranda"
+              aria-label={t('Kembali ke Beranda', 'Back to home')}
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
-                Jadwal Sholat Bulanan
+                {t('Jadwal Sholat Bulanan', 'Monthly prayer times')}
               </h1>
               <p className="text-xs text-slate-600 dark:text-slate-400">
-                Kalender jadwal waktu sholat dan imsakiyah sebulan penuh
+                {t('Kalender jadwal waktu sholat dan imsakiyah sebulan penuh', 'Prayer times and Imsak schedule for the whole month')}
               </p>
             </div>
           </div>

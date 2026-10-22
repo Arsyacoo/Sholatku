@@ -3,7 +3,8 @@
 import React from 'react';
 import { DailyPrayerSchedule, NextPrayerInfo, PrayerKey } from '@/types';
 import { PrayerTimeCard } from './PrayerTimeCard';
-import { PRAYER_NAMES } from '@/lib/prayer/constants';
+import { PRAYER_NAMES, prayerName } from '@/lib/prayer/constants';
+import { useLanguage } from '@/hooks/useLanguage';
 import { Skeleton } from '../ui/Skeleton';
 import { parsePrayerDateTime } from '@/lib/prayer/reminders/schedule';
 import { getTimeZoneLabel } from '@/lib/time/timezone';
@@ -25,6 +26,7 @@ export const PrayerScheduleList: React.FC<PrayerScheduleListProps> = ({
   error = null,
   onRetry,
 }) => {
+  const { t, language } = useLanguage();
   if (isLoading && !schedule) {
     return (
       <div className="space-y-3">
@@ -38,9 +40,9 @@ export const PrayerScheduleList: React.FC<PrayerScheduleListProps> = ({
   if (!schedule) {
     return (
       <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-rose-900 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-100" role="alert">
-        <h2 className="font-semibold">Jadwal sholat belum dapat dimuat.</h2>
+        <h2 className="font-semibold">{t('Jadwal sholat belum dapat dimuat.', 'Prayer times could not be loaded.')}</h2>
         <p className="mt-1 text-sm text-rose-800/80 dark:text-rose-200/80">
-          {error || 'Periksa koneksi internet atau coba kembali.'}
+          {error || t('Periksa koneksi internet atau coba kembali.', 'Check your internet connection or try again.')}
         </p>
         {onRetry && (
           <button
@@ -48,7 +50,7 @@ export const PrayerScheduleList: React.FC<PrayerScheduleListProps> = ({
             onClick={onRetry}
             className="mt-4 rounded-xl bg-rose-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-rose-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
           >
-            Coba Lagi
+            {t('Coba Lagi', 'Try again')}
           </button>
         )}
       </div>
@@ -61,9 +63,9 @@ export const PrayerScheduleList: React.FC<PrayerScheduleListProps> = ({
     <div className="space-y-3" data-testid="prayer-schedule-list">
       <div className="flex items-center justify-between px-1">
         <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-          Jadwal Sholat Hari Ini
+          {t('Jadwal Sholat Hari Ini', "Today's prayer times")}
         </h2>
-        <span className="text-xs text-slate-600 dark:text-slate-400">Zona {getTimeZoneLabel(schedule.timezone)}</span>
+        <span className="text-xs text-slate-600 dark:text-slate-400">{t('Zona', 'Zone')} {getTimeZoneLabel(schedule.timezone)}</span>
       </div>
 
       <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
@@ -81,7 +83,7 @@ export const PrayerScheduleList: React.FC<PrayerScheduleListProps> = ({
             <PrayerTimeCard
               key={key}
               id={key}
-              name={names.id}
+              name={prayerName(key, language)}
               arabicName={names.ar}
               time={time}
               isPassed={isPassed}

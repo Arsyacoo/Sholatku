@@ -6,8 +6,9 @@ import type {
   ScheduleResult,
 } from '@capacitor/local-notifications';
 
-import type { UserSettings } from '@/types';
+import type { Language, UserSettings } from '@/types';
 import { isNativeRuntime } from './runtime';
+import { getSavedSettings } from '@/lib/storage/preferences';
 
 export type ReminderSound = UserSettings['adhanSound'];
 
@@ -50,6 +51,12 @@ const REMINDER_CHANNEL: NativeNotificationChannel = {
   importance: 3,
 };
 
+const ENGLISH_CHANNEL_TEXT: Record<string, Pick<NativeNotificationChannel, 'name' | 'description'>> = {
+  [NATIVE_REMINDER_CHANNEL_ID]: { name: 'Prayer time reminders', description: 'Prayer time and Ramadan reminder notifications' },
+  'prayer-reminders-adhan': { name: 'Adhan at prayer time', description: 'Plays the adhan when a prayer time begins' },
+  'prayer-reminders-silent': { name: 'Silent reminders', description: 'Prayer time reminders without sound' },
+};
+
 // Android channel sound is immutable after creation, so each sound choice gets its own channel.
 const REMINDER_CHANNELS: Record<ReminderSound, NativeNotificationChannel> = {
   beep: REMINDER_CHANNEL,
@@ -70,6 +77,7 @@ const REMINDER_CHANNELS: Record<ReminderSound, NativeNotificationChannel> = {
 
 let pluginPromise: Promise<typeof import('@capacitor/local-notifications')> | null = null;
 let reminderChannelPromise: Promise<void> | null = null;
+let reminderChannelLanguage: Language | null = null;
 
 async function getPlugin() {
   if (!pluginPromise) {
@@ -136,14 +144,17 @@ export async function requestExactAlarmPermission(): Promise<ExactAlarmPermissio
   return status.exact_alarm === 'granted' ? 'granted' : 'denied';
 }
 
-export async function ensureReminderNotificationChannel(): Promise<void> {
+/** Channel ids never change; creating an existing id again only renames it, so the names follow the UI language. */
+export async function ensureReminderNotificationChannel(language: Language = getSavedSettings().language): Promise<void> {
   if (!isNativeRuntime()) return;
-  if (!reminderChannelPromise) {
+  if (!reminderChannelPromise || reminderChannelLanguage !== language) {
+    reminderChannelLanguage = language;
     reminderChannelPromise = (async () => {
       const { LocalNotifications } = await getPlugin();
-      const existing = new Set((await LocalNotifications.listChannels()).channels.map((channel) => channel.id));
+      const existing = new Map((await LocalNotifications.listChannels()).channels.map((channel) => [channel.id, channel.name]));
       for (const channel of Object.values(REMINDER_CHANNELS)) {
-        if (!existing.has(channel.id)) await LocalNotifications.createChannel(channel);
+        const localized = language === 'en' ? { ...channel, ...ENGLISH_CHANNEL_TEXT[channel.id] } : channel;
+        if (existing.get(channel.id) !== localized.name) await LocalNotifications.createChannel(localized);
       }
     })().catch((error) => {
       reminderChannelPromise = null;

@@ -1,17 +1,12 @@
 import type { ReminderEvent, ReminderRoute } from './types';
+import type { Language } from '@/types';
 import { formatTimeInTimeZone } from '@/lib/time/timezone';
-
-const DAILY_PRAYER_LABELS = {
-  fajr: 'Subuh',
-  dhuhr: 'Dzuhur',
-  asr: 'Ashar',
-  maghrib: 'Maghrib',
-  isha: 'Isya',
-} as const;
+import { prayerName } from '@/lib/prayer/constants';
+import { getSavedSettings } from '@/lib/storage/preferences';
 
 const RAMADAN_LABELS = {
-  imsak: 'Imsak',
-  maghrib: 'berbuka',
+  imsak: { id: 'Imsak', en: 'Imsak' },
+  maghrib: { id: 'berbuka', en: 'Iftar' },
 } as const;
 
 export const REMINDER_NOTIFICATION_SOURCE = 'sholatku-native-reminder' as const;
@@ -22,15 +17,28 @@ export function isApprovedReminderRoute(route: string): route is ReminderRoute {
   return route === '/' || route === '/ramadan';
 }
 
-export function buildReminderNotificationCopy(event: ReminderEvent): {
+export function buildReminderNotificationCopy(
+  event: ReminderEvent,
+  language: Language = getSavedSettings().language
+): {
   title: string;
   body: string;
   route: ReminderRoute;
 } {
   const time = formatTimeInTimeZone(event.prayerAt, event.timezone);
+  const en = language === 'en';
 
   if (event.kind === 'ramadan') {
-    const label = RAMADAN_LABELS[event.prayer];
+    const label = RAMADAN_LABELS[event.prayer][language];
+    if (en) {
+      return event.offsetMinutes > 0
+        ? { title: `${label} is coming up`, body: `${event.offsetMinutes} minutes until ${label} - ${time}`, route: event.route }
+        : {
+            title: `It's ${label} time`,
+            body: event.prayer === 'imsak' ? `Get ready to begin your fast - ${time}` : `Time to break your fast - ${time}`,
+            route: event.route,
+          };
+    }
     if (event.offsetMinutes > 0) {
       return {
         title: `${label} akan tiba`,
@@ -49,7 +57,12 @@ export function buildReminderNotificationCopy(event: ReminderEvent): {
     };
   }
 
-  const label = DAILY_PRAYER_LABELS[event.prayer];
+  const label = prayerName(event.prayer, language);
+  if (en) {
+    return event.offsetMinutes > 0
+      ? { title: `${label} is coming up`, body: `${event.offsetMinutes} minutes until ${label} - ${time}`, route: event.route }
+      : { title: `It's time for ${label}`, body: `${label} time has begun - ${time}`, route: event.route };
+  }
   if (event.offsetMinutes > 0) {
     return {
       title: `${label} sebentar lagi`,

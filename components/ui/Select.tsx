@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, ChevronDown } from 'lucide-react';
 import { useBackAction } from '@/lib/platform/back';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export interface SelectOption<T extends string | number> {
   value: T;
@@ -61,12 +62,13 @@ function SelectComponent<T extends string | number>({
   ariaLabel,
   id,
   disabled = false,
-  placeholder = 'Pilih',
+  placeholder,
   tone = 'default',
   size = 'md',
   className = '',
   menuClassName = '',
 }: SelectProps<T>) {
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(() => getSelectableIndex(options, value));
   const [position, setPosition] = useState({ top: 0, left: 0, width: 0, maxHeight: 320 });
@@ -273,7 +275,7 @@ function SelectComponent<T extends string | number>({
         onKeyDown={handleTriggerKeyDown}
         className={`inline-flex max-w-full items-center justify-between gap-2 rounded-xl border font-medium outline-none transition-colors motion-reduce:transition-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${sizeStyles} ${triggerStyles} ${className}`}
       >
-        <span className="min-w-0 truncate text-left">{selectedOption?.label ?? placeholder}</span>
+        <span className="min-w-0 truncate text-left">{selectedOption?.label ?? placeholder ?? t('Pilih', 'Select')}</span>
         <ChevronDown className={`h-4 w-4 shrink-0 opacity-70 transition-transform duration-150 motion-reduce:transition-none ${isOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
       </button>
       {menu}

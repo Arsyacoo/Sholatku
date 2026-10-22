@@ -3,6 +3,7 @@
 import React from 'react';
 import { AlertCircle, MapPin, X } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface LocationPermissionNoticeProps {
   status: string;
@@ -17,6 +18,7 @@ export const LocationPermissionNotice: React.FC<LocationPermissionNoticeProps> =
   onOpenSearch,
   onDismiss,
 }) => {
+  const { t } = useLanguage();
   if (status !== 'denied' && status !== 'error' && !errorMessage) return null;
 
   return (
@@ -25,10 +27,10 @@ export const LocationPermissionNotice: React.FC<LocationPermissionNoticeProps> =
         <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
         <div>
           <p className="font-semibold text-amber-950 dark:text-amber-100">
-            {status === 'denied' ? 'Akses Lokasi Dibatasi' : 'Pemberitahuan Lokasi'}
+            {status === 'denied' ? t('Akses Lokasi Dibatasi', 'Location access blocked') : t('Pemberitahuan Lokasi', 'Location notice')}
           </p>
           <p className="text-xs text-amber-800/90 dark:text-amber-300/90 mt-0.5">
-            {errorMessage || 'Anda dapat memilih kota Anda secara manual untuk mendapatkan jadwal yang akurat.'}
+            {errorMessage || t('Anda dapat memilih kota Anda secara manual untuk mendapatkan jadwal yang akurat.', 'You can choose your city manually to get accurate times.')}
           </p>
         </div>
       </div>
@@ -41,12 +43,12 @@ export const LocationPermissionNotice: React.FC<LocationPermissionNoticeProps> =
           className="bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 dark:bg-amber-900/60 dark:text-amber-100 dark:border-amber-700 text-xs py-1.5"
         >
           <MapPin className="w-3.5 h-3.5 mr-1" />
-          Pilih Kota Manual
+          {t('Pilih Kota Manual', 'Choose city manually')}
         </Button>
         <button
           onClick={onDismiss}
           className="p-1.5 text-amber-600 hover:text-amber-900 dark:text-amber-400 dark:hover:text-amber-100 rounded-lg"
-          aria-label="Tutup pemberitahuan"
+          aria-label={t('Tutup pemberitahuan', 'Dismiss notice')}
         >
           <X className="w-4 h-4" />
         </button>
