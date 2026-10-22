@@ -5,16 +5,18 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Sparkles, Calendar, Compass, Settings, BookOpen } from 'lucide-react';
 import { isRouteActive } from '@/lib/platform/navigation';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export const BottomNav: React.FC = () => {
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   const navItems = [
-    { href: '/', label: 'Hari Ini', icon: Sparkles },
+    { href: '/', label: t('Hari Ini', 'Today'), icon: Sparkles },
     { href: '/quran', label: 'Al-Qur\'an', icon: BookOpen },
-    { href: '/monthly', label: 'Bulanan', icon: Calendar },
-    { href: '/qibla', label: 'Kiblat', icon: Compass },
-    { href: '/settings', label: 'Setelan', icon: Settings },
+    { href: '/monthly', label: t('Bulanan', 'Monthly'), icon: Calendar },
+    { href: '/qibla', label: t('Kiblat', 'Qibla'), icon: Compass },
+    { href: '/settings', label: t('Setelan', 'Settings'), icon: Settings },
   ];
 
   return (

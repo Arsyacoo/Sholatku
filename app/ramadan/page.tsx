@@ -16,6 +16,8 @@ import { buildRamadanImsakiyah, type RamadanImsakiyahRow } from '@/lib/ramadan/i
 import { getDefaultPrayerReminderSettings, getDefaultRamadanPreferences, getPrayerReminderSettings, getRamadanPreferences, getSavedSettings } from '@/lib/storage/preferences';
 import type { PrayerReminderSettings, RamadanPreferences, UserSettings } from '@/types';
 import { formatTimeInTimeZone } from '@/lib/time/timezone';
+import { prayerName } from '@/lib/prayer/constants';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export default function RamadanPage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -27,6 +29,7 @@ export default function RamadanPage() {
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState<Date | null>(null);
   const { location, selectCity, detectLocation, status } = useLocation();
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     setNow(new Date());
@@ -96,20 +99,23 @@ export default function RamadanPage() {
             <Link
               href="/"
               className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl bg-surface-100 text-slate-600 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-slate-300"
-              aria-label="Kembali ke Beranda"
+              aria-label={t('Kembali ke Beranda', 'Back to home')}
             >
               <ArrowLeft className="h-5 w-5" />
             </Link>
             <div>
               <div className="mb-1 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-primary-700 dark:text-primary-300">
                 <MoonStar className="h-3.5 w-3.5" aria-hidden="true" />
-                Ramadan {hijriYear ?? '—'} H
+                Ramadan {hijriYear ?? '—'} {t('H', 'AH')}
               </div>
               <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl">
                 Imsakiyah
               </h1>
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                Jadwal Imsak, Subuh, dan Maghrib untuk {location.displayName}.
+                {t(
+                  `Jadwal Imsak, Subuh, dan Maghrib untuk ${location.displayName}.`,
+                  `Imsak, Fajr and Maghrib times for ${location.displayName}.`
+                )}
               </p>
             </div>
           </div>
@@ -126,22 +132,30 @@ export default function RamadanPage() {
           <div className="flex items-start gap-3">
             <CalendarDays className="mt-0.5 h-5 w-5 shrink-0 text-primary-600 dark:text-primary-300" aria-hidden="true" />
             <div>
-              <p className="font-semibold">Imsak dihitung {preferences.imsakOffsetMinutes} menit sebelum Subuh.</p>
+              <p className="font-semibold">
+                {t(
+                  `Imsak dihitung ${preferences.imsakOffsetMinutes} menit sebelum Subuh.`,
+                  `Imsak is set ${preferences.imsakOffsetMinutes} minutes before Fajr.`
+                )}
+              </p>
               <p className="mt-1 text-xs leading-relaxed text-primary-800/80 dark:text-primary-200/80">
-                Tanggal mengikuti kalender Hijriah yang dihitung Sholatku dan dapat berbeda dari pengumuman resmi setempat. Koreksi ±1 hari tersedia di Pengaturan.
+                {t(
+                  'Tanggal mengikuti kalender Hijriah yang dihitung Sholatku dan dapat berbeda dari pengumuman resmi setempat. Koreksi ±1 hari tersedia di Pengaturan.',
+                  'Dates follow the Hijri calendar calculated by Sholatku and may differ from official local announcements. A ±1 day correction is available in Settings.'
+                )}
               </p>
             </div>
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-2xl border border-surface-200 bg-white shadow-xs dark:border-surface-800 dark:bg-surface-900" aria-label="Jadwal Imsakiyah Ramadan">
+        <section className="overflow-hidden rounded-2xl border border-surface-200 bg-white shadow-xs dark:border-surface-800 dark:bg-surface-900" aria-label={t('Jadwal Imsakiyah Ramadan', 'Ramadan Imsakiyah schedule')}>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[430px] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-surface-200 bg-surface-50 text-left text-xs font-bold uppercase tracking-wider text-slate-600 dark:border-surface-700 dark:bg-surface-800/80 dark:text-slate-300">
                   <th className="px-4 py-3.5">Ramadan</th>
                   <th className="px-3 py-3.5">Imsak</th>
-                  <th className="px-3 py-3.5">Subuh</th>
+                  <th className="px-3 py-3.5">{prayerName('fajr', language)}</th>
                   <th className="px-3 py-3.5">Maghrib</th>
                 </tr>
               </thead>
@@ -160,7 +174,7 @@ export default function RamadanPage() {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <span className="font-mono font-bold">{row.ramadanDay}</span>
-                            {row.isToday && <span className="rounded-full bg-primary-600 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">Hari ini</span>}
+                            {row.isToday && <span className="rounded-full bg-primary-600 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">{t('Hari ini', 'Today')}</span>}
                           </div>
                         </td>
                         <td className="px-3 py-3 font-mono">{formatTimeInTimeZone(row.timing.imsakAt, row.timing.timezone)}</td>
@@ -173,13 +187,18 @@ export default function RamadanPage() {
           </div>
           {!isLoading && !rows.length && (
             <div className="p-6 text-center text-sm text-slate-500 dark:text-slate-400" role="status">
-              {error || 'Jadwal Ramadan tidak tersedia untuk rentang yang dihitung.'}
+              {error
+                ? t(error, 'Ramadan times could not be loaded. Check your connection or try again.')
+                : t('Jadwal Ramadan tidak tersedia untuk rentang yang dihitung.', 'Ramadan times are not available for the calculated range.')}
             </div>
           )}
         </section>
 
         <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-          Jadwal menggunakan lokasi, metode hisab, madhab, dan koreksi menit yang sama dengan halaman jadwal sholat. Perubahan pengaturan akan memuat ulang tabel ini.
+          {t(
+            'Jadwal menggunakan lokasi, metode hisab, madhab, dan koreksi menit yang sama dengan halaman jadwal sholat. Perubahan pengaturan akan memuat ulang tabel ini.',
+            'These times use the same location, calculation method, madhab and minute corrections as the prayer times page. Changing settings reloads this table.'
+          )}
         </p>
         {hijriYear !== null && (
           <RamadanCalendarExport

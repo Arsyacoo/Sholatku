@@ -9,9 +9,11 @@ import {
   type AvailableUpdate,
 } from '@/lib/platform/app-update';
 import { UpdateInstallButton } from '../platform/UpdateInstallButton';
+import { useLanguage } from '@/hooks/useLanguage';
 
 /** Android only: announces a newer GitHub release; Android installs the APK as an in-place update. */
 export const AppUpdateBanner: React.FC = () => {
+  const { t } = useLanguage();
   const [update, setUpdate] = useState<AvailableUpdate | null>(null);
 
   useEffect(() => {
@@ -35,9 +37,12 @@ export const AppUpdateBanner: React.FC = () => {
     >
       <Download className="mt-0.5 h-5 w-5 shrink-0 text-primary-600 dark:text-primary-400" aria-hidden="true" />
       <div className="min-w-0 flex-1">
-        <p className="font-semibold text-primary-950 dark:text-primary-50">Sholatku {update.version} tersedia</p>
+        <p className="font-semibold text-primary-950 dark:text-primary-50">{t(`Sholatku ${update.version} tersedia`, `Sholatku ${update.version} available`)}</p>
         <p className="mt-0.5 text-xs leading-relaxed text-primary-800/90 dark:text-primary-200/90">
-          Ketuk Perbarui, lalu pilih Update di layar Android. Data dan pengaturan tetap tersimpan.
+          {t(
+            'Ketuk Perbarui, lalu pilih Update di layar Android. Data dan pengaturan tetap tersimpan.',
+            'Tap Update, then choose Update on the Android screen. Your data and settings are kept.'
+          )}
         </p>
         <div className="mt-2">
           <UpdateInstallButton update={update} />
@@ -50,7 +55,7 @@ export const AppUpdateBanner: React.FC = () => {
           setUpdate(null);
         }}
         className="rounded-lg p-1.5 text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-100"
-        aria-label="Tutup pemberitahuan pembaruan"
+        aria-label={t('Tutup pemberitahuan pembaruan', 'Dismiss update notice')}
       >
         <X className="h-4 w-4" />
       </button>

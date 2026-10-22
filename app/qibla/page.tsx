@@ -9,9 +9,11 @@ import { CitySearchModal } from '@/components/location/CitySearchModal';
 import { useLocation } from '@/hooks/useLocation';
 import { MapPin, ArrowLeft, ChevronRight, Landmark } from 'lucide-react';
 import Link from 'next/link';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export default function QiblaPage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { t } = useLanguage();
   const { location, selectCity, detectLocation, status } = useLocation();
 
   return (
@@ -25,16 +27,16 @@ export default function QiblaPage() {
             <Link
               href="/"
               className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl bg-surface-100 text-slate-600 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-slate-300"
-              aria-label="Kembali ke Beranda"
+              aria-label={t('Kembali ke Beranda', 'Back to home')}
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
-                Kompas Arah Kiblat
+                {t('Kompas Arah Kiblat', 'Qibla compass')}
               </h1>
               <p className="text-xs text-slate-600 dark:text-slate-400">
-                Petunjuk arah Ka&apos;bah presisi berdasarkan koordinat lokasi Anda
+                {t("Petunjuk arah Ka'bah presisi berdasarkan koordinat lokasi Anda", 'Precise Kaaba direction based on your location coordinates')}
               </p>
             </div>
           </div>
@@ -57,9 +59,9 @@ export default function QiblaPage() {
         >
           <Landmark className="h-5 w-5 shrink-0 text-primary-600 dark:text-primary-400" aria-hidden="true" />
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold text-slate-900 dark:text-slate-100">Masjid Terdekat</span>
+            <span className="block text-sm font-semibold text-slate-900 dark:text-slate-100">{t('Masjid Terdekat', 'Nearby mosques')}</span>
             <span className="block text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-              Jarak, arah, dan rute ke masjid atau musala di sekitar Anda (perlu internet).
+              {t('Jarak, arah, dan rute ke masjid atau musala di sekitar Anda (perlu internet).', 'Distance, direction and route to mosques or prayer rooms near you (internet required).')}
             </span>
           </span>
           <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />

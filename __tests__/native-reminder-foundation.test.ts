@@ -116,6 +116,7 @@ function createSnapshot(enableNotifications: boolean): {
         isha: 0,
       },
       ihtiyat: 0,
+    language: 'id',
       timeFormat24h: true,
       theme: 'system',
       enableNotifications,

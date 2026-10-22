@@ -1,4 +1,5 @@
-import { UserLocation, CitySearchResult } from '@/types';
+import { UserLocation, CitySearchResult, Language } from '@/types';
+import { tr } from '../language';
 import { POPULAR_CITIES, searchLocalCities } from './cities-id';
 import {
   fetchJsonWithTimeout,
@@ -9,6 +10,8 @@ import { isValidTimeZone } from '../time/timezone';
 
 interface GeocodingRequestOptions {
   signal?: AbortSignal;
+  /** Language for fallback place labels; defaults to Indonesian. */
+  language?: Language;
 }
 
 export const CITY_SEARCH_MIN_LENGTH = 3;
@@ -135,7 +138,7 @@ export async function reverseGeocode(
         optionalText(address.county) ||
         optionalText(address.suburb) ||
         optionalText(address.state_district) ||
-        'Lokasi Terpilih';
+        tr(options.language ?? 'id', 'Lokasi Terpilih', 'Selected location');
       const province = optionalText(address.state) || optionalText(address.region);
       return {
         city,
@@ -155,7 +158,7 @@ export async function reverseGeocode(
   }
 
   return {
-    city: 'Lokasi Anda',
+    city: tr(options.language ?? 'id', 'Lokasi Anda', 'Your location'),
     country: 'Indonesia',
     latitude,
     longitude,

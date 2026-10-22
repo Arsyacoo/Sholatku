@@ -3,9 +3,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { CheckCircle2, WifiOff } from 'lucide-react';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export function ConnectionStatus() {
   const isOnline = useOnlineStatus();
+  const { t } = useLanguage();
   const wasOffline = useRef(false);
   const [showRestored, setShowRestored] = useState(false);
 
@@ -43,8 +45,8 @@ export function ConnectionStatus() {
       )}
       <span>
         {isOnline
-          ? 'Koneksi kembali tersedia.'
-          : 'Offline — menggunakan data yang tersimpan di perangkat.'}
+          ? t('Koneksi kembali tersedia.', 'Back online.')
+          : t('Offline — menggunakan data yang tersimpan di perangkat.', 'Offline — using data saved on this device.')}
       </span>
     </div>
   );

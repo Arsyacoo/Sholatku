@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface CountdownTimerProps {
   countdownStr: string; // "HH:mm:ss"
@@ -12,15 +13,16 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ countdownStr, re
   const hours = parts[0] || '00';
   const minutes = parts[1] || '00';
   const seconds = parts[2] || '00';
+  const { t } = useLanguage();
 
   return (
-    <div className="flex items-center gap-1.5 sm:gap-2 select-none" aria-label={`Sisa waktu: ${hours} jam ${minutes} menit ${seconds} detik`}>
+    <div className="flex items-center gap-1.5 sm:gap-2 select-none" aria-label={t(`Sisa waktu: ${hours} jam ${minutes} menit ${seconds} detik`, `Time remaining: ${hours} hours ${minutes} minutes ${seconds} seconds`)}>
       {/* Hours */}
       <div className="flex flex-col items-center">
         <div className="w-12 sm:w-14 h-11 sm:h-12 bg-white/10 dark:bg-black/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20 dark:border-white/10 font-mono text-xl sm:text-2xl font-bold tracking-tight">
           {hours}
         </div>
-        <span className="text-[10px] uppercase font-semibold tracking-wider text-white/70 mt-1">Jam</span>
+        <span className="text-[10px] uppercase font-semibold tracking-wider text-white/70 mt-1">{t('Jam', 'Hours')}</span>
       </div>
 
       <span className="font-mono text-lg font-bold text-white/60 mb-4 animate-pulse-subtle">:</span>
@@ -30,7 +32,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ countdownStr, re
         <div className="w-12 sm:w-14 h-11 sm:h-12 bg-white/10 dark:bg-black/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20 dark:border-white/10 font-mono text-xl sm:text-2xl font-bold tracking-tight">
           {minutes}
         </div>
-        <span className="text-[10px] uppercase font-semibold tracking-wider text-white/70 mt-1">Menit</span>
+        <span className="text-[10px] uppercase font-semibold tracking-wider text-white/70 mt-1">{t('Menit', 'Min')}</span>
       </div>
 
       <span className="font-mono text-lg font-bold text-white/60 mb-4 animate-pulse-subtle">:</span>
@@ -40,7 +42,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ countdownStr, re
         <div className="w-12 sm:w-14 h-11 sm:h-12 bg-white/10 dark:bg-black/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20 dark:border-white/10 font-mono text-xl sm:text-2xl font-bold tracking-tight text-gold-300">
           {seconds}
         </div>
-        <span className="text-[10px] uppercase font-semibold tracking-wider text-white/70 mt-1">Detik</span>
+        <span className="text-[10px] uppercase font-semibold tracking-wider text-white/70 mt-1">{t('Detik', 'Sec')}</span>
       </div>
     </div>
   );

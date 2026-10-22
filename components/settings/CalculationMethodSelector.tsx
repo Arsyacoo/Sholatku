@@ -4,6 +4,7 @@ import React from 'react';
 import { CalculationMethodId } from '@/types';
 import { CALCULATION_METHODS } from '@/lib/prayer/constants';
 import { Check } from 'lucide-react';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface CalculationMethodSelectorProps {
   value: CalculationMethodId;
@@ -19,21 +20,27 @@ export const CalculationMethodSelector: React.FC<CalculationMethodSelectorProps>
   value,
   onChange,
 }) => {
+  const { t, language } = useLanguage();
+  const en = language === 'en';
+
   return (
     <div className="space-y-3">
       <div className="space-y-1">
         <label className="block text-sm font-bold text-slate-900 dark:text-slate-100">
-          Metode Hisab / Perhitungan
+          {t('Metode Hisab / Perhitungan', 'Calculation method')}
         </label>
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          Menentukan sudut elongasi matahari untuk waktu Subuh dan Isya sesuai otoritas resmi.
+          {t(
+            'Menentukan sudut elongasi matahari untuk waktu Subuh dan Isya sesuai otoritas resmi.',
+            'Sets the sun depression angles for Fajr and Isha according to official authorities.',
+          )}
         </p>
       </div>
 
       <div className="space-y-2">
         {CALCULATION_METHODS.map((method) => {
           const isSelected = value === method.id;
-          const { primary, institution } = splitMethodName(method.name);
+          const { primary, institution } = splitMethodName((en && method.nameEn) || method.name);
 
           return (
             <button
@@ -58,13 +65,13 @@ export const CalculationMethodSelector: React.FC<CalculationMethodSelectorProps>
                   )}
                   {method.id === '20' && (
                     <span className="mt-2 inline-flex whitespace-nowrap rounded-full bg-primary-100 px-2 py-0.5 text-[10px] font-semibold leading-4 text-primary-700 dark:bg-primary-900/60 dark:text-primary-300">
-                      Rekomendasi RI
+                      {t('Rekomendasi RI', 'Recommended in Indonesia')}
                     </span>
                   )}
                 </div>
-                <p className="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">{method.description}</p>
+                <p className="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">{(en && method.descriptionEn) || method.description}</p>
                 <span className="mt-1.5 inline-block text-[11px] font-medium leading-4 text-slate-400">
-                  Wilayah: {method.region}
+                  {t('Wilayah', 'Region')}: {(en && method.regionEn) || method.region}
                 </span>
               </div>
 

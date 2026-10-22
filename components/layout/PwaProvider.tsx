@@ -5,9 +5,11 @@ import { RefreshCw, X } from 'lucide-react';
 import { SerwistProvider, useSerwist } from '@serwist/next/react';
 import { isPwaRuntimeEnabled } from '@/lib/platform/runtime';
 import { ConnectionStatus } from './ConnectionStatus';
+import { useLanguage } from '@/hooks/useLanguage';
 
 function PwaUpdatePrompt() {
   const { serwist } = useSerwist();
+  const { t } = useLanguage();
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [updating, setUpdating] = useState(false);
   const reloadTriggered = useRef(false);
@@ -87,18 +89,18 @@ function PwaUpdatePrompt() {
   return (
     <div className="fixed bottom-24 left-3 right-3 z-[65] mx-auto flex max-w-lg items-center gap-3 rounded-2xl border border-primary-200 bg-white/95 px-4 py-3 text-sm text-slate-700 shadow-xl backdrop-blur dark:border-primary-800 dark:bg-slate-900/95 dark:text-slate-200 md:bottom-4">
       <RefreshCw className="h-5 w-5 shrink-0 text-primary-600 dark:text-primary-400" aria-hidden="true" />
-      <p className="flex-1 font-medium">Versi baru Sholatku tersedia.</p>
+      <p className="flex-1 font-medium">{t('Versi baru Sholatku tersedia.', 'A new version of Sholatku is available.')}</p>
       <button
         type="button"
         onClick={applyUpdate}
         disabled={updating}
         className="rounded-xl bg-primary-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-primary-700 disabled:cursor-wait disabled:opacity-60"
       >
-        {updating ? 'Memuat…' : 'Perbarui'}
+        {updating ? t('Memuat…', 'Loading…') : t('Perbarui', 'Update')}
       </button>
       <button
         type="button"
-        aria-label="Tutup pemberitahuan pembaruan"
+        aria-label={t('Tutup pemberitahuan pembaruan', 'Dismiss update notice')}
         onClick={() => setUpdateAvailable(false)}
         className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
       >

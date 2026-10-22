@@ -20,7 +20,7 @@ public class PrayerWidgetScheduleTest {
     @Test
     public void selectsTheNextPrayerOfToday() {
         PrayerWidgetSchedule.Day today = day(0);
-        PrayerWidgetSchedule schedule = new PrayerWidgetSchedule("Jakarta", Arrays.asList(today, day(24)));
+        PrayerWidgetSchedule schedule = new PrayerWidgetSchedule("Jakarta", "id", Arrays.asList(today, day(24)));
 
         PrayerWidgetSchedule.Selection selection = schedule.select(13);
         assertSame(today, selection.day);
@@ -31,7 +31,7 @@ public class PrayerWidgetScheduleTest {
     @Test
     public void rollsToTomorrowFajrAfterIsha() {
         PrayerWidgetSchedule.Day tomorrow = day(24);
-        PrayerWidgetSchedule schedule = new PrayerWidgetSchedule("Jakarta", Arrays.asList(day(0), tomorrow));
+        PrayerWidgetSchedule schedule = new PrayerWidgetSchedule("Jakarta", "id", Arrays.asList(day(0), tomorrow));
 
         PrayerWidgetSchedule.Selection selection = schedule.select(19);
         assertSame(tomorrow, selection.day);
@@ -40,7 +40,7 @@ public class PrayerWidgetScheduleTest {
 
     @Test
     public void returnsNullWhenTheScheduleIsStale() {
-        PrayerWidgetSchedule schedule = new PrayerWidgetSchedule("Jakarta", Arrays.asList(day(0), day(24)));
+        PrayerWidgetSchedule schedule = new PrayerWidgetSchedule("Jakarta", "id", Arrays.asList(day(0), day(24)));
         assertNull(schedule.select(24 + 19));
     }
 }

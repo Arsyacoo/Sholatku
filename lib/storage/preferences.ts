@@ -16,6 +16,7 @@ import { DEFAULT_IMSAK_OFFSET_MINUTES, IMSAK_OFFSET_OPTIONS } from '../ramadan/t
 import { isValidTimeZone, normalizeTimeZone } from '../time/timezone';
 import { parseProviderGregorianDate } from '../prayer/date';
 import { IHTIYAT_OPTIONS, withIhtiyat } from '../prayer/normalize';
+import { detectDeviceLanguage, isLanguage } from '../language';
 
 const KEYS = {
   LOCATION: 'sholatku_user_location_v1',
@@ -172,6 +173,7 @@ function normalizeUserSettings(value: unknown): UserSettings {
     adhanSound: input.adhanSound === 'none' || input.adhanSound === 'beep' || input.adhanSound === 'adhan_short'
       ? input.adhanSound
       : DEFAULT_SETTINGS.adhanSound,
+    language: isLanguage(input.language) ? input.language : DEFAULT_SETTINGS.language,
   };
 }
 
@@ -244,7 +246,7 @@ export function getSavedSettings(): UserSettings {
   } catch (e) {
     console.warn('Failed to read settings from localStorage:', e);
   }
-  return DEFAULT_SETTINGS;
+  return { ...DEFAULT_SETTINGS, language: detectDeviceLanguage() };
 }
 
 export function saveSettings(settings: UserSettings): void {

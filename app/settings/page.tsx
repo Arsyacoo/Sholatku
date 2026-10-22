@@ -11,6 +11,7 @@ import { AppUpdateSettings } from '@/components/settings/AppUpdateSettings';
 import { NotificationPreferences } from '@/components/settings/NotificationPreferences';
 import { PrayerCalendarExport } from '@/components/settings/PrayerCalendarExport';
 import { ThemeSelector } from '@/components/settings/ThemeSelector';
+import { LanguageSelector } from '@/components/settings/LanguageSelector';
 import { RamadanPreferences } from '@/components/settings/RamadanPreferences';
 import { UserSettings, CalculationMethodId, Madhab, PrayerAdjustment } from '@/types';
 import { DEFAULT_SETTINGS } from '@/lib/prayer/constants';
@@ -26,6 +27,7 @@ import {
 } from '@/lib/storage/preferences';
 import type { PrayerReminderSettings, RamadanPreferences as RamadanPreferencesValue } from '@/types';
 import { useLocation } from '@/hooks/useLocation';
+import { useLanguage } from '@/hooks/useLanguage';
 import { ArrowLeft, Check, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 
@@ -35,6 +37,7 @@ export default function SettingsPage() {
   const [ramadanPreferences, setRamadanPreferences] = useState<RamadanPreferencesValue>(getDefaultRamadanPreferences);
   const [savedToast, setSavedToast] = useState(false);
   const { location } = useLocation();
+  const { t } = useLanguage();
 
   React.useEffect(() => {
     setSettings(getSavedSettings());
@@ -64,16 +67,19 @@ export default function SettingsPage() {
             <Link
               href="/"
               className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl bg-surface-100 text-slate-600 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-slate-300"
-              aria-label="Kembali ke Beranda"
+              aria-label={t('Kembali ke Beranda', 'Back to Home')}
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
-                Pengaturan
+                {t('Pengaturan', 'Settings')}
               </h1>
               <p className="text-xs text-slate-600 dark:text-slate-400">
-                Sesuaikan tema, metode hisab, madhab, dan notifikasi pengingat waktu sholat
+                {t(
+                  'Sesuaikan tema, metode hisab, madhab, dan notifikasi pengingat waktu sholat',
+                  'Adjust the theme, calculation method, madhab and prayer time reminders',
+                )}
               </p>
             </div>
           </div>
@@ -81,7 +87,7 @@ export default function SettingsPage() {
           {savedToast && (
             <div className="flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-3 py-1.5 rounded-full border border-emerald-200 dark:border-emerald-800 animate-fade-in font-semibold">
               <Check className="w-3.5 h-3.5" />
-              <span>Tersimpan</span>
+              <span>{t('Tersimpan', 'Saved')}</span>
             </div>
           )}
         </div>
@@ -89,6 +95,14 @@ export default function SettingsPage() {
         {/* Theme Preference */}
         <section>
           <ThemeSelector />
+        </section>
+
+        {/* Language */}
+        <section className="pt-4 border-t border-surface-200 dark:border-surface-800">
+          <LanguageSelector
+            value={settings.language}
+            onChange={(language) => updateSetting((s) => ({ ...s, language }))}
+          />
         </section>
 
         {/* Calculation Methods */}
@@ -172,13 +186,16 @@ export default function SettingsPage() {
           <Link
             href="/privacy"
             className="flex min-h-16 items-center gap-3 rounded-2xl border border-surface-200 bg-white px-4 py-3 transition-colors hover:bg-surface-50 dark:border-surface-800 dark:bg-surface-900 dark:hover:bg-surface-800"
-            aria-label="Buka Kebijakan Privasi"
+            aria-label={t('Buka Kebijakan Privasi', 'Open Privacy Policy')}
           >
             <ShieldCheck className="h-5 w-5 shrink-0 text-primary-600 dark:text-primary-400" aria-hidden="true" />
             <span className="min-w-0">
-              <span className="block text-sm font-semibold text-slate-900 dark:text-slate-100">Kebijakan Privasi</span>
+              <span className="block text-sm font-semibold text-slate-900 dark:text-slate-100">{t('Kebijakan Privasi', 'Privacy Policy')}</span>
               <span className="block text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                Lihat data yang disimpan di perangkat dan dikirim ke layanan terkait.
+                {t(
+                  'Lihat data yang disimpan di perangkat dan dikirim ke layanan terkait.',
+                  'See what data is stored on your device and sent to related services.',
+                )}
               </span>
             </span>
           </Link>

@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="widget_label_small">Next Prayer</string>
+    <string name="widget_label_wide">Prayer Countdown</string>
+    <string name="widget_label_large">Today\'s Prayer Times</string>
+    <string name="widget_description_small">Next prayer with a countdown</string>
+    <string name="widget_description_wide">Next prayer, countdown and today\'s five prayer times</string>
+    <string name="widget_description_large">Countdown, city, Hijri date and the five prayer times</string>
+    <string name="widget_stale">Open Sholatku to refresh prayer times</string>
+</resources>

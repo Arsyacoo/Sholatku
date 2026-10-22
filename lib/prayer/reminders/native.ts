@@ -33,6 +33,8 @@ import { filterFutureReminderEvents, buildPrayerReminderEvents, buildRamadanRemi
 import { buildNativeReminderScheduleFingerprint } from './recovery';
 import type { ReminderEvent, ReminderRoute } from './types';
 import { toAndroidNotificationId } from './id';
+import { tr } from '@/lib/language';
+import type { Language } from '@/types';
 
 export const NATIVE_REMINDER_HORIZON_HOURS = 48;
 export const NATIVE_REMINDER_HORIZON_MS = NATIVE_REMINDER_HORIZON_HOURS * 60 * 60 * 1000;
@@ -116,8 +118,8 @@ export function getReminderSound(sound: ReminderSound, event: ReminderEvent): Re
   return event.kind === 'prayer' && event.offsetMinutes === 0 ? 'adhan_short' : 'beep';
 }
 
-function buildNativeNotificationRequest(event: ReminderEvent, sound: ReminderSound): NativeNotificationRequest {
-  const copy = buildReminderNotificationCopy(event);
+function buildNativeNotificationRequest(event: ReminderEvent, sound: ReminderSound, language: Language): NativeNotificationRequest {
+  const copy = buildReminderNotificationCopy(event, language);
   return {
     id: createNativeNotificationId(event.id),
     title: copy.title,
@@ -214,7 +216,7 @@ export async function reconcileNativeReminderSchedule(
 ): Promise<NativeReminderSyncResult> {
   const diagnostics = await getNativeReminderDiagnostics(snapshot);
 
-  await ensureReminderNotificationChannel();
+  await ensureReminderNotificationChannel(snapshot.settings.language);
 
   const pending = await getNativePendingNotifications();
   const ours = pending.filter(isNativeReminderNotification);
@@ -234,7 +236,7 @@ export async function reconcileNativeReminderSchedule(
   }
 
   const events = await buildNativeReminderEvents(snapshot, new Date());
-  const requests = events.map((event) => buildNativeNotificationRequest(event, snapshot.settings.adhanSound));
+  const requests = events.map((event) => buildNativeNotificationRequest(event, snapshot.settings.adhanSound, snapshot.settings.language));
 
   await cancelNativeNotifications(pendingIds);
   await scheduleNativeNotifications(requests);
@@ -259,7 +261,7 @@ export async function scheduleNativeReminderTestNotification(): Promise<boolean>
     {
       id: createNativeNotificationId(`dev-test:${scheduledAt.toISOString()}`),
       title: 'Sholatku',
-      body: 'Tes pengingat native berhasil dijadwalkan.',
+      body: tr(getSavedSettings().language, 'Tes pengingat native berhasil dijadwalkan.', 'Test reminder scheduled.'),
       at: scheduledAt,
       allowWhileIdle: true,
       extra: {

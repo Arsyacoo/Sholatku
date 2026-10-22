@@ -26,6 +26,10 @@ import {
 declare const __SHOLATKU_NATIVE_REMINDER_QA__: boolean | undefined;
 import { getAppRuntime } from '@/lib/platform/runtime';
 import { openAppSettings } from '@/lib/platform/app-settings';
+import { useLanguage } from '@/hooks/useLanguage';
+import { prayerName } from '@/lib/prayer/constants';
+
+type Translate = ReturnType<typeof useLanguage>['t'];
 
 interface NotificationPreferencesProps {
   value: PrayerReminderSettings;
@@ -36,33 +40,24 @@ interface NotificationPreferencesProps {
   onSoundChange: (sound: UserSettings['adhanSound']) => void;
 }
 
-const SOUND_SELECT_OPTIONS: Array<{ value: UserSettings['adhanSound']; label: string }> = [
-  { value: 'beep', label: 'Bunyi bawaan' },
-  { value: 'adhan_short', label: 'Adzan' },
-  { value: 'none', label: 'Tanpa suara' },
+const soundSelectOptions = (t: Translate): Array<{ value: UserSettings['adhanSound']; label: string }> => [
+  { value: 'beep', label: t('Bunyi bawaan', 'Default sound') },
+  { value: 'adhan_short', label: t('Adzan', 'Adhan') },
+  { value: 'none', label: t('Tanpa suara', 'Silent') },
 ];
 
-const PRAYER_LABELS: Record<(typeof PRAYER_REMINDER_PRAYERS)[number], string> = {
-  fajr: 'Subuh',
-  dhuhr: 'Dzuhur',
-  asr: 'Ashar',
-  maghrib: 'Maghrib',
-  isha: 'Isya',
-};
+const OFFSET_VALUES: Array<'off' | PrayerReminderOffset> = ['off', 0, 5, 10, 15, 30];
 
-const OFFSET_OPTIONS: Array<{ value: 'off' | PrayerReminderOffset; label: string }> = [
-  { value: 'off', label: 'Nonaktif' },
-  { value: 0, label: 'Tepat waktu' },
-  { value: 5, label: '5 menit sebelum' },
-  { value: 10, label: '10 menit sebelum' },
-  { value: 15, label: '15 menit sebelum' },
-  { value: 30, label: '30 menit sebelum' },
-];
-
-const OFFSET_SELECT_OPTIONS = OFFSET_OPTIONS.map((option) => ({
-  value: String(option.value),
-  label: option.label,
-}));
+const offsetSelectOptions = (t: Translate) =>
+  OFFSET_VALUES.map((value) => ({
+    value: String(value),
+    label:
+      value === 'off'
+        ? t('Nonaktif', 'Off')
+        : value === 0
+        ? t('Tepat waktu', 'On time')
+        : t(`${value} menit sebelum`, `${value} minutes before`),
+  }));
 
 const INITIAL_CAPABILITIES: PrayerReminderCapabilities = {
   notificationsSupported: false,
@@ -78,38 +73,40 @@ const INITIAL_CAPABILITIES: PrayerReminderCapabilities = {
 function describePermissionState(
   enabled: boolean,
   permissionState: NormalizedNotificationPermissionState,
-  isNativeRuntime: boolean
+  isNativeRuntime: boolean,
+  t: Translate
 ): string {
-  if (!enabled) return 'Pengingat belum diaktifkan.';
+  if (!enabled) return t('Pengingat belum diaktifkan.', 'Reminders are not turned on yet.');
   if (permissionState === 'granted') {
     return isNativeRuntime
-      ? 'Notifikasi aktif. Pengingat akan dijadwalkan di perangkat.'
-      : 'Notifikasi diizinkan. Pengingat akan muncul saat browser mendukung.';
+      ? t('Notifikasi aktif. Pengingat akan dijadwalkan di perangkat.', 'Notifications are on. Reminders will be scheduled on this device.')
+      : t('Notifikasi diizinkan. Pengingat akan muncul saat browser mendukung.', 'Notifications are allowed. Reminders will appear when the browser supports it.');
   }
   if (permissionState === 'denied') {
-    return 'Notifikasi diblokir di perangkat. Ubah izin untuk menjalankan pengingat.';
+    return t('Notifikasi diblokir di perangkat. Ubah izin untuk menjalankan pengingat.', 'Notifications are blocked on this device. Change the permission to use reminders.');
   }
   if (permissionState === 'unsupported') {
-    return 'Perangkat atau browser ini belum mendukung notifikasi.';
+    return t('Perangkat atau browser ini belum mendukung notifikasi.', 'This device or browser does not support notifications.');
   }
-  return 'Izinkan notifikasi untuk menjalankan pengingat.';
+  return t('Izinkan notifikasi untuk menjalankan pengingat.', 'Allow notifications to use reminders.');
 }
 
 function getReminderToggleLabel(
   enabled: boolean,
-  permissionState: NormalizedNotificationPermissionState
+  permissionState: NormalizedNotificationPermissionState,
+  t: Translate
 ): string {
-  if (!enabled) return 'Nonaktif';
-  if (permissionState === 'granted') return 'Aktif';
-  if (permissionState === 'denied') return 'Izin diblokir';
-  if (permissionState === 'unsupported') return 'Tidak tersedia';
-  return 'Izin diperlukan';
+  if (!enabled) return t('Nonaktif', 'Off');
+  if (permissionState === 'granted') return t('Aktif', 'On');
+  if (permissionState === 'denied') return t('Izin diblokir', 'Permission blocked');
+  if (permissionState === 'unsupported') return t('Tidak tersedia', 'Unavailable');
+  return t('Izin diperlukan', 'Permission needed');
 }
 
-function formatPendingSummary(diagnostics: NativeReminderDiagnostics | null): string | null {
+function formatPendingSummary(diagnostics: NativeReminderDiagnostics | null, locale: string): string | null {
   if (!diagnostics?.nextPending) return null;
   const { nextPending } = diagnostics;
-  const time = nextPending.scheduleAt?.toLocaleString('id-ID', {
+  const time = nextPending.scheduleAt?.toLocaleString(locale, {
     hour: '2-digit',
     minute: '2-digit',
     day: '2-digit',
@@ -126,6 +123,7 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
   sound,
   onSoundChange,
 }) => {
+  const { t, language, locale } = useLanguage();
   const runtime = getAppRuntime();
   const isNativeAndroid = runtime === 'android';
   const isDev =
@@ -197,11 +195,11 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
       const result = await requestNotificationPermission();
       setPermissionState(result);
       if (result === 'granted') {
-        setTestMessage('Notifikasi diizinkan. Pengingat akan dijadwalkan ulang.');
+        setTestMessage(t('Notifikasi diizinkan. Pengingat akan dijadwalkan ulang.', 'Notifications allowed. Reminders will be rescheduled.'));
       } else if (result === 'denied') {
-        setTestMessage('Notifikasi diblokir di perangkat. Pilihan pengingat tetap tersimpan.');
+        setTestMessage(t('Notifikasi diblokir di perangkat. Pilihan pengingat tetap tersimpan.', 'Notifications are blocked on this device. Your reminder choices are still saved.'));
       } else if (result === 'unsupported') {
-        setTestMessage('Notifikasi tidak didukung pada perangkat ini.');
+        setTestMessage(t('Notifikasi tidak didukung pada perangkat ini.', 'Notifications are not supported on this device.'));
       }
       return result;
     } finally {
@@ -218,7 +216,7 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
 
     onEnabledChange(nextEnabled);
     if (!nextEnabled) {
-      setTestMessage('Pengingat dimatikan.');
+      setTestMessage(t('Pengingat dimatikan.', 'Reminders turned off.'));
     }
   };
 
@@ -233,40 +231,41 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
       setTestMessage(
         delivered
           ? isNativeAndroid && isDev
-            ? 'Notifikasi tes native dijadwalkan dan akan muncul sebentar lagi.'
-            : 'Notifikasi tes dikirim. Suara mengikuti pengaturan notifikasi perangkat.'
-          : 'Notifikasi tes tidak dapat dikirim. Periksa izin dan pengaturan notifikasi perangkat.'
+            ? t('Notifikasi tes native dijadwalkan dan akan muncul sebentar lagi.', 'Native test notification scheduled; it will appear shortly.')
+            : t('Notifikasi tes dikirim. Suara mengikuti pengaturan notifikasi perangkat.', 'Test notification sent. The sound follows your device notification settings.')
+          : t('Notifikasi tes tidak dapat dikirim. Periksa izin dan pengaturan notifikasi perangkat.', 'The test notification could not be sent. Check your device notification permission and settings.')
       );
     } catch {
-      setTestMessage('Notifikasi tes gagal dikirim. Periksa izin dan pengaturan notifikasi perangkat.');
+      setTestMessage(t('Notifikasi tes gagal dikirim. Periksa izin dan pengaturan notifikasi perangkat.', 'Failed to send the test notification. Check your device notification permission and settings.'));
     } finally {
       setIsSendingTest(false);
     }
   };
 
   const handleReminderChange = (prayer: keyof PrayerReminderSettings, selected: string) => {
-    const option = OFFSET_OPTIONS.find((item) => String(item.value) === selected);
-    if (!option) return;
+    const option = OFFSET_VALUES.find((item) => String(item) === selected);
+    if (option === undefined) return;
     onChange({
       ...value,
       [prayer]: {
-        enabled: option.value !== 'off',
-        offsetMinutes: option.value === 'off' ? 0 : option.value,
+        enabled: option !== 'off',
+        offsetMinutes: option === 'off' ? 0 : option,
       },
     });
   };
 
-  const statusText = describePermissionState(enabled, permissionState, isNativeAndroid);
-  const pendingSummary = isNativeAndroid && isDev ? formatPendingSummary(diagnostics) : null;
+  const statusText = describePermissionState(enabled, permissionState, isNativeAndroid, t);
+  const pendingSummary = isNativeAndroid && isDev ? formatPendingSummary(diagnostics, locale) : null;
+  const offsetOptions = offsetSelectOptions(t);
 
   return (
     <div className="space-y-4">
       <div className="space-y-1">
         <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-          Pengingat Waktu Sholat
+          {t('Pengingat Waktu Sholat', 'Prayer Time Reminders')}
         </h2>
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          Atur pengingat untuk setiap waktu sholat. Pilihan disimpan di perangkat ini.
+          {t('Atur pengingat untuk setiap waktu sholat. Pilihan disimpan di perangkat ini.', 'Set a reminder for each prayer time. Your choices are saved on this device.')}
         </p>
       </div>
 
@@ -278,10 +277,10 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
             </div>
             <div className="min-w-0">
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                Pengingat waktu sholat
+                {t('Pengingat waktu sholat', 'Prayer time reminders')}
               </h3>
               <p className="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                Aktifkan pengingat yang ingin Anda terima.
+                {t('Aktifkan pengingat yang ingin Anda terima.', 'Turn on the reminders you want to receive.')}
               </p>
             </div>
           </div>
@@ -290,7 +289,7 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
             type="button"
             role="switch"
             aria-checked={enabled}
-            aria-label={enabled ? 'Nonaktifkan pengingat waktu sholat' : 'Aktifkan pengingat waktu sholat'}
+            aria-label={enabled ? t('Nonaktifkan pengingat waktu sholat', 'Turn off prayer time reminders') : t('Aktifkan pengingat waktu sholat', 'Turn on prayer time reminders')}
             onClick={() => {
               void handleMasterToggle(!enabled);
             }}
@@ -306,7 +305,7 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
         <div className="border-t border-surface-100 px-4 py-3 dark:border-surface-800">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">Status notifikasi</h3>
+              <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">{t('Status notifikasi', 'Notification status')}</h3>
               <p className="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400" aria-live="polite">
                 {statusText}
               </p>
@@ -318,27 +317,32 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
                 ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'
                 : 'bg-surface-100 text-slate-600 dark:bg-surface-800 dark:text-slate-300'
             }`}>
-              {getReminderToggleLabel(enabled, permissionState)}
+              {getReminderToggleLabel(enabled, permissionState, t)}
             </span>
           </div>
         </div>
 
         {permissionState === 'denied' && (
           <p className="mx-4 mb-3 rounded-xl bg-amber-50 p-3 text-xs leading-relaxed text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
-            Notifikasi diblokir di perangkat. Ubah izin notifikasi di pengaturan perangkat untuk memakai pengingat Sholatku.
+            {t(
+              'Notifikasi diblokir di perangkat. Ubah izin notifikasi di pengaturan perangkat untuk memakai pengingat Sholatku.',
+              'Notifications are blocked on this device. Change the notification permission in your device settings to use Sholatku reminders.'
+            )}
           </p>
         )}
         {isNativeAndroid && enabled && permissionState === 'granted' && (
           exactAlarmState === 'granted' ? (
             <p className="mx-4 mb-3 flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-300">
               <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-              Pengingat tepat waktu aktif.
+              {t('Pengingat tepat waktu aktif.', 'Exact-time reminders are on.')}
             </p>
           ) : exactAlarmState === 'denied' ? (
             <div className="mx-4 mb-3 space-y-2 rounded-xl bg-amber-50 p-3 text-xs leading-relaxed text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
               <p>
-                Pengingat bisa terlambat beberapa menit saat ponsel menghemat baterai. Izinkan &ldquo;Alarm &amp; pengingat&rdquo;
-                agar adzan berbunyi tepat waktu.
+                {t(
+                  'Pengingat bisa terlambat beberapa menit saat ponsel menghemat baterai. Izinkan “Alarm & pengingat” agar adzan berbunyi tepat waktu.',
+                  'Reminders may be a few minutes late while the phone saves battery. Allow “Alarms & reminders” so the adhan plays on time.'
+                )}
               </p>
               <Button
                 variant="outline"
@@ -350,22 +354,25 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
                   window.dispatchEvent(new CustomEvent('sholatku:prayer-reminders-changed', { detail: value }));
                 }}
               >
-                Izinkan Alarm &amp; pengingat
+                {t('Izinkan Alarm & pengingat', 'Allow Alarms & reminders')}
               </Button>
             </div>
           ) : null
         )}
         {permissionState === 'unsupported' && (
           <p className="mx-4 mb-3 rounded-xl bg-surface-50 p-3 text-xs leading-relaxed text-slate-600 dark:bg-surface-800 dark:text-slate-300">
-            Perangkat atau browser ini belum mendukung notifikasi. Pengingat tidak bisa dijalankan di runtime ini.
+            {t(
+              'Perangkat atau browser ini belum mendukung notifikasi. Pengingat tidak bisa dijalankan di runtime ini.',
+              'This device or browser does not support notifications. Reminders cannot run here.'
+            )}
           </p>
         )}
 
         <div className="border-t border-surface-100 p-4 dark:border-surface-800">
           <div className="mb-3 space-y-0.5">
-            <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">Waktu pengingat</h3>
+            <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">{t('Waktu pengingat', 'Reminder time')}</h3>
             <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-              Pilih kapan pengingat muncul sebelum waktu sholat.
+              {t('Pilih kapan pengingat muncul sebelum waktu sholat.', 'Choose when the reminder appears before each prayer time.')}
             </p>
           </div>
           <div className="space-y-2">
@@ -375,14 +382,14 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
               return (
                 <div key={prayer} className="flex items-center justify-between gap-3">
                   <label htmlFor={`prayer-reminder-${prayer}`} className="min-w-0 text-sm font-semibold text-slate-700 dark:text-slate-200">
-                    {PRAYER_LABELS[prayer]}
+                    {prayerName(prayer, language)}
                   </label>
                   <Select
                     id={`prayer-reminder-${prayer}`}
                     value={selected}
-                    options={OFFSET_SELECT_OPTIONS}
+                    options={offsetOptions}
                     onValueChange={(nextValue) => handleReminderChange(prayer, nextValue)}
-                    ariaLabel={`Pengingat ${PRAYER_LABELS[prayer]}`}
+                    ariaLabel={t(`Pengingat ${prayerName(prayer, language)}`, `${prayerName(prayer, language)} reminder`)}
                     size="sm"
                     className="w-[164px] shrink-0"
                   />
@@ -395,19 +402,22 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
         {isNativeAndroid && (
           <div className="space-y-1.5 border-t border-surface-100 p-4 dark:border-surface-800">
             <div className="flex items-center justify-between gap-3">
-              <label htmlFor="prayer-reminder-sound" className="text-sm font-semibold text-slate-700 dark:text-slate-200">Suara pengingat</label>
+              <label htmlFor="prayer-reminder-sound" className="text-sm font-semibold text-slate-700 dark:text-slate-200">{t('Suara pengingat', 'Reminder sound')}</label>
               <Select
                 id="prayer-reminder-sound"
                 value={sound}
-                options={SOUND_SELECT_OPTIONS}
+                options={soundSelectOptions(t)}
                 onValueChange={onSoundChange}
-                ariaLabel="Suara pengingat"
+                ariaLabel={t('Suara pengingat', 'Reminder sound')}
                 size="sm"
                 className="w-[164px] shrink-0"
               />
             </div>
             <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-              Adzan diputar saat pengingat diatur tepat waktu. Pengingat sebelum waktu sholat dan Imsak tetap memakai bunyi bawaan.
+              {t(
+                'Adzan diputar saat pengingat diatur tepat waktu. Pengingat sebelum waktu sholat dan Imsak tetap memakai bunyi bawaan.',
+                'The adhan plays when a reminder is set to on time. Early reminders and Imsak still use the default sound.'
+              )}
             </p>
           </div>
         )}
@@ -422,19 +432,19 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
               isLoading={isSendingTest}
             >
               <Send className="h-3.5 w-3.5" />
-              {isNativeAndroid ? 'Tes Pengingat Native' : 'Kirim Notifikasi Tes'}
+              {isNativeAndroid ? t('Tes Pengingat Native', 'Test Native Reminder') : t('Kirim Notifikasi Tes', 'Send Test Notification')}
             </Button>
           )}
           {capabilities.canShowPersistentNotification && (
             <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 dark:text-emerald-300">
               <CheckCircle2 className="h-3.5 w-3.5" />
-              Notifikasi tetap dapat tampil saat aplikasi web aktif
+              {t('Notifikasi tetap dapat tampil saat aplikasi web aktif', 'Notifications can still appear while the web app is open')}
             </span>
           )}
           {isNativeAndroid && isDev && pendingSummary && (
             <span className="inline-flex items-center gap-1 text-[11px] text-slate-600 dark:text-slate-300">
               <ShieldAlert className="h-3.5 w-3.5" />
-              Pengingat berikutnya: {pendingSummary}
+              {t('Pengingat berikutnya', 'Next reminder')}: {pendingSummary}
             </span>
           )}
         </div>
@@ -448,24 +458,39 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
         {isNativeAndroid && (
           <details className="group border-t border-surface-100 px-4 py-3 dark:border-surface-800">
             <summary className="cursor-pointer text-sm font-semibold text-slate-800 marker:text-slate-400 dark:text-slate-200">
-              Pengingat tidak muncul?
+              {t('Pengingat tidak muncul?', 'Reminders not showing?')}
             </summary>
             <div className="mt-2 space-y-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-              <p>Beberapa ponsel menghentikan aplikasi untuk menghemat baterai. Buka pengaturan aplikasi Sholatku, lalu:</p>
+              <p>
+                {t(
+                  'Beberapa ponsel menghentikan aplikasi untuk menghemat baterai. Buka pengaturan aplikasi Sholatku, lalu:',
+                  'Some phones stop apps to save battery. Open the Sholatku app settings, then:'
+                )}
+              </p>
               <ul className="list-disc space-y-1 pl-4">
                 <li>
-                  <span className="font-semibold">Samsung:</span> Baterai → pilih &ldquo;Tidak dibatasi&rdquo;. Di Izin
-                  aplikasi, matikan &ldquo;Kelola aplikasi jika tidak digunakan&rdquo;. Pastikan Sholatku tidak ada di
-                  daftar &ldquo;Aplikasi tidur&rdquo;.
+                  <span className="font-semibold">Samsung:</span>{' '}
+                  {t(
+                    'Baterai → pilih “Tidak dibatasi”. Di Izin aplikasi, matikan “Kelola aplikasi jika tidak digunakan”. Pastikan Sholatku tidak ada di daftar “Aplikasi tidur”.',
+                    'Battery → choose “Unrestricted”. Under App permissions, turn off “Manage app if unused”. Make sure Sholatku is not in the “Sleeping apps” list.'
+                  )}
                 </li>
                 <li>
-                  <span className="font-semibold">Xiaomi, Oppo, Vivo, Realme:</span> aktifkan &ldquo;Mulai
-                  otomatis&rdquo; / Autostart dan matikan penghemat baterai untuk Sholatku.
+                  <span className="font-semibold">Xiaomi, Oppo, Vivo, Realme:</span>{' '}
+                  {t(
+                    'aktifkan “Mulai otomatis” / Autostart dan matikan penghemat baterai untuk Sholatku.',
+                    'turn on Autostart and turn off battery saver for Sholatku.'
+                  )}
                 </li>
-                <li>Jangan tutup paksa Sholatku dari daftar aplikasi terbaru; Android menahan pengingat sampai aplikasi dibuka lagi.</li>
+                <li>
+                  {t(
+                    'Jangan tutup paksa Sholatku dari daftar aplikasi terbaru; Android menahan pengingat sampai aplikasi dibuka lagi.',
+                    'Do not force-close Sholatku from the recent apps list; Android holds reminders until the app is opened again.'
+                  )}
+                </li>
               </ul>
               <Button variant="outline" size="sm" onClick={() => void openAppSettings()}>
-                Buka pengaturan aplikasi
+                {t('Buka pengaturan aplikasi', 'Open app settings')}
               </Button>
             </div>
           </details>
@@ -474,8 +499,12 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
         <p className="flex items-start gap-2 border-t border-surface-100 px-4 py-3 text-xs leading-relaxed text-slate-500 dark:border-surface-800 dark:text-slate-400">
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           {isNativeAndroid
-            ? 'Di Android, pengingat muncul sebagai notifikasi lokal di perangkat.'
-            : 'Notifikasi web bergantung pada dukungan browser. Untuk pengingat yang lebih konsisten saat aplikasi tidak dibuka, gunakan ekspor kalender.'}
+            ? t('Di Android, pengingat muncul sebagai notifikasi lokal di perangkat.', 'On Android, reminders appear as local notifications on the device.')
+            : t(
+                'Notifikasi web bergantung pada dukungan browser. Untuk pengingat yang lebih konsisten saat aplikasi tidak dibuka, gunakan ekspor kalender.',
+                'Web notifications depend on browser support. For more reliable reminders when the app is closed, use the calendar export.'
+              )}
+
         </p>
       </div>
     </div>

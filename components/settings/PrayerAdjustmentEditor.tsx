@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { PrayerAdjustment, PrayerKey } from '@/types';
-import { PRAYER_NAMES } from '@/lib/prayer/constants';
+import { prayerName } from '@/lib/prayer/constants';
+import { useLanguage } from '@/hooks/useLanguage';
 import { IHTIYAT_OPTIONS } from '@/lib/prayer/normalize';
 import { Select } from '../ui/Select';
 import { Plus, Minus, RotateCcw } from 'lucide-react';
@@ -14,10 +15,16 @@ interface PrayerAdjustmentEditorProps {
   onIhtiyatChange: (minutes: number) => void;
 }
 
-const IHTIYAT_SELECT_OPTIONS = IHTIYAT_OPTIONS.map((minutes) => ({
-  value: minutes as number,
-  label: minutes === 0 ? 'Tanpa ihtiyat' : minutes === 2 ? '+2 menit (Kemenag)' : `+${minutes} menit`,
-}));
+const ihtiyatSelectOptions = (t: ReturnType<typeof useLanguage>['t']) =>
+  IHTIYAT_OPTIONS.map((minutes) => ({
+    value: minutes as number,
+    label:
+      minutes === 0
+        ? t('Tanpa ihtiyat', 'No ihtiyat')
+        : minutes === 2
+        ? t('+2 menit (Kemenag)', '+2 min (Kemenag)')
+        : t(`+${minutes} menit`, `+${minutes} min`),
+  }));
 
 const ADJUSTABLE_KEYS: PrayerKey[] = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
 
@@ -27,6 +34,7 @@ export const PrayerAdjustmentEditor: React.FC<PrayerAdjustmentEditorProps> = ({
   ihtiyat,
   onIhtiyatChange,
 }) => {
+  const { t, language } = useLanguage();
   const handleStep = (key: PrayerKey, delta: number) => {
     const current = adjustments[key as keyof PrayerAdjustment] || 0;
     const updated = {
@@ -47,17 +55,19 @@ export const PrayerAdjustmentEditor: React.FC<PrayerAdjustmentEditorProps> = ({
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 space-y-0.5">
           <label htmlFor="ihtiyat" className="block text-sm font-bold text-slate-900 dark:text-slate-100">
-            Ihtiyat (waktu kehati-hatian)
+            {t('Ihtiyat (waktu kehati-hatian)', 'Ihtiyat (safety margin)')}
           </label>
           <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-            Jadwal resmi Kemenag menambahkan beberapa menit agar sholat tidak dimulai terlalu awal. Berlaku untuk semua
-            waktu sholat; waktu terbit dimajukan.
+            {t(
+              'Jadwal resmi Kemenag menambahkan beberapa menit agar sholat tidak dimulai terlalu awal. Berlaku untuk semua waktu sholat; waktu terbit dimajukan.',
+              'The official Kemenag schedule adds a few minutes so prayers never start too early. Applies to all prayer times; sunrise moves earlier.'
+            )}
           </p>
         </div>
         <Select
           id="ihtiyat"
           value={ihtiyat}
-          options={IHTIYAT_SELECT_OPTIONS}
+          options={ihtiyatSelectOptions(t)}
           onValueChange={onIhtiyatChange}
           ariaLabel="Ihtiyat"
           size="sm"
@@ -68,10 +78,13 @@ export const PrayerAdjustmentEditor: React.FC<PrayerAdjustmentEditorProps> = ({
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
           <label className="block text-sm font-bold text-slate-900 dark:text-slate-100">
-            Koreksi Menit Manual
+            {t('Koreksi Menit Manual', 'Manual Minute Adjustments')}
           </label>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Tambahkan atau kurangi menit per jadwal bila masjid setempat berbeda. Ditambahkan di atas ihtiyat.
+            {t(
+              'Tambahkan atau kurangi menit per jadwal bila masjid setempat berbeda. Ditambahkan di atas ihtiyat.',
+              'Add or subtract minutes per prayer if your local mosque differs. Applied on top of ihtiyat.'
+            )}
           </p>
         </div>
 
@@ -90,7 +103,7 @@ export const PrayerAdjustmentEditor: React.FC<PrayerAdjustmentEditorProps> = ({
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
         {ADJUSTABLE_KEYS.map((key) => {
           const val = adjustments[key as keyof PrayerAdjustment] || 0;
-          const name = PRAYER_NAMES[key]?.id || key;
+          const name = prayerName(key as keyof PrayerAdjustment, language);
 
           return (
             <div
@@ -106,7 +119,7 @@ export const PrayerAdjustmentEditor: React.FC<PrayerAdjustmentEditorProps> = ({
                   type="button"
                   onClick={() => handleStep(key, -1)}
                   className="w-8 h-8 rounded-lg bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors"
-                  aria-label={`Kurangi 1 menit untuk ${name}`}
+                  aria-label={t(`Kurangi 1 menit untuk ${name}`, `Subtract 1 minute from ${name}`)}
                 >
                   <Minus className="w-3.5 h-3.5" />
                 </button>
@@ -127,7 +140,8 @@ export const PrayerAdjustmentEditor: React.FC<PrayerAdjustmentEditorProps> = ({
                   type="button"
                   onClick={() => handleStep(key, 1)}
                   className="w-8 h-8 rounded-lg bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors"
-                  aria-label={`Tambah 1 menit untuk ${name}`}
+                  aria-label={t(`Tambah 1 menit untuk ${name}`, `Add 1 minute to ${name}`)}
+
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>

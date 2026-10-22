@@ -6,6 +6,7 @@ import type { PrayerReminderSettings, RamadanReminderSettings, UserLocation } fr
 import type { RamadanImsakiyahRow } from '@/lib/ramadan/imsakiyah';
 import { downloadPrayerCalendar, generateRamadanCalendarIcs, getRamadanCalendarFilename } from '@/lib/prayer/reminders/ics';
 import { Button } from '@/components/ui/Button';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface RamadanCalendarExportProps {
   rows: readonly RamadanImsakiyahRow[];
@@ -22,6 +23,7 @@ export const RamadanCalendarExport: React.FC<RamadanCalendarExportProps> = ({
   prayerReminderSettings,
   ramadanReminderSettings,
 }) => {
+  const { t } = useLanguage();
   const [isExporting, setIsExporting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -31,9 +33,11 @@ export const RamadanCalendarExport: React.FC<RamadanCalendarExportProps> = ({
     try {
       const ics = generateRamadanCalendarIcs(rows, location, prayerReminderSettings, ramadanReminderSettings, hijriYear);
       const downloaded = downloadPrayerCalendar(ics, getRamadanCalendarFilename(hijriYear));
-      setMessage(downloaded ? 'Kalender Ramadan berhasil dibuat.' : 'Browser tidak dapat mengunduh file kalender.');
+      setMessage(downloaded
+        ? t('Kalender Ramadan berhasil dibuat.', 'Ramadan calendar created.')
+        : t('Browser tidak dapat mengunduh file kalender.', 'The browser could not download the calendar file.'));
     } catch {
-      setMessage('Gagal menyiapkan kalender Ramadan. Silakan coba lagi.');
+      setMessage(t('Gagal menyiapkan kalender Ramadan. Silakan coba lagi.', 'Could not prepare the Ramadan calendar. Please try again.'));
     } finally {
       setIsExporting(false);
     }
@@ -42,13 +46,13 @@ export const RamadanCalendarExport: React.FC<RamadanCalendarExportProps> = ({
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Simpan ke kalender</p>
-        <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">Ekspor Imsak, Subuh, dan Maghrib untuk seluruh Ramadan {hijriYear} H.</p>
+        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('Simpan ke kalender', 'Save to calendar')}</p>
+        <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">{t(`Ekspor Imsak, Subuh, dan Maghrib untuk seluruh Ramadan ${hijriYear} H.`, `Export Imsak, Fajr and Maghrib for all of Ramadan ${hijriYear} AH.`)}</p>
       </div>
       <div className="flex flex-col items-start gap-2 sm:items-end">
         <Button size="sm" onClick={exportCalendar} isLoading={isExporting} disabled={!rows.length}>
           <Download className="h-3.5 w-3.5" aria-hidden="true" />
-          Export Kalender Ramadan
+          {t('Export Kalender Ramadan', 'Export Ramadan calendar')}
         </Button>
         {message && <p className="text-xs text-slate-500 dark:text-slate-400" role="status" aria-live="polite">{message}</p>}
       </div>

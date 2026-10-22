@@ -41,10 +41,13 @@ final class PrayerWidgetSchedule {
     }
 
     final String city;
+    /** "id" or "en", from the app's language setting. */
+    final String language;
     final List<Day> days;
 
-    PrayerWidgetSchedule(String city, List<Day> days) {
+    PrayerWidgetSchedule(String city, String language, List<Day> days) {
         this.city = city;
+        this.language = language;
         this.days = Collections.unmodifiableList(days);
     }
 
