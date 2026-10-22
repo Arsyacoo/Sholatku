@@ -38,12 +38,12 @@ test('publishes truthful robots, sitemap, manifest, and route metadata', async (
   await expect(page).toHaveTitle(/Android Preview \/ Beta.*Sholatku/);
   await expect(page.getByRole('heading', { name: 'Sholatku untuk Android' })).toBeVisible();
   await expect(page.getByText('Direct Preview / Beta', { exact: true })).toBeVisible();
-  const downloadLink = page.getByRole('link', { name: 'Download APK 0.2.5' });
+  const downloadLink = page.getByRole('link', { name: 'Download APK 0.2.6' });
   await expect(downloadLink).toHaveAttribute(
     'href',
-    'https://github.com/Arsyacoo/Sholatku/releases/download/v0.2.5-preview.7/sholatku-latest.apk'
+    'https://github.com/Arsyacoo/Sholatku/releases/download/v0.2.6-preview.8/sholatku-latest.apk'
   );
-  await expect(page.getByText('4f2f8b7dc26021456aff120d4c2a31c26993058693addcccb2167c8f3ccd9101')).toBeVisible();
+  await expect(page.getByText('db3224440fe4ddd55355e8a6c15eeca68f883380f3db5424641e8fdbf9c252ba')).toBeVisible();
   await assertNoErrors();
 });
 

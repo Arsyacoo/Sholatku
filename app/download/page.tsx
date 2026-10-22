@@ -5,7 +5,7 @@ import { Footer } from '@/components/layout/Footer';
 import { Navbar } from '@/components/layout/Navbar';
 
 const directPreviewAssetUrl =
-  'https://github.com/Arsyacoo/Sholatku/releases/download/v0.2.5-preview.7/sholatku-latest.apk';
+  'https://github.com/Arsyacoo/Sholatku/releases/download/v0.2.6-preview.8/sholatku-latest.apk';
 
 export const metadata: Metadata = {
   title: 'Android Preview / Beta',
@@ -40,7 +40,7 @@ export default function DownloadPage() {
               <div className="space-y-2 text-sm leading-relaxed text-amber-950 dark:text-amber-100">
                 <p className="font-bold">Status: Preview / Beta, channel direct-preview</p>
                 <p>
-                  Preview 7 (0.2.5) tersedia sebagai GitHub Pre-release. Pengguna versi sebelumnya dapat memasangnya
+                  Preview 8 (0.2.6) tersedia sebagai GitHub Pre-release. Pengguna versi sebelumnya dapat memasangnya
                   langsung sebagai pembaruan tanpa kehilangan data.
                 </p>
                 <p>
@@ -54,7 +54,7 @@ export default function DownloadPage() {
           <section className="grid gap-3 sm:grid-cols-3" aria-label="Informasi preview Android">
             <div className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Versi</p>
-              <p className="mt-1 text-lg font-bold text-slate-900 dark:text-slate-100">0.2.5</p>
+              <p className="mt-1 text-lg font-bold text-slate-900 dark:text-slate-100">0.2.6</p>
             </div>
             <div className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Android minimum</p>
@@ -83,11 +83,11 @@ export default function DownloadPage() {
                   className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-primary-700"
                 >
                   <Download className="h-4 w-4" aria-hidden="true" />
-                  Download APK 0.2.5
+                  Download APK 0.2.6
                 </a>
-                <p className="text-xs text-slate-500 dark:text-slate-400">File: sholatku-v0.2.5.apk (4,2 MB)</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">File: sholatku-v0.2.6.apk (4,2 MB)</p>
                 <p className="break-all text-xs text-slate-500 dark:text-slate-400">
-                  SHA-256: 4f2f8b7dc26021456aff120d4c2a31c26993058693addcccb2167c8f3ccd9101
+                  SHA-256: db3224440fe4ddd55355e8a6c15eeca68f883380f3db5424641e8fdbf9c252ba
                 </p>
               </div>
             </div>
