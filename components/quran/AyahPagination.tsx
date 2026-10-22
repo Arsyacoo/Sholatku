@@ -3,6 +3,7 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface AyahPaginationProps {
   currentPage: number;
@@ -19,6 +20,7 @@ export const AyahPagination: React.FC<AyahPaginationProps> = ({
   pageSize,
   onPageChange,
 }) => {
+  const { t } = useLanguage();
   if (totalPages <= 1) return null;
 
   const startAyah = (currentPage - 1) * pageSize + 1;
@@ -51,7 +53,7 @@ export const AyahPagination: React.FC<AyahPaginationProps> = ({
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-2xl shadow-2xs">
       <div className="text-xs text-slate-500 font-medium">
-        Menampilkan Ayat <span className="font-bold text-slate-800 dark:text-slate-200">{startAyah} - {endAyah}</span> dari {totalAyahs} (Hal. {currentPage}/{totalPages})
+        {t('Menampilkan Ayat', 'Showing ayahs')} <span className="font-bold text-slate-800 dark:text-slate-200">{startAyah} - {endAyah}</span> {t('dari', 'of')} {totalAyahs} ({t('Hal.', 'Page')} {currentPage}/{totalPages})
       </div>
 
       <div className="flex items-center gap-1.5">
@@ -61,10 +63,10 @@ export const AyahPagination: React.FC<AyahPaginationProps> = ({
           disabled={currentPage <= 1}
           onClick={() => handleSelect(currentPage - 1)}
           className="text-xs px-2.5 py-1.5"
-          aria-label="Halaman sebelumnya"
+          aria-label={t('Halaman sebelumnya', 'Previous page')}
         >
           <ChevronLeft className="w-4 h-4" />
-          <span className="hidden sm:inline">Sebelumnya</span>
+          <span className="hidden sm:inline">{t('Sebelumnya', 'Previous')}</span>
         </Button>
 
         <div className="flex items-center gap-1">
@@ -102,9 +104,9 @@ export const AyahPagination: React.FC<AyahPaginationProps> = ({
           disabled={currentPage >= totalPages}
           onClick={() => handleSelect(currentPage + 1)}
           className="text-xs px-2.5 py-1.5"
-          aria-label="Halaman berikutnya"
+          aria-label={t('Halaman berikutnya', 'Next page')}
         >
-          <span className="hidden sm:inline">Berikutnya</span>
+          <span className="hidden sm:inline">{t('Berikutnya', 'Next')}</span>
           <ChevronRight className="w-4 h-4" />
         </Button>
       </div>

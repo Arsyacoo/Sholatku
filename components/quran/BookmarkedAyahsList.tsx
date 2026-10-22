@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { SavedAyah } from '@/lib/storage/quran-offline';
 import { Bookmark, ArrowRight, Trash2 } from 'lucide-react';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface BookmarkedAyahsListProps {
   bookmarks: SavedAyah[];
@@ -14,15 +15,19 @@ export const BookmarkedAyahsList: React.FC<BookmarkedAyahsListProps> = ({
   bookmarks,
   onRemoveBookmark,
 }) => {
+  const { t } = useLanguage();
   if (bookmarks.length === 0) {
     return (
       <div className="text-center py-16 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-3xl p-6">
         <Bookmark className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
         <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
-          Belum Ada Ayat yang Disimpan
+          {t('Belum Ada Ayat yang Disimpan', 'No saved ayahs yet')}
         </h3>
         <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
-          Saat membaca surat, ketuk ikon penanda (*Bookmark*) pada ayat mana pun untuk menyimpannya ke daftar koleksi pribadi Anda di sini.
+          {t(
+            'Saat membaca surat, ketuk ikon penanda (*Bookmark*) pada ayat mana pun untuk menyimpannya ke daftar koleksi pribadi Anda di sini.',
+            'While reading a surah, tap the Bookmark icon on any ayah to save it to your personal collection here.'
+          )}
         </p>
       </div>
     );
@@ -32,7 +37,7 @@ export const BookmarkedAyahsList: React.FC<BookmarkedAyahsListProps> = ({
     <div className="space-y-3">
       <div className="flex items-center justify-between px-1">
         <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-          Koleksi Ayat Tersimpan ({bookmarks.length})
+          {t('Koleksi Ayat Tersimpan', 'Saved ayahs')} ({bookmarks.length})
         </h2>
       </div>
 
@@ -57,8 +62,8 @@ export const BookmarkedAyahsList: React.FC<BookmarkedAyahsListProps> = ({
                 type="button"
                 onClick={() => onRemoveBookmark(b)}
                 className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
-                title="Hapus dari simpanan"
-                aria-label="Hapus dari simpanan"
+                title={t('Hapus dari simpanan', 'Remove from saved')}
+                aria-label={t('Hapus dari simpanan', 'Remove from saved')}
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -80,7 +85,7 @@ export const BookmarkedAyahsList: React.FC<BookmarkedAyahsListProps> = ({
                 href={`/quran/${b.surahNumber}#ayah-${b.ayahNumber}`}
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-primary-600 dark:text-primary-400 hover:underline"
               >
-                <span>Buka Ayat di Surat</span>
+                <span>{t('Buka Ayat di Surat', 'Open ayah in surah')}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>

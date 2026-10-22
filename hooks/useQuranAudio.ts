@@ -7,6 +7,8 @@ import {
   QURAN_PLAYBACK_RATES,
   SurahDetail,
 } from '@/types';
+import { tr } from '@/lib/language';
+import { getSavedSettings } from '@/lib/storage/preferences';
 
 export type RepeatMode = 'none' | 'ayah' | 'surah';
 
@@ -14,13 +16,14 @@ export interface QariOption {
   id: string;
   name: string;
   subname: string;
+  subnameEn: string;
 }
 
 export const QARI_OPTIONS: QariOption[] = [
-  { id: '05', name: 'Misyari Rasyid Al-Afasy', subname: 'Makkah / Kuwait' },
-  { id: '01', name: 'Abdullah Al-Juhany', subname: 'Imam Masjidil Haram' },
-  { id: '02', name: 'Abdul Muhsin Al-Qasim', subname: 'Imam Masjid Nabawi' },
-  { id: '04', name: 'Mahmoud Khalil Al-Husary', subname: 'Mesir (Tartil)' },
+  { id: '05', name: 'Misyari Rasyid Al-Afasy', subname: 'Makkah / Kuwait', subnameEn: 'Makkah / Kuwait' },
+  { id: '01', name: 'Abdullah Al-Juhany', subname: 'Imam Masjidil Haram', subnameEn: 'Imam of Masjid al-Haram' },
+  { id: '02', name: 'Abdul Muhsin Al-Qasim', subname: 'Imam Masjid Nabawi', subnameEn: 'Imam of Masjid an-Nabawi' },
+  { id: '04', name: 'Mahmoud Khalil Al-Husary', subname: 'Mesir (Tartil)', subnameEn: 'Egypt (Tartil)' },
 ];
 
 interface QuranAudioOptions {
@@ -131,8 +134,14 @@ export function useQuranAudio(surah: SurahDetail | null, options: QuranAudioOpti
           // Update MediaSession
           if ('mediaSession' in navigator) {
             navigator.mediaSession.metadata = new MediaMetadata({
-              title: `Surat ${surah.name} : Ayat ${ayah.numberInSurah}`,
-              artist: QARI_OPTIONS.find((q) => q.id === selectedQari)?.name || 'Murottal Al-Qur\'an',
+              title: tr(
+                getSavedSettings().language,
+                `Surat ${surah.name} : Ayat ${ayah.numberInSurah}`,
+                `Surah ${surah.name} : Ayah ${ayah.numberInSurah}`
+              ),
+              artist:
+                QARI_OPTIONS.find((q) => q.id === selectedQari)?.name ||
+                tr(getSavedSettings().language, 'Murottal Al-Qur\'an', 'Quran recitation'),
               album: `Juz ${ayah.juz ?? '—'} • Sholatku`,
             });
           }

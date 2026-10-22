@@ -34,6 +34,7 @@ function scoreSurah(surah: SurahInfo, query: string, arabicQuery: string): numbe
   const name = normalizeSearchText(surah.name);
   const arabicName = normalizeArabicText(surah.arabicName);
   const translation = normalizeSearchText(surah.translation);
+  const translationEn = normalizeSearchText(surah.translationEn ?? '');
 
   if (/^\d+$/.test(query) && String(surah.number) === query) return 850;
   if (name === query) return 900;
@@ -45,6 +46,10 @@ function scoreSurah(surah: SurahInfo, query: string, arabicQuery: string): numbe
   if (translation === query) return 620;
   if (translation.startsWith(query)) return 600;
   if (translation.includes(query)) return 560;
+  // English meanings match in either language, a little below the Indonesian ones.
+  if (translationEn === query) return 610;
+  if (translationEn.startsWith(query)) return 590;
+  if (translationEn.includes(query)) return 550;
   return 0;
 }
 

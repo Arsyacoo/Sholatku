@@ -15,6 +15,7 @@ import { looksLikeAyahReference } from '@/lib/quran/search/parser';
 import { fetchWithTimeout, NETWORK_TIMEOUTS, readJsonResponse } from '@/lib/network/fetch';
 import { resolveApiUrl } from '@/lib/platform/api';
 import { useOnlineStatus } from './useOnlineStatus';
+import { useLanguage } from './useLanguage';
 
 const PAGE_SIZE = 20;
 export type QuranSearchStatus = 'idle' | 'loading' | 'ready' | 'error';
@@ -81,6 +82,7 @@ export function useQuranSearch(query: string) {
   const requestId = useRef(0);
   const controllerRef = useRef<AbortController | null>(null);
   const isOnline = useOnlineStatus();
+  const { language } = useLanguage();
 
   const refresh = useCallback(async () => {
     setIsLoading(true);
@@ -138,7 +140,7 @@ export function useQuranSearch(query: string) {
 
     const search = async () => {
       try {
-        const params = new URLSearchParams({ q: debouncedQuery, limit: String(resultLimit) });
+        const params = new URLSearchParams({ q: debouncedQuery, limit: String(resultLimit), lang: language });
         const response = await fetchWithTimeout(resolveApiUrl(`/api/quran/search?${params.toString()}`), {
           timeoutMs: NETWORK_TIMEOUTS.quranRoute,
           rejectHttpErrors: false,
@@ -156,7 +158,11 @@ export function useQuranSearch(query: string) {
       } catch (error) {
         if (isAbortError(error) || controller.signal.aborted || currentId !== requestId.current) return;
         setSearchStatus('error');
-        setSearchError(error instanceof Error ? error.message : 'Pencarian ayat online belum tersedia.');
+        setSearchError(
+          language === 'en'
+            ? 'Online ayah search is not available yet.'
+            : error instanceof Error ? error.message : 'Pencarian ayat online belum tersedia.'
+        );
       }
     };
     void search();
@@ -165,7 +171,7 @@ export function useQuranSearch(query: string) {
       controller.abort();
       if (controllerRef.current === controller) controllerRef.current = null;
     };
-  }, [debouncedQuery, isOnline, resultLimit, retryNonce, shouldSearchOnline]);
+  }, [debouncedQuery, isOnline, language, resultLimit, retryNonce, shouldSearchOnline]);
 
   const response: QuranSearchResponse = useMemo(() => {
     const effectiveRecords = searchStatus === 'ready' ? [...onlineRecords, ...records] : records;

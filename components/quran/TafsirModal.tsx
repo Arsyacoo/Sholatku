@@ -4,6 +4,7 @@ import React from 'react';
 import { Modal } from '../ui/Modal';
 import { Ayah } from '@/types';
 import { BookOpen } from 'lucide-react';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface TafsirModalProps {
   isOpen: boolean;
@@ -18,13 +19,14 @@ export const TafsirModal: React.FC<TafsirModalProps> = ({
   ayah,
   surahName,
 }) => {
+  const { t } = useLanguage();
   if (!ayah) return null;
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Tafsir QS. ${surahName} : Ayat ${ayah.numberInSurah}`}
+      title={t(`Tafsir QS. ${surahName} : Ayat ${ayah.numberInSurah}`, `Tafsir QS. ${surahName} : Ayah ${ayah.numberInSurah}`)}
       maxWidth="lg"
     >
       <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1 custom-scrollbar">
@@ -38,7 +40,7 @@ export const TafsirModal: React.FC<TafsirModalProps> = ({
         {/* Translation */}
         <div className="space-y-1">
           <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-            Terjemahan:
+            {t('Terjemahan:', 'Translation:')}
           </span>
           <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed italic">
             &ldquo;{ayah.translation}&rdquo;
@@ -54,7 +56,7 @@ export const TafsirModal: React.FC<TafsirModalProps> = ({
 
           <div className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed space-y-2">
             <p>
-              {ayah.tafsir?.text || 'Tafsir belum tersedia untuk ayat ini.'}
+              {ayah.tafsir?.text || t('Tafsir belum tersedia untuk ayat ini.', 'Tafsir is not yet available for this ayah.')}
             </p>
           </div>
         </div>
